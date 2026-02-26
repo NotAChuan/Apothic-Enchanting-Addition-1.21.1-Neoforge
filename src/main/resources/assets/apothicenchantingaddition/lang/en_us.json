@@ -1,0 +1,13 @@
+{
+  "itemGroup.apothicenchantingaddition": "Example Mod Tab",
+  "block.apothicenchantingaddition.example_block": "Example Block",
+  "item.apothicenchantingaddition.example_item": "Example Item",
+
+  "apothicenchantingaddition.configuration.title": "Apothic Enchanting Addition Configs",
+  "apothicenchantingaddition.configuration.section.apothicenchantingaddition.common.toml": "Apothic Enchanting Addition Configs",
+  "apothicenchantingaddition.configuration.section.apothicenchantingaddition.common.toml.title": "Apothic Enchanting Addition Configs",
+  "apothicenchantingaddition.configuration.items": "Item List",
+  "apothicenchantingaddition.configuration.logDirtBlock": "Log Dirt Block",
+  "apothicenchantingaddition.configuration.magicNumberIntroduction": "Magic Number Text",
+  "apothicenchantingaddition.configuration.magicNumber": "Magic Number"
+}
