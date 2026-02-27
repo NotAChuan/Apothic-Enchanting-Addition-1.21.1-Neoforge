@@ -22,6 +22,21 @@ repositories {
         url "https://cursemaven.com"
         allowInsecureProtocol = true
     }
+
+    maven {
+        url "https://maven.latvian.dev/releases"
+        content {
+            includeGroup "dev.latvian.mods"
+            includeGroup "dev.latvian.apps"
+        }
+    }
+
+    maven {
+        url 'https://jitpack.io'
+        content {
+            includeGroup "com.github.rtyley"
+        }
+    }
 }
 
 base {
@@ -118,6 +133,8 @@ dependencies {
     api "curse.maven:ApothicEnchanting-1063926:7659120"
     api "curse.maven:Placebo-283644:6926281"
     api "curse.maven:ApothicAttributes-898963:7445079"
+
+    compileOnly api("dev.latvian.mods:kubejs-neoforge:2101.7.2-build.348")
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

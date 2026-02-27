@@ -1,0 +1,13 @@
+{
+  "type": "apothicenchantingaddition:ritual",
+  "inputs": [
+    { "item": "minecraft:stone" },
+    { "item": "minecraft:stone" },
+    { "item": "minecraft:sand" }
+  ],
+  "output_item": {
+    "id": "apothicenchantingaddition.stats_bookshelf_tier_1",
+    "count": 1
+  },
+  "craft_time": 20
+}

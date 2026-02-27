@@ -3,6 +3,7 @@
   "block.apothicenchantingaddition.stats_bookshelf_tier_2": "Stats Adjustment Bookshelf (Tier 2)",
   "block.apothicenchantingaddition.stats_bookshelf_tier_3": "Stats Adjustment Bookshelf (Tier 3)",
   "block.apothicenchantingaddition.stats_bookshelf_tier_4": "Stats Adjustment Bookshelf (Tier 4)",
+  "block.apothicenchantingaddition.ritual_core": "Ritual Core",
   "gui.apothicenchantingaddition.title.stats_bookshelf": "Bookshelf Stats Console",
   "gui.apothicenchantingaddition.stat.eterna": "Eterna: %s",
   "gui.apothicenchantingaddition.stat.quanta": "Quanta: %s",
@@ -16,5 +17,7 @@
   "gui.apothicenchantingaddition.stat.rectification.false": "Disabled",
   "gui.apothicenchantingaddition.energy.fe": "Energy: %s / %s FE",
   "gui.apothicenchantingaddition.energy.cost": "Usage: %s FE/t",
-  "gui.apothicenchantingaddition.save": "save"
+  "gui.apothicenchantingaddition.save": "save",
+  "ritual.apothicenchantingaddition.name": "Spirit Gathering",
+  "ritual.apothicenchantingaddition.crafting": "Converging Spiritual Energy..."
 }
