@@ -1,13 +1,20 @@
 {
-  "itemGroup.apothicenchantingaddition": "Example Mod Tab",
-  "block.apothicenchantingaddition.example_block": "Example Block",
-  "item.apothicenchantingaddition.example_item": "Example Item",
-
-  "apothicenchantingaddition.configuration.title": "Apothic Enchanting Addition Configs",
-  "apothicenchantingaddition.configuration.section.apothicenchantingaddition.common.toml": "Apothic Enchanting Addition Configs",
-  "apothicenchantingaddition.configuration.section.apothicenchantingaddition.common.toml.title": "Apothic Enchanting Addition Configs",
-  "apothicenchantingaddition.configuration.items": "Item List",
-  "apothicenchantingaddition.configuration.logDirtBlock": "Log Dirt Block",
-  "apothicenchantingaddition.configuration.magicNumberIntroduction": "Magic Number Text",
-  "apothicenchantingaddition.configuration.magicNumber": "Magic Number"
+  "block.apothicenchantingaddition.stats_bookshelf_tier_1": "Stats Adjustment Bookshelf (Tier 1)",
+  "block.apothicenchantingaddition.stats_bookshelf_tier_2": "Stats Adjustment Bookshelf (Tier 2)",
+  "block.apothicenchantingaddition.stats_bookshelf_tier_3": "Stats Adjustment Bookshelf (Tier 3)",
+  "block.apothicenchantingaddition.stats_bookshelf_tier_4": "Stats Adjustment Bookshelf (Tier 4)",
+  "gui.apothicenchantingaddition.title.stats_bookshelf": "Bookshelf Stats Console",
+  "gui.apothicenchantingaddition.stat.eterna": "Eterna: %s",
+  "gui.apothicenchantingaddition.stat.quanta": "Quanta: %s",
+  "gui.apothicenchantingaddition.stat.arcana": "Arcana: %s",
+  "gui.apothicenchantingaddition.stat.clues": "Clues: %s",
+  "gui.apothicenchantingaddition.stat.treasure": "Treasure Enchants",
+  "gui.apothicenchantingaddition.stat.treasure.true": "Allowed",
+  "gui.apothicenchantingaddition.stat.treasure.false": "Denied",
+  "gui.apothicenchantingaddition.stat.rectification": "Rectification",
+  "gui.apothicenchantingaddition.stat.rectification.true": "Enabled",
+  "gui.apothicenchantingaddition.stat.rectification.false": "Disabled",
+  "gui.apothicenchantingaddition.energy.fe": "Energy: %s / %s FE",
+  "gui.apothicenchantingaddition.energy.cost": "Usage: %s FE/t",
+  "gui.apothicenchantingaddition.save": "save"
 }

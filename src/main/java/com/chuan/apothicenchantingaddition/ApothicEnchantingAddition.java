@@ -1,5 +1,10 @@
 package com.chuan.apothicenchantingaddition;
 
+import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
+import com.chuan.apothicenchantingaddition.network.NetworkHandler;
+import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -66,26 +71,19 @@ public class ApothicEnchantingAddition {
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public ApothicEnchantingAddition(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
-        modEventBus.addListener(this::commonSetup);
+        modContainer.registerConfig(ModConfig.Type.COMMON, ApothicAdditionConfig.SPEC);
+        ModRegistry.register(modEventBus);
+        modEventBus.addListener(NetworkHandler::register);
+        modEventBus.addListener(this::registerCapabilities);
 
-        // Register the Deferred Register to the mod event bus so blocks get registered
-        BLOCKS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so items get registered
-        ITEMS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so tabs get registered
-        CREATIVE_MODE_TABS.register(modEventBus);
+    }
 
-        // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (ApothicEnchantingAddition) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
-        NeoForge.EVENT_BUS.register(this);
-
-        // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
-
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+    private void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModRegistry.STATS_BOOKSHELF_BE.get(),
+                (be, side) -> be.energyStorage
+        );
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

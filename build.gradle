@@ -18,7 +18,10 @@ version = mod_version
 group = mod_group_id
 
 repositories {
-    // Add here additional repositories if required by some of the dependencies below.
+    maven {
+        url "https://cursemaven.com"
+        allowInsecureProtocol = true
+    }
 }
 
 base {
@@ -112,6 +115,9 @@ configurations {
 }
 
 dependencies {
+    api "curse.maven:ApothicEnchanting-1063926:7659120"
+    api "curse.maven:Placebo-283644:6926281"
+    api "curse.maven:ApothicAttributes-898963:7445079"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
