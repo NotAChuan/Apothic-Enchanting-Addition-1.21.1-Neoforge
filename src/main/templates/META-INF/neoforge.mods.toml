@@ -102,6 +102,13 @@ Example mod description.
     ordering="NONE"
     side="BOTH"
 
+[[dependencies.${mod_id}]]
+    modId="jei"
+    type="optional"
+    versionRange="[19.27.0.340,)"
+    ordering="NONE"
+    side="BOTH"
+
 
 
 
