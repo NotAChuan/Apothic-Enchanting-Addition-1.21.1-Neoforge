@@ -5,11 +5,13 @@ import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Unit;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -175,8 +177,19 @@ public class RitualBlockEntity extends BlockEntity {
 
         // 2. 生成物品
         if (!recipe.outputItem().isEmpty()) {
-            Containers.dropItemStack(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    recipe.outputItem().copy());
+            ItemStack outputStack = recipe.outputItem().copy();
+            ItemEntity itemEntity = new ItemEntity(
+                    level,
+                    pos.getX() + 0.5,
+                    pos.getY() + 0.5,
+                    pos.getZ() + 0.5,
+                    outputStack
+            );
+            // 设置拾取延迟（10 tick = 0.5秒，防止立刻被玩家误拾）
+            itemEntity.setPickUpDelay(10);
+            // 设置无敌
+            itemEntity.setInvulnerable(true);
+            level.addFreshEntity(itemEntity);
         }
 
         // 3. 生成流体
