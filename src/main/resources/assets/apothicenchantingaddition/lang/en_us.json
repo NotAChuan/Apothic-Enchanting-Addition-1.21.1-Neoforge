@@ -19,5 +19,10 @@
   "gui.apothicenchantingaddition.energy.cost": "Usage: %s FE/t",
   "gui.apothicenchantingaddition.save": "save",
   "ritual.apothicenchantingaddition.name": "Spirit Gathering",
-  "ritual.apothicenchantingaddition.crafting": "Converging Spiritual Energy..."
+  "ritual.apothicenchantingaddition.crafting": "Converging Spiritual Energy...",
+  "jei.apothicenchantingaddition.category.drawing": "Drawing",
+  "jei.apothicenchantingaddition.category.ritual": "Spirit Gathering",
+  "jei.apothicenchantingaddition.drawing.consume": "Consumed",
+  "jei.apothicenchantingaddition.drawing.no_consume": "Not Consumed",
+  "jei.apothicenchantingaddition.drawing.damage": "Damaged"
 }

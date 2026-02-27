@@ -19,5 +19,10 @@
   "gui.apothicenchantingaddition.energy.cost": "耗電: %s FE/t",
   "gui.apothicenchantingaddition.save": "保存",
   "ritual.apothicenchantingaddition.name": "聚靈匯法",
-  "ritual.apothicenchantingaddition.crafting": "靈氣匯聚中..."
+  "ritual.apothicenchantingaddition.crafting": "靈氣匯聚中...",
+  "jei.apothicenchantingaddition.category.drawing": "繪製",
+  "jei.apothicenchantingaddition.category.ritual": "聚靈",
+  "jei.apothicenchantingaddition.drawing.consume": "消耗",
+  "jei.apothicenchantingaddition.drawing.no_consume": "不消耗",
+  "jei.apothicenchantingaddition.drawing.damage": "損傷"
 }

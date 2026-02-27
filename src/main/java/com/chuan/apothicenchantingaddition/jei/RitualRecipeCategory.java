@@ -1,0 +1,202 @@
+package com.chuan.apothicenchantingaddition.jei;
+
+import com.chuan.apothicenchantingaddition.recipe.RitualCraftingRecipe;
+import com.chuan.apothicenchantingaddition.recipe.RitualDrawingRecipe;
+import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
+import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.helpers.IGuiHelper;
+import mezz.jei.api.recipe.IFocusGroup;
+import mezz.jei.api.recipe.RecipeIngredientRole;
+import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.category.IRecipeCategory;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
+
+import java.util.List;
+import java.util.Optional;
+
+public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecipe> {
+
+    private static final ResourceLocation BG_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "textures/gui/jei/octagram.png");
+    private static final ResourceLocation ENTITY_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "textures/gui/jei/entity.png");
+    private static final ResourceLocation ARROW_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "textures/gui/jei/arrow.png");
+
+    private static final int WIDTH = 176;
+    private static final int HEIGHT = 90;
+
+    private static final int OCT_SIZE = 80;
+    private static final int OCT_X = 4;
+    private static final int OCT_Y = (HEIGHT - OCT_SIZE) / 2;
+    private static final int OCT_CENTER_X = OCT_X + OCT_SIZE / 2;
+    private static final int OCT_CENTER_Y = OCT_Y + OCT_SIZE / 2;
+    private static final float OUTER_RADIUS = 30.0f;
+
+    private static final int ARROW_X = OCT_X + OCT_SIZE + 4;
+    private static final int ARROW_Y = HEIGHT / 2 - 8;
+    private static final int ARROW_W = 16;
+    private static final int ARROW_H = 16;
+
+    private static final int OUTPUT_X = ARROW_X + ARROW_W + 4;
+    private static final int OUTPUT_CENTER_Y = HEIGHT / 2;
+
+    private final IDrawable background;
+    private final IDrawable icon;
+
+    public RitualRecipeCategory(IGuiHelper guiHelper) {
+        this.background = guiHelper.createBlankDrawable(WIDTH, HEIGHT);
+        this.icon = guiHelper.createDrawableItemStack(new ItemStack(net.minecraft.world.item.Items.ENCHANTING_TABLE));
+
+//        this.icon = guiHelper.createDrawableItemStack(
+//                new ItemStack(ModRegistry.RITUAL_CORE_BLOCK.get())
+//        );
+    }
+
+    @Override
+    public mezz.jei.api.recipe.RecipeType<RitualCraftingRecipe> getRecipeType() {
+        return ApothicAdditionJeiPlugin.RITUAL_TYPE;
+    }
+
+    @Override
+    public Component getTitle() {
+        return Component.translatable("jei.apothicenchantingaddition.category.ritual");
+    }
+
+    @Override
+    public int getWidth() {
+        return WIDTH;
+    }
+
+    @Override
+    public int getHeight() {
+        return HEIGHT;
+    }
+    @Override
+    public IDrawable getIcon() {
+        return icon;
+    }
+
+    @Override
+    public void setRecipe(IRecipeLayoutBuilder builder, RitualCraftingRecipe recipe, IFocusGroup focuses) {
+        List<Ingredient> inputs = recipe.inputs();
+        int count = inputs.size();
+        if (count == 0) return;
+
+        // 中心：第一个输入物品
+        builder.addSlot(RecipeIngredientRole.INPUT, OCT_CENTER_X - 8, OCT_CENTER_Y - 8)
+                .addIngredients(inputs.get(0));
+
+        // 外圈：其余输入物品平分圆
+        int outerCount = Math.min(count - 1, 16);
+        for (int i = 0; i < outerCount; i++) {
+            float angle = (float) (i * 2 * Math.PI / outerCount);
+            int slotX = (int) (OCT_CENTER_X + OUTER_RADIUS * Math.cos(angle)) - 8;
+            int slotY = (int) (OCT_CENTER_Y + OUTER_RADIUS * Math.sin(angle)) - 8;
+            builder.addSlot(RecipeIngredientRole.INPUT, slotX, slotY)
+                    .addIngredients(inputs.get(i + 1));
+        }
+
+        // 统计输出数量，用于布局计算
+        int totalOutputs = countOutputs(recipe);
+
+        // 输出物品槽
+        if (!recipe.outputItem().isEmpty()) {
+            int[] pos = getOutputPos(totalOutputs, 0);
+            builder.addSlot(RecipeIngredientRole.OUTPUT, pos[0], pos[1])
+                    .addItemStack(recipe.outputItem());
+        }
+
+        // 输出流体槽
+        Optional<String> fluidOpt = recipe.outputFluid();
+        if (fluidOpt.isPresent() && !fluidOpt.get().isEmpty()) {
+            ResourceLocation fluidRL = ResourceLocation.tryParse(fluidOpt.get());
+            if (fluidRL != null) {
+                Fluid fluid = BuiltInRegistries.FLUID.get(fluidRL);
+                if (fluid != null && fluid != net.minecraft.world.level.material.Fluids.EMPTY) {
+                    int fluidIndex = recipe.outputItem().isEmpty() ? 0 : 1;
+                    int[] pos = getOutputPos(totalOutputs, fluidIndex);
+                    builder.addSlot(RecipeIngredientRole.OUTPUT, pos[0], pos[1])
+                            .addFluidStack(fluid, FluidType.BUCKET_VOLUME);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void draw(RitualCraftingRecipe recipe, IRecipeSlotsView recipeSlotsView,
+                     GuiGraphics guiGraphics, double mouseX, double mouseY) {
+
+        // 绘制八芒星背景
+        guiGraphics.blit(BG_TEXTURE, OCT_X, OCT_Y, 0, 0, OCT_SIZE, OCT_SIZE, OCT_SIZE, OCT_SIZE);
+
+        // 绘制箭头
+        guiGraphics.blit(ARROW_TEXTURE, ARROW_X, ARROW_Y, 0, 0, ARROW_W, ARROW_H, ARROW_W, ARROW_H);
+
+        // 实体输出渲染
+        Optional<String> entityOpt = recipe.outputEntity();
+        if (entityOpt.isPresent() && !entityOpt.get().isEmpty()) {
+            int totalOutputs = countOutputs(recipe);
+            int entityIndex = 0;
+            if (!recipe.outputItem().isEmpty()) entityIndex++;
+            Optional<String> fluidOpt = recipe.outputFluid();
+            if (fluidOpt.isPresent() && !fluidOpt.get().isEmpty()) entityIndex++;
+
+            int[] pos = getOutputPos(totalOutputs, entityIndex);
+            EntityRenderer.render(guiGraphics, entityOpt.get(),
+                    pos[0] + 8, pos[1] + 8, 24, ENTITY_TEXTURE);
+        }
+    }
+
+    private int countOutputs(RitualCraftingRecipe recipe) {
+        int count = 0;
+        if (!recipe.outputItem().isEmpty()) count++;
+        Optional<String> fluidOpt = recipe.outputFluid();
+        if (fluidOpt.isPresent() && !fluidOpt.get().isEmpty()) count++;
+        Optional<String> entityOpt = recipe.outputEntity();
+        if (entityOpt.isPresent() && !entityOpt.get().isEmpty()) count++;
+        return count;
+    }
+
+    private int[] getOutputPos(int totalOutputs, int index) {
+        int rightAreaStartX = OUTPUT_X;
+        int rightAreaWidth = WIDTH - OUTPUT_X - 2;
+        int slotSize = 18;
+
+        return switch (totalOutputs) {
+            case 1 -> new int[]{
+                    rightAreaStartX + (rightAreaWidth - slotSize) / 2,
+                    OUTPUT_CENTER_Y - slotSize / 2
+            };
+            case 2 -> {
+                int totalW = slotSize * 2 + 4;
+                int startX = rightAreaStartX + (rightAreaWidth - totalW) / 2;
+                yield new int[]{startX + index * (slotSize + 4), OUTPUT_CENTER_Y - slotSize / 2};
+            }
+            case 3 -> {
+                if (index == 0) {
+                    yield new int[]{
+                            rightAreaStartX + (rightAreaWidth - slotSize) / 2,
+                            OUTPUT_CENTER_Y - slotSize - 2
+                    };
+                } else {
+                    int totalW = slotSize * 2 + 4;
+                    int startX = rightAreaStartX + (rightAreaWidth - totalW) / 2;
+                    yield new int[]{startX + (index - 1) * (slotSize + 4), OUTPUT_CENTER_Y + 2};
+                }
+            }
+            default -> new int[]{rightAreaStartX, OUTPUT_CENTER_Y - slotSize / 2};
+        };
+    }
+}
