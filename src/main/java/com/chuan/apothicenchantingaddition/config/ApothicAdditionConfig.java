@@ -11,7 +11,10 @@ public class ApothicAdditionConfig {
     public static final ModConfigSpec.IntValue TIER_3_ENERGY_COST;
     public static final ModConfigSpec.IntValue TIER_4_ENERGY_COST;
 
-//    public static final ModConfigSpec.IntValue MAX_ENERGY_CAPACITY;
+    public static final ModConfigSpec.IntValue FLUX_ENCHANTER_TICK_COST;
+    public static final ModConfigSpec.IntValue FLUX_ENCHANTER_BASE_COST;
+    public static final ModConfigSpec.ConfigValue<String> FLUX_ENCHANTER_REFRESH_ITEM;
+    public static final ModConfigSpec.IntValue FLUX_ENCHANTER_REFRESH_COUNT;
 
     static {
         BUILDER.push("Energy Settings");
@@ -25,8 +28,28 @@ public class ApothicAdditionConfig {
         TIER_4_ENERGY_COST = BUILDER.comment("Energy cost per tick for Tier 4 Bookshelf")
                 .defineInRange("tier4EnergyCost", 80, 0, Integer.MAX_VALUE);
 
-//        MAX_ENERGY_CAPACITY = BUILDER.comment("Maximum FE capacity for the bookshelves")
-//                .defineInRange("maxEnergyCapacity", 100000, 1000, Integer.MAX_VALUE);
+        BUILDER.push("Flux Enchanting Table Settings");
+
+        FLUX_ENCHANTER_TICK_COST = BUILDER.comment(
+                        "Energy cost per tick for the Flux Enchanting Table to stay active.",
+                        "通量附魔台每 tick (1/20秒) 消耗的待机能量。")
+                .defineInRange("fluxEnchanterTickCost", 1000, 0, Integer.MAX_VALUE);
+
+        FLUX_ENCHANTER_BASE_COST = BUILDER.comment(
+                        "Base energy cost per enchantment level.",
+                        "Example: If set to 1000, enchanting a level 50 enchant will cost 50,000 FE.",
+                        "通量附魔台附魔时的基础耗电量（实际耗电 = 该值 * 附魔等级）。")
+                .defineInRange("fluxEnchanterBaseCost", 1000, 0, Integer.MAX_VALUE);
+
+        FLUX_ENCHANTER_REFRESH_ITEM = BUILDER.comment(
+                        "The item required to refresh the enchantments (Registry Name).",
+                        "刷新附魔时消耗的物品 ID。默认：minecraft:lapis_lazuli (青金石)。")
+                .define("fluxEnchanterRefreshItem", "minecraft:lapis_lazuli");
+
+        FLUX_ENCHANTER_REFRESH_COUNT = BUILDER.comment(
+                        "The amount of the refresh item required.",
+                        "每次点击刷新附魔时，需要消耗上述物品的数量。")
+                .defineInRange("fluxEnchanterRefreshCount", 3, 1, 64);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

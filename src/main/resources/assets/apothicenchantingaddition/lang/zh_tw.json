@@ -25,5 +25,9 @@
   "jei.apothicenchantingaddition.drawing.consume": "消耗",
   "jei.apothicenchantingaddition.drawing.no_consume": "不消耗",
   "jei.apothicenchantingaddition.drawing.damage": "損傷",
-  "ritual.apothicenchantingaddition.busy": "儀式進行中，無法操作！"
+  "ritual.apothicenchantingaddition.busy": "儀式進行中，無法操作！",
+  "block.apothicenchantingaddition.flux_enchanting_table": "通量附魔台",
+  "gui.apothicenchantingaddition.flux_enchanter": "通量附魔台",
+  "gui.apothicenchantingaddition.refresh": "刷新附魔"
+
 }

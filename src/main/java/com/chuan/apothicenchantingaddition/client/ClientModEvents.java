@@ -16,6 +16,7 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), StatsBookshelfScreen::new);
+        event.register(ModRegistry.FLUX_ENCHANTING_MENU.get(), com.chuan.apothicenchantingaddition.client.screen.FluxEnchantingScreen::new);
     }
 
     @SubscribeEvent

@@ -27,6 +27,9 @@ import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import com.chuan.apothicenchantingaddition.block.FluxEnchantingTableBlock;
+import com.chuan.apothicenchantingaddition.block.entity.FluxEnchantingTableBlockEntity;
+import com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu;
 
 public class ModRegistry {
     public static final String MOD_ID = "apothicenchantingaddition";
@@ -60,6 +63,22 @@ public class ModRegistry {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RitualBlockEntity>> RITUAL_BE = BLOCK_ENTITIES.register("ritual_core",
             () -> BlockEntityType.Builder.of(RitualBlockEntity::new, RITUAL_CORE_BLOCK.get()).build(null));
+
+    // 1. 注册通量附魔台方块与物品
+    public static final DeferredHolder<Block, FluxEnchantingTableBlock> FLUX_ENCHANTING_TABLE = BLOCKS.register("flux_enchanting_table",
+            () -> new FluxEnchantingTableBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops()));
+
+    // 注意：注册同名物品
+    public static final DeferredHolder<Item, BlockItem> FLUX_ENCHANTING_TABLE_ITEM = ITEMS.register("flux_enchanting_table",
+            () -> new BlockItem(FLUX_ENCHANTING_TABLE.get(), new Item.Properties()));
+
+    // 2. 注册方块实体
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxEnchantingTableBlockEntity>> FLUX_ENCHANTING_TABLE_BE = BLOCK_ENTITIES.register("flux_enchanting_table",
+            () -> BlockEntityType.Builder.of(FluxEnchantingTableBlockEntity::new, FLUX_ENCHANTING_TABLE.get()).build(null));
+
+    // 3. 注册菜单类型 (Container)
+    public static final DeferredHolder<MenuType<?>, MenuType<FluxEnchantingMenu>> FLUX_ENCHANTING_MENU = MENU_TYPES.register("flux_enchanting_menu",
+            () -> IMenuTypeExtension.create(FluxEnchantingMenu::new));
 
     // ================== 菜单 ==================
     public static final DeferredHolder<MenuType<?>, MenuType<StatsBookshelfMenu>> STATS_BOOKSHELF_MENU = MENU_TYPES.register("stats_bookshelf_menu",
@@ -130,6 +149,7 @@ public class ModRegistry {
             event.accept(STATS_BOOKSHELF_TIER_2.get());
             event.accept(STATS_BOOKSHELF_TIER_3.get());
             event.accept(STATS_BOOKSHELF_TIER_4.get());
+            event.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
         }
     }
 }

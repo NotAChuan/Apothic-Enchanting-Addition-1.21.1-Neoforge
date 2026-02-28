@@ -19,6 +19,27 @@ public class NetworkHandler {
                 UpdateStatsPayload.CODEC,
                 NetworkHandler::handleData
         );
+
+        registrar.playToServer(
+                FluxActionPayload.TYPE,
+                FluxActionPayload.CODEC,
+                NetworkHandler::handleFluxAction
+        );
+    }
+
+    // 新增处理逻辑
+    public static void handleFluxAction(final FluxActionPayload payload, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player) {
+                // 安全校验：玩家距离方块不能太远 (16格内)
+                if (player.distanceToSqr(payload.pos().getX() + 0.5, payload.pos().getY() + 0.5, payload.pos().getZ() + 0.5) <= 256.0) {
+                    // 如果玩家当前打开的正是通量附魔台菜单，直接将动作移交给菜单处理
+                    if (player.containerMenu instanceof com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu menu) {
+                        menu.handleAction(player, payload.actionId());
+                    }
+                }
+            }
+        });
     }
 
     public static void handleData(final UpdateStatsPayload payload, final IPayloadContext context) {

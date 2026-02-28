@@ -25,5 +25,9 @@
   "jei.apothicenchantingaddition.drawing.consume": "Consumed",
   "jei.apothicenchantingaddition.drawing.no_consume": "Not Consumed",
   "jei.apothicenchantingaddition.drawing.damage": "Damaged",
-  "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!"
+  "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!",
+  "block.apothicenchantingaddition.flux_enchanting_table": "Flux Enchanting Table",
+  "gui.apothicenchantingaddition.flux_enchanter": "Flux Enchanting Table",
+  "gui.apothicenchantingaddition.refresh": "Refresh"
+
 }

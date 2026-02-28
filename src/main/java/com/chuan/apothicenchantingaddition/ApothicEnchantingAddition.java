@@ -77,7 +77,6 @@ public class ApothicEnchantingAddition {
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(this::registerCapabilities);
 
-
         NeoForge.EVENT_BUS.register(this);
 
     }
@@ -86,6 +85,12 @@ public class ApothicEnchantingAddition {
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
                 ModRegistry.STATS_BOOKSHELF_BE.get(),
+                (be, side) -> be.energyStorage
+        );
+
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModRegistry.FLUX_ENCHANTING_TABLE_BE.get(),
                 (be, side) -> be.energyStorage
         );
     }
