@@ -28,6 +28,8 @@
   "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!",
   "block.apothicenchantingaddition.flux_enchanting_table": "Flux Enchanting Table",
   "gui.apothicenchantingaddition.flux_enchanter": "Flux Enchanting Table",
-  "gui.apothicenchantingaddition.refresh": "Refresh"
-
+  "gui.apothicenchantingaddition.refresh": "Refresh",
+  "block.apothicenchantingaddition.flux_anvil": "Flux Anvil",
+  "gui.apothicenchantingaddition.not_enough_energy": "Not Enough Energy",
+  "gui.apothicenchantingaddition.anvil.cost": "Usage: %s FE"
 }

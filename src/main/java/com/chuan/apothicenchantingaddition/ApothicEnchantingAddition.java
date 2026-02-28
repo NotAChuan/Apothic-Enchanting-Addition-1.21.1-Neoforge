@@ -93,6 +93,12 @@ public class ApothicEnchantingAddition {
                 ModRegistry.FLUX_ENCHANTING_TABLE_BE.get(),
                 (be, side) -> be.energyStorage
         );
+
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModRegistry.FLUX_ANVIL_BE.get(),
+                (be, side) -> be.getEnergyStorage()
+        );
     }
 
     @SubscribeEvent

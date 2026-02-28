@@ -28,5 +28,8 @@
   "ritual.apothicenchantingaddition.busy": "仪式进行中，无法操作！",
   "block.apothicenchantingaddition.flux_enchanting_table": "通量附魔台",
   "gui.apothicenchantingaddition.flux_enchanter": "通量附魔台",
-  "gui.apothicenchantingaddition.refresh": "刷新附魔"
+  "gui.apothicenchantingaddition.refresh": "刷新附魔",
+  "block.apothicenchantingaddition.flux_anvil": "通量铁砧",
+  "gui.apothicenchantingaddition.not_enough_energy": "能量不足",
+  "gui.apothicenchantingaddition.anvil.cost": "耗电: %s FE"
 }

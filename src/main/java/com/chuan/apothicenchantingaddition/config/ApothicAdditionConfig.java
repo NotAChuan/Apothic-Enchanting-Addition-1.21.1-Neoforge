@@ -16,6 +16,8 @@ public class ApothicAdditionConfig {
     public static final ModConfigSpec.ConfigValue<String> FLUX_ENCHANTER_REFRESH_ITEM;
     public static final ModConfigSpec.IntValue FLUX_ENCHANTER_REFRESH_COUNT;
 
+    public static final ModConfigSpec.IntValue FLUX_ANVIL_BASE_COST;
+
     static {
         BUILDER.push("Energy Settings");
 
@@ -50,6 +52,14 @@ public class ApothicAdditionConfig {
                         "The amount of the refresh item required.",
                         "每次点击刷新附魔时，需要消耗上述物品的数量。")
                 .defineInRange("fluxEnchanterRefreshCount", 3, 1, 64);
+
+        BUILDER.push("Flux Anvil");
+
+        FLUX_ANVIL_BASE_COST = BUILDER
+                .comment("The base FE cost for the Flux Anvil per level.",
+                        "Total Cost = Operation Level * Base Cost.",
+                        "通量铁砧每级操作的基础 FE 耗电量（总耗电 = 操作等级 * 基础耗电）")
+                .defineInRange("fluxAnvilBaseCost", 1000, 1, Integer.MAX_VALUE);
 
         BUILDER.pop();
         SPEC = BUILDER.build();

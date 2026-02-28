@@ -1,8 +1,7 @@
 package com.chuan.apothicenchantingaddition.registry;
 
-import com.chuan.apothicenchantingaddition.block.RitualCoreBlock;
-import com.chuan.apothicenchantingaddition.block.StatsBookshelfBlock;
-import com.chuan.apothicenchantingaddition.block.Tier;
+import com.chuan.apothicenchantingaddition.block.*;
+import com.chuan.apothicenchantingaddition.block.entity.FluxAnvilBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.RitualBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.menu.StatsBookshelfMenu;
@@ -20,6 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
@@ -27,9 +27,9 @@ import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import com.chuan.apothicenchantingaddition.block.FluxEnchantingTableBlock;
 import com.chuan.apothicenchantingaddition.block.entity.FluxEnchantingTableBlockEntity;
 import com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu;
+import com.chuan.apothicenchantingaddition.menu.FluxAnvilMenu;
 
 public class ModRegistry {
     public static final String MOD_ID = "apothicenchantingaddition";
@@ -52,6 +52,16 @@ public class ModRegistry {
     public static final DeferredHolder<Block, RitualCoreBlock> RITUAL_CORE_BLOCK = BLOCKS.register("ritual_core",
             () -> new RitualCoreBlock(BlockBehaviour.Properties.of().noOcclusion().strength(0.2f)));
 
+    public static final DeferredHolder<Block, FluxAnvilBlock> FLUX_ANVIL = BLOCKS.register("flux_anvil",
+            () -> new FluxAnvilBlock(BlockBehaviour.Properties.of()
+                    .strength(5.0f, 1200.0f) // 参照原版铁砧硬度，但防爆等级调高
+                    .sound(SoundType.ANVIL)
+                    .requiresCorrectToolForDrops()));
+
+    // ================== 物品 ==================
+    public static final DeferredHolder<Item, BlockItem> FLUX_ANVIL_ITEM = ITEMS.register("flux_anvil",
+            () -> new BlockItem(FLUX_ANVIL.get(), new Item.Properties()));
+
     // ================== 方块实体 ==================
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
             () -> BlockEntityType.Builder.of(StatsBookshelfBlockEntity::new,
@@ -63,6 +73,10 @@ public class ModRegistry {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RitualBlockEntity>> RITUAL_BE = BLOCK_ENTITIES.register("ritual_core",
             () -> BlockEntityType.Builder.of(RitualBlockEntity::new, RITUAL_CORE_BLOCK.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxAnvilBlockEntity>> FLUX_ANVIL_BE = BLOCK_ENTITIES.register("flux_anvil",
+            () -> BlockEntityType.Builder.of(FluxAnvilBlockEntity::new, FLUX_ANVIL.get()).build(null));
+
 
     // 1. 注册通量附魔台方块与物品
     public static final DeferredHolder<Block, FluxEnchantingTableBlock> FLUX_ENCHANTING_TABLE = BLOCKS.register("flux_enchanting_table",
@@ -83,6 +97,9 @@ public class ModRegistry {
     // ================== 菜单 ==================
     public static final DeferredHolder<MenuType<?>, MenuType<StatsBookshelfMenu>> STATS_BOOKSHELF_MENU = MENU_TYPES.register("stats_bookshelf_menu",
             () -> IMenuTypeExtension.create(StatsBookshelfMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<FluxAnvilMenu>> FLUX_ANVIL_MENU = MENU_TYPES.register("flux_anvil_menu",
+            () -> IMenuTypeExtension.create(FluxAnvilMenu::new));
 
     // ================== 配方类型与序列化器 ==================
 
@@ -150,6 +167,7 @@ public class ModRegistry {
             event.accept(STATS_BOOKSHELF_TIER_3.get());
             event.accept(STATS_BOOKSHELF_TIER_4.get());
             event.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
+            event.accept(FLUX_ANVIL_ITEM.get());
         }
     }
 }
