@@ -24,5 +24,6 @@
   "jei.apothicenchantingaddition.category.ritual": "Spirit Gathering",
   "jei.apothicenchantingaddition.drawing.consume": "Consumed",
   "jei.apothicenchantingaddition.drawing.no_consume": "Not Consumed",
-  "jei.apothicenchantingaddition.drawing.damage": "Damaged"
+  "jei.apothicenchantingaddition.drawing.damage": "Damaged",
+  "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!"
 }

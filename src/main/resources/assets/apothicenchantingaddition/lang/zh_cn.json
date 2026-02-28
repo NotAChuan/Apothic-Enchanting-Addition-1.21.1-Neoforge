@@ -24,5 +24,6 @@
   "jei.apothicenchantingaddition.category.ritual": "聚灵",
   "jei.apothicenchantingaddition.drawing.consume": "消耗",
   "jei.apothicenchantingaddition.drawing.no_consume": "不消耗",
-  "jei.apothicenchantingaddition.drawing.damage": "损伤"
+  "jei.apothicenchantingaddition.drawing.damage": "损伤",
+  "ritual.apothicenchantingaddition.busy": "仪式进行中，无法操作！"
 }
