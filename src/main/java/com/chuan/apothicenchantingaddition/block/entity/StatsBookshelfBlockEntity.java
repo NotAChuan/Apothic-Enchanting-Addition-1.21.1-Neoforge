@@ -1,5 +1,6 @@
 package com.chuan.apothicenchantingaddition.block.entity;
 
+import com.chuan.apothicenchantingaddition.block.FluxStatsBookshelfBlock;
 import com.chuan.apothicenchantingaddition.block.Tier;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import net.minecraft.core.BlockPos;
@@ -43,7 +44,7 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
     }
 
     public Tier getTier() {
-        if (this.getBlockState().getBlock() instanceof com.chuan.apothicenchantingaddition.block.StatsBookshelfBlock block) {
+        if (this.getBlockState().getBlock() instanceof FluxStatsBookshelfBlock block) {
             return block.getTier();
         }
         return Tier.TIER_1;

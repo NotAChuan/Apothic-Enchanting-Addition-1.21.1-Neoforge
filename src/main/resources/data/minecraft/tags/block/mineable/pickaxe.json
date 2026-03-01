@@ -2,10 +2,10 @@
   "replace": false,
   "values": [
     "apothicenchantingaddition:flux_anvil",
-    "apothicenchantingaddition:stats_bookshelf_tier_1",
-    "apothicenchantingaddition:stats_bookshelf_tier_2",
-    "apothicenchantingaddition:stats_bookshelf_tier_3",
-    "apothicenchantingaddition:stats_bookshelf_tier_4",
+    "apothicenchantingaddition:flux_stats_bookshelf_tier_1",
+    "apothicenchantingaddition:flux_stats_bookshelf_tier_2",
+    "apothicenchantingaddition:flux_stats_bookshelf_tier_3",
+    "apothicenchantingaddition:flux_stats_bookshelf_tier_4",
     "apothicenchantingaddition:flux_enchanting_table"
   ]
 }

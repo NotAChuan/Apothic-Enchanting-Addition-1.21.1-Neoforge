@@ -10,7 +10,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.item.ItemStack;
 
-public class StatsBookshelfMenu extends AbstractContainerMenu {
+public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
 
     private final StatsBookshelfBlockEntity blockEntity;
     private final ContainerLevelAccess levelAccess;
@@ -25,11 +25,11 @@ public class StatsBookshelfMenu extends AbstractContainerMenu {
     private final DataSlot energyUpper = DataSlot.standalone();
     private final DataSlot energyLower = DataSlot.standalone();
 
-    public StatsBookshelfMenu(int containerId, Inventory inv, FriendlyByteBuf extraData) {
+    public FluxStatsBookshelfMenu(int containerId, Inventory inv, FriendlyByteBuf extraData) {
         this(containerId, inv, (StatsBookshelfBlockEntity) inv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
-    public StatsBookshelfMenu(int containerId, Inventory inv, StatsBookshelfBlockEntity entity) {
+    public FluxStatsBookshelfMenu(int containerId, Inventory inv, StatsBookshelfBlockEntity entity) {
         super(ModRegistry.STATS_BOOKSHELF_MENU.get(), containerId);
         this.blockEntity = entity;
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());

@@ -1,7 +1,7 @@
 package com.chuan.apothicenchantingaddition.client;
 
 import com.chuan.apothicenchantingaddition.client.renderer.RitualBlockEntityRenderer;
-import com.chuan.apothicenchantingaddition.client.screen.StatsBookshelfScreen;
+import com.chuan.apothicenchantingaddition.client.screen.FluxStatsBookshelfScreen;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import com.chuan.apothicenchantingaddition.client.screen.FluxEnchantingScreen;
 import com.chuan.apothicenchantingaddition.client.screen.FluxAnvilScreen;
@@ -20,7 +20,7 @@ public class ClientModEvents {
     @SuppressWarnings("unchecked")
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), StatsBookshelfScreen::new);
+        event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), FluxStatsBookshelfScreen::new);
         event.register(ModRegistry.FLUX_ENCHANTING_MENU.get(), FluxEnchantingScreen::new);
 
         // 泛型报错修复：先将我们的 MenuType 强转为原版的 MenuType<AnvilMenu> 骗过编译器！

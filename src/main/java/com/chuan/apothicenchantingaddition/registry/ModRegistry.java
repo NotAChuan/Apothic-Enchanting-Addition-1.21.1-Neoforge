@@ -4,7 +4,9 @@ import com.chuan.apothicenchantingaddition.block.*;
 import com.chuan.apothicenchantingaddition.block.entity.FluxAnvilBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.RitualBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
-import com.chuan.apothicenchantingaddition.menu.StatsBookshelfMenu;
+import com.chuan.apothicenchantingaddition.item.CompressedSolidifiedFluxExperienceItem;
+import com.chuan.apothicenchantingaddition.item.SolidifiedFluxExperienceItem;
+import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
 import com.chuan.apothicenchantingaddition.recipe.RitualCraftingRecipe;
 import com.chuan.apothicenchantingaddition.recipe.RitualDrawingRecipe;
 import com.mojang.serialization.MapCodec;
@@ -44,10 +46,10 @@ public class ModRegistry {
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS = DeferredRegister.create(BuiltInRegistries.RECIPE_SERIALIZER, MOD_ID);
 
     // ================== 方块 ==================
-    public static final DeferredHolder<Block, StatsBookshelfBlock> STATS_BOOKSHELF_TIER_1 = registerBlock("stats_bookshelf_tier_1", Tier.TIER_1);
-    public static final DeferredHolder<Block, StatsBookshelfBlock> STATS_BOOKSHELF_TIER_2 = registerBlock("stats_bookshelf_tier_2", Tier.TIER_2);
-    public static final DeferredHolder<Block, StatsBookshelfBlock> STATS_BOOKSHELF_TIER_3 = registerBlock("stats_bookshelf_tier_3", Tier.TIER_3);
-    public static final DeferredHolder<Block, StatsBookshelfBlock> STATS_BOOKSHELF_TIER_4 = registerBlock("stats_bookshelf_tier_4", Tier.TIER_4);
+    public static final DeferredHolder<Block, FluxStatsBookshelfBlock> FLUX_STATS_BOOKSHELF_TIER_1 = registerBlock("flux_stats_bookshelf_tier_1", Tier.TIER_1);
+    public static final DeferredHolder<Block, FluxStatsBookshelfBlock> FLUX_STATS_BOOKSHELF_TIER_2 = registerBlock("flux_stats_bookshelf_tier_2", Tier.TIER_2);
+    public static final DeferredHolder<Block, FluxStatsBookshelfBlock> FLUX_STATS_BOOKSHELF_TIER_3 = registerBlock("flux_stats_bookshelf_tier_3", Tier.TIER_3);
+    public static final DeferredHolder<Block, FluxStatsBookshelfBlock> FLUX_STATS_BOOKSHELF_TIER_4 = registerBlock("flux_stats_bookshelf_tier_4", Tier.TIER_4);
 
     public static final DeferredHolder<Block, RitualCoreBlock> RITUAL_CORE_BLOCK = BLOCKS.register("ritual_core",
             () -> new RitualCoreBlock(BlockBehaviour.Properties.of().noOcclusion().strength(0.2f)));
@@ -62,13 +64,22 @@ public class ModRegistry {
     public static final DeferredHolder<Item, BlockItem> FLUX_ANVIL_ITEM = ITEMS.register("flux_anvil",
             () -> new BlockItem(FLUX_ANVIL.get(), new Item.Properties()));
 
+    // 注册固化通量经验
+    public static final DeferredHolder<Item, Item> SOLIDIFIED_FLUX_EXPERIENCE = ITEMS.register("solidified_flux_experience",
+            () -> new SolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
+
+    // 注册压缩固化通量经验
+    public static final DeferredHolder<Item, Item> COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE = ITEMS.register("compressed_solidified_flux_experience",
+            () -> new CompressedSolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
+
+
     // ================== 方块实体 ==================
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
             () -> BlockEntityType.Builder.of(StatsBookshelfBlockEntity::new,
-                    STATS_BOOKSHELF_TIER_1.get(),
-                    STATS_BOOKSHELF_TIER_2.get(),
-                    STATS_BOOKSHELF_TIER_3.get(),
-                    STATS_BOOKSHELF_TIER_4.get()
+                    FLUX_STATS_BOOKSHELF_TIER_1.get(),
+                    FLUX_STATS_BOOKSHELF_TIER_2.get(),
+                    FLUX_STATS_BOOKSHELF_TIER_3.get(),
+                    FLUX_STATS_BOOKSHELF_TIER_4.get()
             ).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<RitualBlockEntity>> RITUAL_BE = BLOCK_ENTITIES.register("ritual_core",
@@ -95,8 +106,8 @@ public class ModRegistry {
             () -> IMenuTypeExtension.create(FluxEnchantingMenu::new));
 
     // ================== 菜单 ==================
-    public static final DeferredHolder<MenuType<?>, MenuType<StatsBookshelfMenu>> STATS_BOOKSHELF_MENU = MENU_TYPES.register("stats_bookshelf_menu",
-            () -> IMenuTypeExtension.create(StatsBookshelfMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<FluxStatsBookshelfMenu>> STATS_BOOKSHELF_MENU = MENU_TYPES.register("stats_bookshelf_menu",
+            () -> IMenuTypeExtension.create(FluxStatsBookshelfMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxAnvilMenu>> FLUX_ANVIL_MENU = MENU_TYPES.register("flux_anvil_menu",
             () -> IMenuTypeExtension.create(FluxAnvilMenu::new));
@@ -143,8 +154,8 @@ public class ModRegistry {
             });
 
 
-    private static DeferredHolder<Block, StatsBookshelfBlock> registerBlock(String name, Tier tier) {
-        DeferredHolder<Block, StatsBookshelfBlock> block = BLOCKS.register(name, () -> new StatsBookshelfBlock(BlockBehaviour.Properties.of().strength(2.0f), tier));
+    private static DeferredHolder<Block, FluxStatsBookshelfBlock> registerBlock(String name, Tier tier) {
+        DeferredHolder<Block, FluxStatsBookshelfBlock> block = BLOCKS.register(name, () -> new FluxStatsBookshelfBlock(BlockBehaviour.Properties.of().strength(2.0f), tier));
         ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
         return block;
     }
@@ -162,12 +173,14 @@ public class ModRegistry {
 
     private static void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
-            event.accept(STATS_BOOKSHELF_TIER_1.get());
-            event.accept(STATS_BOOKSHELF_TIER_2.get());
-            event.accept(STATS_BOOKSHELF_TIER_3.get());
-            event.accept(STATS_BOOKSHELF_TIER_4.get());
+            event.accept(FLUX_STATS_BOOKSHELF_TIER_1.get());
+            event.accept(FLUX_STATS_BOOKSHELF_TIER_2.get());
+            event.accept(FLUX_STATS_BOOKSHELF_TIER_3.get());
+            event.accept(FLUX_STATS_BOOKSHELF_TIER_4.get());
             event.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
             event.accept(FLUX_ANVIL_ITEM.get());
+            event.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
+            event.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
         }
     }
 }

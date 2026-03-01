@@ -1,8 +1,8 @@
 {
-  "block.apothicenchantingaddition.stats_bookshelf_tier_1": "属性调整书架 (一阶)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_2": "属性调整书架 (二阶)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_3": "属性调整书架 (三阶)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_4": "属性调整书架 (四阶)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_1": "通量调整书架 (一阶)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_2": "通量调整书架 (二阶)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_3": "通量调整书架 (三阶)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_4": "通量调整书架 (四阶)",
   "block.apothicenchantingaddition.ritual_core": "聚灵法阵",
   "gui.apothicenchantingaddition.title.stats_bookshelf": "书架属性控制台",
   "gui.apothicenchantingaddition.stat.eterna": "位阶: %s",
@@ -31,5 +31,7 @@
   "gui.apothicenchantingaddition.refresh": "刷新附魔",
   "block.apothicenchantingaddition.flux_anvil": "通量铁砧",
   "gui.apothicenchantingaddition.not_enough_energy": "能量不足",
-  "gui.apothicenchantingaddition.anvil.cost": "耗电: %s FE"
+  "gui.apothicenchantingaddition.anvil.cost": "耗电: %s FE",
+  "item.apothicenchantingaddition.solidified_flux_experience": "固化通量经验",
+  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "压缩固化通量经验"
 }

@@ -1,8 +1,8 @@
 {
-  "block.apothicenchantingaddition.stats_bookshelf_tier_1": "Stats Adjustment Bookshelf (Tier 1)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_2": "Stats Adjustment Bookshelf (Tier 2)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_3": "Stats Adjustment Bookshelf (Tier 3)",
-  "block.apothicenchantingaddition.stats_bookshelf_tier_4": "Stats Adjustment Bookshelf (Tier 4)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_1": "Flux Adjustment Bookshelf (Tier 1)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_2": "Flux Adjustment Bookshelf (Tier 2)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_3": "Flux Adjustment Bookshelf (Tier 3)",
+  "block.apothicenchantingaddition.flux_stats_bookshelf_tier_4": "Flux Adjustment Bookshelf (Tier 4)",
   "block.apothicenchantingaddition.ritual_core": "Ritual Core",
   "gui.apothicenchantingaddition.title.stats_bookshelf": "Bookshelf Stats Console",
   "gui.apothicenchantingaddition.stat.eterna": "Eterna: %s",
@@ -31,5 +31,7 @@
   "gui.apothicenchantingaddition.refresh": "Refresh",
   "block.apothicenchantingaddition.flux_anvil": "Flux Anvil",
   "gui.apothicenchantingaddition.not_enough_energy": "Not Enough Energy",
-  "gui.apothicenchantingaddition.anvil.cost": "Usage: %s FE"
+  "gui.apothicenchantingaddition.anvil.cost": "Usage: %s FE",
+  "item.apothicenchantingaddition.solidified_flux_experience": "Solidified Flux Experience",
+  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "Compressed Solidified Flux Experience"
 }

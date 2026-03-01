@@ -1,6 +1,7 @@
 package com.chuan.apothicenchantingaddition.block;
 
 import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
+import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
 import dev.shadowsoffire.apothic_enchanting.api.EnchantmentStatBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -12,17 +13,16 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
-public class StatsBookshelfBlock extends Block implements EntityBlock, EnchantmentStatBlock {
+public class FluxStatsBookshelfBlock extends Block implements EntityBlock, EnchantmentStatBlock {
 
     private final Tier tier;
 
-    public StatsBookshelfBlock(Properties properties, Tier tier) {
+    public FluxStatsBookshelfBlock(Properties properties, Tier tier) {
         super(properties);
         this.tier = tier;
     }
@@ -119,7 +119,7 @@ public class StatsBookshelfBlock extends Block implements EntityBlock, Enchantme
 
                     @Override
                     public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int containerId, net.minecraft.world.entity.player.Inventory inventory, net.minecraft.world.entity.player.Player player) {
-                        return new com.chuan.apothicenchantingaddition.menu.StatsBookshelfMenu(containerId, inventory, entity);
+                        return new FluxStatsBookshelfMenu(containerId, inventory, entity);
                     }
                 }, pos); // 传入 pos 以便 Menu 构造函数能读取
             }

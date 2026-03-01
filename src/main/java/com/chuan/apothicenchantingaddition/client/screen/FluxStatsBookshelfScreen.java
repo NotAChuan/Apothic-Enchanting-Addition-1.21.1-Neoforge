@@ -1,7 +1,7 @@
 package com.chuan.apothicenchantingaddition.client.screen;
 
 import com.chuan.apothicenchantingaddition.block.Tier;
-import com.chuan.apothicenchantingaddition.menu.StatsBookshelfMenu;
+import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
 import com.chuan.apothicenchantingaddition.network.UpdateStatsPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-public class StatsBookshelfScreen extends AbstractContainerScreen<StatsBookshelfMenu> {
+public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsBookshelfMenu> {
 
     private StatsSlider eternaSlider;
     private StatsSlider quantaSlider;
@@ -24,7 +24,7 @@ public class StatsBookshelfScreen extends AbstractContainerScreen<StatsBookshelf
     private final Tier tier;
     private final int MAX_ENERGY = 1000000;
 
-    public StatsBookshelfScreen(StatsBookshelfMenu menu, Inventory playerInventory, Component title) {
+    public FluxStatsBookshelfScreen(FluxStatsBookshelfMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 194;
         this.imageHeight = 142;
