@@ -2,7 +2,9 @@ package com.chuan.apothicenchantingaddition.menu;
 
 import com.chuan.apothicenchantingaddition.block.entity.FluxEnchantingTableBlockEntity;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
+import com.chuan.apothicenchantingaddition.network.FluxCluePayload;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import dev.shadowsoffire.apothic_enchanting.table.ApothEnchantmentMenu;
 import dev.shadowsoffire.apothic_enchanting.table.ApothEnchantmentHelper;
 import dev.shadowsoffire.apothic_enchanting.table.EnchantmentTableStats;
 import net.minecraft.core.BlockPos;
@@ -25,7 +27,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.neoforged.neoforge.items.SlotItemHandler;
+import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FluxEnchantingMenu extends AbstractContainerMenu {
@@ -34,6 +38,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess levelAccess;
     private final RandomSource random = RandomSource.create();
     private final DataSlot enchantmentSeed = DataSlot.standalone();
+    private final Player player; // 【新增】保存当前玩家引用，用于定向发包
 
     public final int[] costs = new int[3];
     public final int[] enchantClue = new int[]{-1, -1, -1};
@@ -42,10 +47,20 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final DataSlot energyUpper = DataSlot.standalone();
     private final DataSlot energyLower = DataSlot.standalone();
 
-    // 【新增】：同步神化三大属性
     private final DataSlot eternaSlot = DataSlot.standalone();
     private final DataSlot quantaSlot = DataSlot.standalone();
     private final DataSlot arcanaSlot = DataSlot.standalone();
+
+    // 客户端缓存线索数据
+    public final List<EnchantmentInstance>[] clientClues = new List[]{List.of(), List.of(), List.of()};
+    public final boolean[] clientAllRevealed = new boolean[3];
+
+    public void setClues(int slot, List<EnchantmentInstance> clues, boolean allRevealed) {
+        if (slot >= 0 && slot < 3) {
+            this.clientClues[slot] = clues;
+            this.clientAllRevealed[slot] = allRevealed;
+        }
+    }
 
     public FluxEnchantingMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(containerId, playerInventory, (FluxEnchantingTableBlockEntity) playerInventory.player.level().getBlockEntity(extraData.readBlockPos()));
@@ -54,6 +69,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     public FluxEnchantingMenu(int containerId, Inventory playerInventory, FluxEnchantingTableBlockEntity entity) {
         super(ModRegistry.FLUX_ENCHANTING_MENU.get(), containerId);
         this.blockEntity = entity;
+        this.player = playerInventory.player; // 【新增】赋值玩家
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
 
         this.addSlot(new SlotItemHandler(entity.inventory, 0, 15, 47) {
@@ -86,8 +102,6 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         this.addDataSlot(DataSlot.shared(levelClue, 2));
         this.addDataSlot(energyUpper);
         this.addDataSlot(energyLower);
-
-        // 添加属性同步槽
         this.addDataSlot(eternaSlot);
         this.addDataSlot(quantaSlot);
         this.addDataSlot(arcanaSlot);
@@ -99,33 +113,62 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         ItemStack stack = blockEntity.inventory.getStackInSlot(0);
 
         EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.isEmpty() ? 0 : stack.getEnchantmentValue());
-        // 保存属性以便推送到客户端 GUI
         eternaSlot.set(Float.floatToIntBits(stats.eterna()));
         quantaSlot.set(Float.floatToIntBits(stats.quanta()));
         arcanaSlot.set(Float.floatToIntBits(stats.arcana()));
 
-        if (!stack.isEmpty() && stack.isEnchantable()) {
+        // 【优化】接入神化的被诅咒装备拯救逻辑
+        boolean isEnchantable = !stack.isEmpty() && (stack.isEnchantable() || ApothEnchantmentMenu.isEnchantableEnough(stack));
+
+        if (isEnchantable) {
+            // 【第一步：绝对纯净的第一循环，专门算 Cost】
             this.random.setSeed(this.enchantmentSeed.get());
             for (int i = 0; i < 3; ++i) {
                 this.costs[i] = ApothEnchantmentHelper.getEnchantmentCost(random, i, stats.eterna(), stack);
                 this.enchantClue[i] = -1;
                 this.levelClue[i] = -1;
+            }
 
+            // 【第二步：第二循环，专门算具体魔咒和发包】
+            for (int i = 0; i < 3; ++i) {
                 if (this.costs[i] > 0) {
                     net.minecraft.core.Registry<Enchantment> enchRegistry = blockEntity.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
+
+                    // 每次都干净利落地重置为当前槽位的专属种子！
+                    this.random.setSeed((long)(this.enchantmentSeed.get() + i));
+
                     List<EnchantmentInstance> list = ApothEnchantmentHelper.selectEnchantment(random, stack, this.costs[i], stats, enchRegistry.asLookup());
+
                     if (list != null && !list.isEmpty()) {
-                        EnchantmentInstance instance = list.get(0);
-                        this.enchantClue[i] = enchRegistry.getId(instance.enchantment.value());
-                        this.levelClue[i] = instance.level;
+                        EnchantmentInstance firstInstance = list.get(0);
+                        this.enchantClue[i] = enchRegistry.getId(firstInstance.enchantment.value());
+                        this.levelClue[i] = firstInstance.level;
+
+                        int maxClues = stats.clues();
+                        List<EnchantmentInstance> displayClues = new ArrayList<>();
+                        boolean allRevealed = false;
+
+                        if (maxClues > 0) {
+                            List<EnchantmentInstance> copyList = new ArrayList<>(list);
+                            while (displayClues.size() < maxClues && !copyList.isEmpty()) {
+                                displayClues.add(copyList.remove(this.blockEntity.getLevel().random.nextInt(copyList.size())));
+                            }
+                            allRevealed = copyList.isEmpty(); // 这个布尔值就是决定是否显示那行金字的关键！
+                        }
+
+                        if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                            PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, displayClues, allRevealed));
+                        }
+                    } else {
+                        if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                            PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
+                        }
+                    }
+                } else {
+                    if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                        PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
                     }
                 }
-            }
-        } else {
-            for (int i = 0; i < 3; ++i) {
-                this.costs[i] = 0;
-                this.enchantClue[i] = -1;
-                this.levelClue[i] = -1;
             }
         }
         this.broadcastChanges();

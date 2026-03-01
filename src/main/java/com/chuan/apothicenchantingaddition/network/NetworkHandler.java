@@ -3,6 +3,7 @@ package com.chuan.apothicenchantingaddition.network;
 import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -25,9 +26,30 @@ public class NetworkHandler {
                 FluxActionPayload.CODEC,
                 NetworkHandler::handleFluxAction
         );
+
+        // ================= 【新增】 =================
+        // 注册服务端到客户端 (S ➔ C) 的线索盲盒包
+        registrar.playToClient(
+                FluxCluePayload.TYPE,
+                FluxCluePayload.STREAM_CODEC,
+                NetworkHandler::handleFluxClue
+        );
+        // ===========================================
     }
 
-    // 新增处理逻辑
+    // ================= 【新增】 =================
+    // 客户端处理收到的盲盒线索 (S ➔ C)
+    public static void handleFluxClue(final FluxCluePayload payload, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            // context.player() 会自动获取当前端的玩家对象（客户端就是 LocalPlayer）
+            Player player = context.player();
+            if (player != null && player.containerMenu instanceof com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu menu) {
+                menu.setClues(payload.slot(), payload.clues(), payload.allRevealed());
+            }
+        });
+    }
+    // ===========================================
+
     public static void handleFluxAction(final FluxActionPayload payload, final IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {

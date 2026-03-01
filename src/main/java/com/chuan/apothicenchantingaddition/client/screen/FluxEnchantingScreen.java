@@ -132,6 +132,37 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
+
+        // ================= 【新增：附魔按钮的魔咒线索提示】 =================
+        for (int i = 0; i < 3; i++) {
+            int btnX = x + 60;
+            int btnY = y + 14 + 19 * i;
+
+            if (mouseX >= btnX && mouseX <= btnX + 108 && mouseY >= btnY && mouseY <= btnY + 19) {
+                int costLevel = menu.costs[i];
+                if (costLevel > 0) {
+                    java.util.List<Component> tooltip = new java.util.ArrayList<>();
+
+                    // 直接从 Menu 缓存中读取同步过来的线索
+                    java.util.List<net.minecraft.world.item.enchantment.EnchantmentInstance> clues = menu.clientClues[i];
+
+                    if (clues != null && !clues.isEmpty()) {
+                        for (net.minecraft.world.item.enchantment.EnchantmentInstance clue : clues) {
+                            // 调用 getFullname，神化的 Mixin 会在这里自动接管并注入彩色 TooltipUtil 样式！
+                            Component enchantName = net.minecraft.world.item.enchantment.Enchantment.getFullname(clue.enchantment, clue.level);
+                            tooltip.add(enchantName);
+                        }
+
+                    } else {
+                        // 盲盒状态：线索为 0
+                        tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", "")).withStyle(net.minecraft.ChatFormatting.WHITE));
+                    }
+
+                    guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+                }
+            }
+        }
+
         if (mouseX >= x + 4 && mouseX <= x + 10 && mouseY >= y + 10 && mouseY <= y + 80) {
             java.util.List<Component> tooltips = java.util.List.of(
                     Component.translatable("gui.apothicenchantingaddition.energy.fe", String.format("%,d", menu.getEnergy()), String.format("%,d", MAX_ENERGY)),
