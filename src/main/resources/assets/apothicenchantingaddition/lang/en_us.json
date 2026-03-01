@@ -33,5 +33,8 @@
   "gui.apothicenchantingaddition.not_enough_energy": "Not Enough Energy",
   "gui.apothicenchantingaddition.anvil.cost": "Usage: %s FE",
   "item.apothicenchantingaddition.solidified_flux_experience": "Solidified Flux Experience",
-  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "Compressed Solidified Flux Experience"
+  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "Compressed Solidified Flux Experience",
+  "gui.apothicenchantingaddition.all_revealed": "The runes reveal all",
+  "gui.apothicenchantingaddition.some_revealed": "The Runes Reveal"
+
 }

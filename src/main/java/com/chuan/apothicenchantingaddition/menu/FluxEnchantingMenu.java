@@ -22,8 +22,10 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.EnchantedBookItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.neoforged.neoforge.items.SlotItemHandler;
@@ -38,7 +40,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess levelAccess;
     private final RandomSource random = RandomSource.create();
     private final DataSlot enchantmentSeed = DataSlot.standalone();
-    private final Player player; // 【新增】保存当前玩家引用，用于定向发包
+    private final Player player;
 
     public final int[] costs = new int[3];
     public final int[] enchantClue = new int[]{-1, -1, -1};
@@ -51,9 +53,23 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final DataSlot quantaSlot = DataSlot.standalone();
     private final DataSlot arcanaSlot = DataSlot.standalone();
 
-    // 客户端缓存线索数据
     public final List<EnchantmentInstance>[] clientClues = new List[]{List.of(), List.of(), List.of()};
     public final boolean[] clientAllRevealed = new boolean[3];
+
+    // ==========================================
+    // ✨ [调整] 严格的附魔资格计算（不拦截放入，只拦截附魔生成）
+    // ==========================================
+    public static boolean canEnchantItem(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.is(Items.ENCHANTED_BOOK)) return false; // 附魔书拒绝二次附魔
+
+        // 如果物品的附魔价值 <= 0 且不是普通书，说明它是石头、泥土等绝对不可附魔的杂物
+        if (stack.getEnchantmentValue() <= 0 && !stack.is(Items.BOOK)) {
+            return false;
+        }
+
+        return stack.isEnchantable() || ApothEnchantmentMenu.isEnchantableEnough(stack);
+    }
 
     public void setClues(int slot, List<EnchantmentInstance> clues, boolean allRevealed) {
         if (slot >= 0 && slot < 3) {
@@ -69,17 +85,32 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     public FluxEnchantingMenu(int containerId, Inventory playerInventory, FluxEnchantingTableBlockEntity entity) {
         super(ModRegistry.FLUX_ENCHANTING_MENU.get(), containerId);
         this.blockEntity = entity;
-        this.player = playerInventory.player; // 【新增】赋值玩家
+        this.player = playerInventory.player;
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
 
+        // ✨ [调整] 机器槽位 0：不再限制放入，像原版一样允许塞入任何东西
         this.addSlot(new SlotItemHandler(entity.inventory, 0, 15, 47) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return true;
+            }
+
             @Override
             public void setChanged() {
                 super.setChanged();
                 slotsChanged(new SimpleContainer(0));
             }
         });
-        this.addSlot(new SlotItemHandler(entity.inventory, 1, 35, 47));
+
+        // 机器槽位 1：刷新材料槽
+        this.addSlot(new SlotItemHandler(entity.inventory, 1, 35, 47) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                String configItemStr = ApothicAdditionConfig.FLUX_ENCHANTER_REFRESH_ITEM.get();
+                Item requiredItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(configItemStr));
+                return stack.is(requiredItem);
+            }
+        });
 
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
@@ -117,11 +148,9 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         quantaSlot.set(Float.floatToIntBits(stats.quanta()));
         arcanaSlot.set(Float.floatToIntBits(stats.arcana()));
 
-        // 【优化】接入神化的被诅咒装备拯救逻辑
-        boolean isEnchantable = !stack.isEmpty() && (stack.isEnchantable() || ApothEnchantmentMenu.isEnchantableEnough(stack));
+        boolean isEnchantable = canEnchantItem(stack);
 
         if (isEnchantable) {
-            // 【第一步：绝对纯净的第一循环，专门算 Cost】
             this.random.setSeed(this.enchantmentSeed.get());
             for (int i = 0; i < 3; ++i) {
                 this.costs[i] = ApothEnchantmentHelper.getEnchantmentCost(random, i, stats.eterna(), stack);
@@ -129,13 +158,11 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
                 this.levelClue[i] = -1;
             }
 
-            // 【第二步：第二循环，专门算具体魔咒和发包】
             for (int i = 0; i < 3; ++i) {
                 if (this.costs[i] > 0) {
                     net.minecraft.core.Registry<Enchantment> enchRegistry = blockEntity.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 
-                    // 每次都干净利落地重置为当前槽位的专属种子！
-                    this.random.setSeed((long)(this.enchantmentSeed.get() + i));
+                    this.random.setSeed((long) (this.enchantmentSeed.get() + i));
 
                     List<EnchantmentInstance> list = ApothEnchantmentHelper.selectEnchantment(random, stack, this.costs[i], stats, enchRegistry.asLookup());
 
@@ -153,7 +180,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
                             while (displayClues.size() < maxClues && !copyList.isEmpty()) {
                                 displayClues.add(copyList.remove(this.blockEntity.getLevel().random.nextInt(copyList.size())));
                             }
-                            allRevealed = copyList.isEmpty(); // 这个布尔值就是决定是否显示那行金字的关键！
+                            allRevealed = copyList.isEmpty();
                         }
 
                         if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
@@ -170,8 +197,17 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
                     }
                 }
             }
+        } else {
+            // ✨ [调整] 放入杂物或槽位为空时，强制将 costs 设为 0，这会让右侧 UI 瞬间全空
+            for (int i = 0; i < 3; ++i) {
+                this.costs[i] = 0;
+                this.enchantClue[i] = -1;
+                this.levelClue[i] = -1;
+                if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
+                }
+            }
         }
-        this.broadcastChanges();
     }
 
     public void handleAction(Player player, int actionId) {
@@ -198,19 +234,23 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
             if (costLevel > 0 && !stack.isEmpty() && blockEntity.energyStorage.getEnergyStored() >= feCost) {
                 EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.getEnchantmentValue());
-                this.random.setSeed(this.enchantmentSeed.get());
+                this.random.setSeed((long) (this.enchantmentSeed.get() + slot));
                 net.minecraft.core.Registry<Enchantment> enchRegistry = blockEntity.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
                 List<EnchantmentInstance> list = ApothEnchantmentHelper.selectEnchantment(random, stack, costLevel, stats, enchRegistry.asLookup());
 
                 if (list != null && !list.isEmpty()) {
                     blockEntity.energyStorage.extractEnergy(feCost, false);
-                    if (stack.is(net.minecraft.world.item.Items.BOOK)) {
-                        stack = new ItemStack(net.minecraft.world.item.Items.ENCHANTED_BOOK);
-                        blockEntity.inventory.setStackInSlot(0, stack);
+
+                    if (stack.is(Items.BOOK)) {
+                        stack = new ItemStack(Items.ENCHANTED_BOOK);
                     }
+
                     for (EnchantmentInstance instance : list) {
                         stack.enchant(instance.enchantment, instance.level);
                     }
+
+                    blockEntity.inventory.setStackInSlot(0, stack);
+
                     player.onEnchantmentPerformed(stack, costLevel);
                     this.enchantmentSeed.set(player.getEnchantmentSeed());
                     this.slotsChanged(new SimpleContainer(0));
@@ -227,11 +267,9 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         energyUpper.set(energy >> 16);
         energyLower.set(energy & 0xFFFF);
 
-        // 【智能刷新】：每秒(20t)自动检测一次周围书架是否变动
         if (!blockEntity.getLevel().isClientSide && blockEntity.getLevel().getGameTime() % 20 == 0) {
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
             EnchantmentTableStats currentStats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.isEmpty() ? 0 : stack.getEnchantmentValue());
-            // 检查属性是否发生改变，变了就自动刷新选项
             if (Float.floatToIntBits(currentStats.eterna()) != eternaSlot.get() ||
                     Float.floatToIntBits(currentStats.quanta()) != quantaSlot.get() ||
                     Float.floatToIntBits(currentStats.arcana()) != arcanaSlot.get()) {
@@ -240,11 +278,25 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         }
     }
 
-    public int getEnergy() { return (energyUpper.get() << 16) | (energyLower.get() & 0xFFFF); }
-    public float getEterna() { return Float.intBitsToFloat(eternaSlot.get()); }
-    public float getQuanta() { return Float.intBitsToFloat(quantaSlot.get()); }
-    public float getArcana() { return Float.intBitsToFloat(arcanaSlot.get()); }
-    public FluxEnchantingTableBlockEntity getBlockEntity() { return this.blockEntity; }
+    public int getEnergy() {
+        return (energyUpper.get() << 16) | (energyLower.get() & 0xFFFF);
+    }
+
+    public float getEterna() {
+        return Float.intBitsToFloat(eternaSlot.get());
+    }
+
+    public float getQuanta() {
+        return Float.intBitsToFloat(quantaSlot.get());
+    }
+
+    public float getArcana() {
+        return Float.intBitsToFloat(arcanaSlot.get());
+    }
+
+    public FluxEnchantingTableBlockEntity getBlockEntity() {
+        return this.blockEntity;
+    }
 
     @Override
     public boolean stillValid(Player player) {
@@ -260,38 +312,31 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
             ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
 
-            // 如果点击的是机器槽位 (0:附魔槽, 1:刷新材料槽) -> 将物品丢回玩家背包 (槽位 2 到 37)
             if (index == 0 || index == 1) {
                 if (!this.moveItemStackTo(itemstack1, 2, 38, true)) {
                     return ItemStack.EMPTY;
                 }
-            }
-            // 如果点击的是玩家背包或快捷栏 -> 将物品放入机器
-            else {
-                // 动态获取配置文件中定义的刷新物品（默认应该是青金石）
+            } else {
                 String configItemStr = ApothicAdditionConfig.FLUX_ENCHANTER_REFRESH_ITEM.get();
                 Item requiredItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse(configItemStr));
 
-                // 规则 1：如果是刷新物品，优先扔进槽位 1 (索引范围 1~2)
+                boolean movedToMachine = false;
+
                 if (itemstack1.is(requiredItem)) {
-                    if (!this.moveItemStackTo(itemstack1, 1, 2, false)) {
-                        return ItemStack.EMPTY;
-                    }
-                }
-                // 规则 2：其他所有装备、武器、书本，都扔进槽位 0 (索引范围 0~1)
-                else {
-                    if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
-                        return ItemStack.EMPTY;
-                    }
+                    movedToMachine = this.moveItemStackTo(itemstack1, 1, 2, false);
                 }
 
-                // 兜底规则：如果机器槽位满了，或者放不进去，就在玩家的主背包和快捷栏之间互相转移
-                if (itemstack1.getCount() == itemstack.getCount()) {
-                    if (index >= 2 && index < 29) { // 玩家主背包 -> 快捷栏
+                // ✨ [调整] 像原版附魔台一样，只要附魔槽是空的，任何东西都可以被 Shift 塞进去
+                if (!movedToMachine) {
+                    movedToMachine = this.moveItemStackTo(itemstack1, 0, 1, false);
+                }
+
+                if (!movedToMachine) {
+                    if (index >= 2 && index < 29) {
                         if (!this.moveItemStackTo(itemstack1, 29, 38, false)) {
                             return ItemStack.EMPTY;
                         }
-                    } else if (index >= 29 && index < 38) { // 快捷栏 -> 玩家主背包
+                    } else if (index >= 29 && index < 38) {
                         if (!this.moveItemStackTo(itemstack1, 2, 29, false)) {
                             return ItemStack.EMPTY;
                         }
@@ -299,7 +344,6 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
                 }
             }
 
-            // 更新槽位状态
             if (itemstack1.isEmpty()) {
                 slot.setByPlayer(ItemStack.EMPTY);
             } else {

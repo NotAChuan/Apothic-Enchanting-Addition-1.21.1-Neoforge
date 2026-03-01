@@ -27,7 +27,6 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
-        // 【修改点】：按钮移动到槽位2上方 (x=35, y=25)，宽 22 像素，且文字改为纯 "刷新"
         this.addRenderableWidget(Button.builder(Component.literal("刷新"), b -> {
             PacketDistributor.sendToServer(new FluxActionPayload(menu.getBlockEntity().getBlockPos(), 0));
         }).bounds(x + 35, y + 25, 22, 14).build());
@@ -44,22 +43,20 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         guiGraphics.fill(x + imageWidth - 1, y + 1, x + imageWidth, y + imageHeight, 0xFF555555);
         guiGraphics.fill(x + 1, y + imageHeight - 1, x + imageWidth, y + imageHeight, 0xFF555555);
 
-        // 绘制槽位 0(附魔) 和 槽位 1(青金石)
+        // 绘制槽位
         drawSlotBackground(guiGraphics, x + 14, y + 46, 18, 18);
         drawSlotBackground(guiGraphics, x + 34, y + 46, 18, 18);
 
-        // 【新增】：绘制玩家 3x9 物品栏背景槽位
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
                 drawSlotBackground(guiGraphics, x + 7 + j * 18, y + 83 + i * 18, 18, 18);
             }
         }
-        // 【新增】：绘制玩家快捷栏 1x9 背景槽位
         for (int k = 0; k < 9; ++k) {
             drawSlotBackground(guiGraphics, x + 7 + k * 18, y + 141, 18, 18);
         }
 
-        // 绘制左侧能量条
+        // 绘制能量条
         int energyBarX = x + 4;
         int energyBarY = y + 10;
         int energyBarWidth = 6;
@@ -71,7 +68,6 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
             guiGraphics.fill(energyBarX + 1, energyBarY + energyBarHeight - 1 - fillHeight, energyBarX + energyBarWidth - 1, energyBarY + energyBarHeight - 1, 0xFFFF0000);
         }
 
-        // 绘制附魔选项按钮
         int baseCost = ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
         for (int i = 0; i < 3; i++) {
             int btnX = x + 60;
@@ -90,7 +86,6 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
             }
         }
 
-        // 【新增】：绘制神化三大属性 (位阶、量子化、阿卡那) 悬停显示在附魔选项框的正下方
         int statY = y + 73;
         guiGraphics.drawString(this.font, Component.literal("E: " + String.format("%.1f", menu.getEterna())), x + 60, statY, 0x55FF55, false);
         guiGraphics.drawString(this.font, Component.literal("Q: " + String.format("%.1f%%", menu.getQuanta())), x + 95, statY, 0xFF5555, false);
@@ -112,7 +107,9 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         for (int i = 0; i < 3; i++) {
             int btnX = x + 60;
             int btnY = y + 14 + 19 * i;
-            if (mouseX >= btnX && mouseX <= btnX + 108 && mouseY >= btnY && mouseY <= btnY + 19) {
+
+            // 🐛 [修复] 同样缩小实际的点击判定框，防止边角误触
+            if (mouseX > btnX && mouseX < btnX + 107 && mouseY > btnY && mouseY < btnY + 18) {
                 int costLevel = menu.costs[i];
                 int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
                 if (costLevel > 0 && menu.getEnergy() >= feCost) {
@@ -133,28 +130,35 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
-        // ================= 【新增：附魔按钮的魔咒线索提示】 =================
         for (int i = 0; i < 3; i++) {
             int btnX = x + 60;
             int btnY = y + 14 + 19 * i;
 
-            if (mouseX >= btnX && mouseX <= btnX + 108 && mouseY >= btnY && mouseY <= btnY + 19) {
+            // 🐛 [修复3] 悬停判定框严格向内缩小一点，并且去除等号 (=) 避免重叠
+            if (mouseX > btnX && mouseX < btnX + 107 && mouseY > btnY && mouseY < btnY + 18) {
                 int costLevel = menu.costs[i];
                 if (costLevel > 0) {
                     java.util.List<Component> tooltip = new java.util.ArrayList<>();
-
-                    // 直接从 Menu 缓存中读取同步过来的线索
                     java.util.List<net.minecraft.world.item.enchantment.EnchantmentInstance> clues = menu.clientClues[i];
 
                     if (clues != null && !clues.isEmpty()) {
+
+                        // ✨ [修复2] 将全揭示判定移动到这里，优先加进列表，让它显示在第一行！
+                        if (menu.clientAllRevealed[i]) {
+                            // ✨ [修复1] 使用我们自己模组的专属翻译键，不再依赖神化内部
+                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed").withStyle(net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.UNDERLINE));
+                        }
+
                         for (net.minecraft.world.item.enchantment.EnchantmentInstance clue : clues) {
-                            // 调用 getFullname，神化的 Mixin 会在这里自动接管并注入彩色 TooltipUtil 样式！
                             Component enchantName = net.minecraft.world.item.enchantment.Enchantment.getFullname(clue.enchantment, clue.level);
                             tooltip.add(enchantName);
                         }
 
+                        if (!menu.clientAllRevealed[i]) {
+                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed").withStyle(net.minecraft.ChatFormatting.GRAY));
+                        }
+
                     } else {
-                        // 盲盒状态：线索为 0
                         tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", "")).withStyle(net.minecraft.ChatFormatting.WHITE));
                     }
 

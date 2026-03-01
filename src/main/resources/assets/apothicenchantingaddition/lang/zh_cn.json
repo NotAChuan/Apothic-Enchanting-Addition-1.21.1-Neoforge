@@ -33,5 +33,7 @@
   "gui.apothicenchantingaddition.not_enough_energy": "能量不足",
   "gui.apothicenchantingaddition.anvil.cost": "耗电: %s FE",
   "item.apothicenchantingaddition.solidified_flux_experience": "固化通量经验",
-  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "压缩固化通量经验"
+  "item.apothicenchantingaddition.compressed_solidified_flux_experience": "压缩固化通量经验",
+  "gui.apothicenchantingaddition.all_revealed": "符文揭示了一切",
+  "gui.apothicenchantingaddition.some_revealed": "符文之语"
 }

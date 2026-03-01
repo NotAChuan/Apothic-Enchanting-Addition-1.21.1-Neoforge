@@ -14,37 +14,27 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class FluxEnchantingTableBlockEntity extends BlockEntity {
 
-    // 10 亿容量，无限制输入速率
-    public final EnergyStorage energyStorage = new EnergyStorage(1000000000, Integer.MAX_VALUE, Integer.MAX_VALUE) {
-        @Override
-        public int receiveEnergy(int maxReceive, boolean simulate) {
-            int ret = super.receiveEnergy(maxReceive, simulate);
-            if (!simulate && ret > 0) setChanged();
-            return ret;
-        }
+    // ✨ [新增] 能量快照，用于对比能量是否发生了实质性变化
+    private int lastEnergy = -1;
 
-        // 补上提取能量时的更新标记
-        @Override
-        public int extractEnergy(int maxExtract, boolean simulate) {
-            int ret = super.extractEnergy(maxExtract, simulate);
-            if (!simulate && ret > 0) setChanged();
-            return ret;
-        }
-    };
+    // ✨ [修复] 彻底去除了内部重写的 receiveEnergy 和 extractEnergy。
+    // 不要让外部线缆输入或内部每 tick 消耗时疯狂触发 setChanged()。
+    public final EnergyStorage energyStorage = new EnergyStorage(1000000000, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     // 槽位 0：附魔物品位，槽位 1：刷新耗材位
     public final ItemStackHandler inventory = new ItemStackHandler(2) {
         @Override
         protected void onContentsChanged(int slot) {
+            // 物品改变的频率极低（只有玩家手动拿放或自动化管道抽入），这里保留 setChanged() 是完全合理的
             setChanged();
         }
 
         @Override
         public int getSlotLimit(int slot) {
             if (slot == 0) {
-                return 1; // 槽位 0 (附魔槽) 强制只能放 1 个物品
+                return 1;
             }
-            return super.getSlotLimit(slot); // 槽位 1 (青金石等耗材) 保持默认的 64 个上限
+            return super.getSlotLimit(slot);
         }
     };
 
@@ -58,8 +48,14 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
         int tickCost = ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get();
         if (tickCost > 0 && energyStorage.getEnergyStored() >= tickCost) {
             energyStorage.extractEnergy(tickCost, false);
-            // 这里我们不需要像书架那样发送状态包，因为断电只需在菜单里表现为按钮变灰即可
-            setChanged();
+        }
+        // 每秒（20 tick）集中检查一次。如果这 1 秒内（无论是因为每 tick 扣电，还是线缆输入）能量变了，才向硬盘汇报一次！
+        if (level.getGameTime() % 20 == 0) {
+            int currentEnergy = energyStorage.getEnergyStored();
+            if (currentEnergy != lastEnergy) {
+                setChanged();
+                lastEnergy = currentEnergy;
+            }
         }
     }
 
@@ -79,6 +75,8 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
         if (tag.contains("Inventory")) {
             inventory.deserializeNBT(registries, (CompoundTag) tag.get("Inventory"));
         }
+        // 初始化时同步一下能量快照
+        this.lastEnergy = energyStorage.getEnergyStored();
     }
 
     @Override
