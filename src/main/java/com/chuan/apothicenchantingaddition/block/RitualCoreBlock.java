@@ -86,7 +86,7 @@ public class RitualCoreBlock extends Block implements EntityBlock {
 
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return level.getBlockState(pos.below()).isSolid(); // 必须下方是实心方块
+        return level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP); // 必须下方是实心方块
     }
 
     @Nullable

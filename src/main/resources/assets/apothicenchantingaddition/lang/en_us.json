@@ -35,6 +35,17 @@
   "item.apothicenchantingaddition.solidified_flux_experience": "Solidified Flux Experience",
   "item.apothicenchantingaddition.compressed_solidified_flux_experience": "Compressed Solidified Flux Experience",
   "gui.apothicenchantingaddition.all_revealed": "The runes reveal all",
-  "gui.apothicenchantingaddition.some_revealed": "The Runes Reveal"
+  "gui.apothicenchantingaddition.some_revealed": "The Runes Reveal",
+  "block.apothicenchantingaddition.flux_spawner": "Flux Spawner",
+  "config.apothicenchantingaddition.flux_spawner_energy_per_egg": "Energy Cost Per Egg",
+  "gui.apothicenchantingaddition.flux_spawner": "Flux Spawner",
+  "gui.apothicenchantingaddition.flux_spawner.min_delay": "Min Delay: %s",
+  "gui.apothicenchantingaddition.flux_spawner.max_delay": "Max Delay: %s",
+  "gui.apothicenchantingaddition.flux_spawner.spawn_count": "Spawn Count: %s",
+  "gui.apothicenchantingaddition.flux_spawner.redstone": "Redstone: %s",
+  "gui.apothicenchantingaddition.flux_spawner.echoing": "Echoing: %s",
+  "gui.apothicenchantingaddition.flux_spawner.on": "On",
+  "gui.apothicenchantingaddition.flux_spawner.off": "Off",
+  "gui.apothicenchantingaddition.flux_spawner.energy": "Energy: %s / %s FE"
 
 }

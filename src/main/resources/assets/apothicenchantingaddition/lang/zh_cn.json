@@ -35,5 +35,16 @@
   "item.apothicenchantingaddition.solidified_flux_experience": "固化通量经验",
   "item.apothicenchantingaddition.compressed_solidified_flux_experience": "压缩固化通量经验",
   "gui.apothicenchantingaddition.all_revealed": "符文揭示了一切",
-  "gui.apothicenchantingaddition.some_revealed": "符文之语"
+  "gui.apothicenchantingaddition.some_revealed": "符文之语",
+  "block.apothicenchantingaddition.flux_spawner": "通量刷怪笼",
+  "config.apothicenchantingaddition.flux_spawner_energy_per_egg": "刷怪笼耗电量 (每个刷怪蛋)",
+  "gui.apothicenchantingaddition.flux_spawner": "通量刷怪笼",
+  "gui.apothicenchantingaddition.flux_spawner.min_delay": "最小延迟: %s",
+  "gui.apothicenchantingaddition.flux_spawner.max_delay": "最大延迟: %s",
+  "gui.apothicenchantingaddition.flux_spawner.spawn_count": "刷怪数量: %s",
+  "gui.apothicenchantingaddition.flux_spawner.redstone": "红石控制: %s",
+  "gui.apothicenchantingaddition.flux_spawner.echoing": "回响等级: %s",
+  "gui.apothicenchantingaddition.flux_spawner.on": "开启",
+  "gui.apothicenchantingaddition.flux_spawner.off": "忽略",
+  "gui.apothicenchantingaddition.flux_spawner.energy": "能量: %s / %s FE"
 }

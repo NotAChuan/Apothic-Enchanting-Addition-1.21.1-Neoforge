@@ -18,6 +18,9 @@ public class ApothicAdditionConfig {
 
     public static final ModConfigSpec.IntValue FLUX_ANVIL_BASE_COST;
 
+    // 新增：通量刷怪笼配置
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_ENERGY_PER_EGG;
+
     static {
         BUILDER.push("Energy Settings");
 
@@ -61,7 +64,19 @@ public class ApothicAdditionConfig {
                         "通量铁砧每级操作的基础 FE 耗电量（总耗电 = 操作等级 * 基础耗电）")
                 .defineInRange("fluxAnvilBaseCost", 1000, 1, Integer.MAX_VALUE);
 
-        BUILDER.pop();
+        BUILDER.pop(); // Pop Flux Anvil
+
+        // 通量刷怪笼设置区域
+        BUILDER.push("Flux Spawner");
+
+        FLUX_SPAWNER_ENERGY_PER_EGG = BUILDER
+                .comment("Base energy parameter for the Flux Spawner.",
+                        "通量刷怪笼的基础耗电参数。",
+                        "每 tick 耗电公式: 基础*刷怪蛋数量 + 基础*(800/最大延迟) + 基础*刷怪数量 + 基础*回响等级*2")
+                .defineInRange("fluxSpawnerEnergyPerEgg", 1000, 0, Integer.MAX_VALUE);
+
+        BUILDER.pop(); // Pop Flux Spawner
+
         SPEC = BUILDER.build();
     }
 }

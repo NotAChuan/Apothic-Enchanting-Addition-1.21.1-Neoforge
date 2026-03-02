@@ -1,31 +1,25 @@
 package com.chuan.apothicenchantingaddition;
 
-import com.chuan.apothicenchantingaddition.client.ClientModEvents;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.network.NetworkHandler;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
-import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
-
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -99,6 +93,20 @@ public class ApothicEnchantingAddition {
                 ModRegistry.FLUX_ANVIL_BE.get(),
                 (be, side) -> be.getEnergyStorage()
         );
+
+        // 注册通量刷怪笼的能量接收能力
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModRegistry.FLUX_SPAWNER_BE.get(),
+                (be, side) -> be.energyStorage
+        );
+
+        // 注册通量刷怪笼的物品交互能力 (只暴露输出槽，允许从所有面抽取)
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModRegistry.FLUX_SPAWNER_BE.get(),
+                (be, side) -> be.outputItemHandler
+        );
     }
 
     @SubscribeEvent
@@ -108,7 +116,7 @@ public class ApothicEnchantingAddition {
         BlockPos placePos = event.getPos().relative(event.getFace());
 
         // 检查下方是否有方块
-        if (!level.getBlockState(placePos.below()).isSolid()) return;
+        if (!level.getBlockState(placePos.below()).isFaceSturdy(level, placePos .below(), Direction.UP)) return;
 
         // 在所有 RitualDrawingRecipe 中寻找匹配当前物品的配方
         level.getRecipeManager().getAllRecipesFor(ModRegistry.DRAWING_TYPE.get()).stream()

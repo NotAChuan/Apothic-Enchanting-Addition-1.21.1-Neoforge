@@ -2,10 +2,12 @@ package com.chuan.apothicenchantingaddition.registry;
 
 import com.chuan.apothicenchantingaddition.block.*;
 import com.chuan.apothicenchantingaddition.block.entity.FluxAnvilBlockEntity;
+import com.chuan.apothicenchantingaddition.block.entity.FluxSpawnerBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.RitualBlockEntity;
 import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.item.CompressedSolidifiedFluxExperienceItem;
 import com.chuan.apothicenchantingaddition.item.SolidifiedFluxExperienceItem;
+import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
 import com.chuan.apothicenchantingaddition.recipe.RitualCraftingRecipe;
 import com.chuan.apothicenchantingaddition.recipe.RitualDrawingRecipe;
@@ -60,6 +62,10 @@ public class ModRegistry {
                     .sound(SoundType.ANVIL)
                     .requiresCorrectToolForDrops()));
 
+    // 注册通量刷怪笼方块
+    public static final DeferredHolder<Block, FluxSpawnerBlock> FLUX_SPAWNER = BLOCKS.register("flux_spawner",
+            () -> new FluxSpawnerBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops().noOcclusion()));
+
     // ================== 物品 ==================
     public static final DeferredHolder<Item, BlockItem> FLUX_ANVIL_ITEM = ITEMS.register("flux_anvil",
             () -> new BlockItem(FLUX_ANVIL.get(), new Item.Properties()));
@@ -72,6 +78,9 @@ public class ModRegistry {
     public static final DeferredHolder<Item, Item> COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE = ITEMS.register("compressed_solidified_flux_experience",
             () -> new CompressedSolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
 
+    // 注册通量刷怪笼物品
+    public static final DeferredHolder<Item, BlockItem> FLUX_SPAWNER_ITEM = ITEMS.register("flux_spawner",
+            () -> new BlockItem(FLUX_SPAWNER.get(), new Item.Properties()));
 
     // ================== 方块实体 ==================
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
@@ -88,18 +97,20 @@ public class ModRegistry {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxAnvilBlockEntity>> FLUX_ANVIL_BE = BLOCK_ENTITIES.register("flux_anvil",
             () -> BlockEntityType.Builder.of(FluxAnvilBlockEntity::new, FLUX_ANVIL.get()).build(null));
 
-
     // 1. 注册通量附魔台方块与物品
     public static final DeferredHolder<Block, FluxEnchantingTableBlock> FLUX_ENCHANTING_TABLE = BLOCKS.register("flux_enchanting_table",
             () -> new FluxEnchantingTableBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops()));
 
-    // 注意：注册同名物品
     public static final DeferredHolder<Item, BlockItem> FLUX_ENCHANTING_TABLE_ITEM = ITEMS.register("flux_enchanting_table",
             () -> new BlockItem(FLUX_ENCHANTING_TABLE.get(), new Item.Properties()));
 
     // 2. 注册方块实体
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxEnchantingTableBlockEntity>> FLUX_ENCHANTING_TABLE_BE = BLOCK_ENTITIES.register("flux_enchanting_table",
             () -> BlockEntityType.Builder.of(FluxEnchantingTableBlockEntity::new, FLUX_ENCHANTING_TABLE.get()).build(null));
+
+    // 注册通量刷怪笼方块实体
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxSpawnerBlockEntity>> FLUX_SPAWNER_BE = BLOCK_ENTITIES.register("flux_spawner",
+            () -> BlockEntityType.Builder.of(FluxSpawnerBlockEntity::new, FLUX_SPAWNER.get()).build(null));
 
     // 3. 注册菜单类型 (Container)
     public static final DeferredHolder<MenuType<?>, MenuType<FluxEnchantingMenu>> FLUX_ENCHANTING_MENU = MENU_TYPES.register("flux_enchanting_menu",
@@ -111,6 +122,9 @@ public class ModRegistry {
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxAnvilMenu>> FLUX_ANVIL_MENU = MENU_TYPES.register("flux_anvil_menu",
             () -> IMenuTypeExtension.create(FluxAnvilMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<FluxSpawnerMenu>> FLUX_SPAWNER_MENU = MENU_TYPES.register("flux_spawner_menu",
+            () -> IMenuTypeExtension.create(FluxSpawnerMenu::new));
 
     // ================== 配方类型与序列化器 ==================
 
@@ -181,6 +195,8 @@ public class ModRegistry {
             event.accept(FLUX_ANVIL_ITEM.get());
             event.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
             event.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
+            // 把通量刷怪笼也加入创造模式物品栏
+            event.accept(FLUX_SPAWNER_ITEM.get());
         }
     }
 }
