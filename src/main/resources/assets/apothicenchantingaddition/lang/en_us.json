@@ -46,6 +46,7 @@
   "gui.apothicenchantingaddition.flux_spawner.echoing": "Echoing: %s",
   "gui.apothicenchantingaddition.flux_spawner.on": "On",
   "gui.apothicenchantingaddition.flux_spawner.off": "Off",
-  "gui.apothicenchantingaddition.flux_spawner.energy": "Energy: %s / %s FE"
+  "gui.apothicenchantingaddition.flux_spawner.energy": "Energy: %s / %s FE",
+  "jei.apothicenchantingaddition.ritual.time": "Crafting: %s s"
 
 }

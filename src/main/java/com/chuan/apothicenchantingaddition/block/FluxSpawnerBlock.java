@@ -173,4 +173,23 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
         return false;
     }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof FluxSpawnerBlockEntity fluxBE) {
+                // 遍历 72 个槽位 (8个输入 + 64个输出)，把里面的东西全部喷出来
+                for (int i = 0; i < fluxBE.inventory.getSlots(); i++) {
+                    ItemStack stack = fluxBE.inventory.getStackInSlot(i);
+                    if (!stack.isEmpty()) {
+                        net.minecraft.world.Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
+                    }
+                }
+                // 更新周围方块的状态
+                level.updateNeighbourForOutputSignal(pos, this);
+            }
+            super.onRemove(state, level, pos, newState, isMoving);
+        }
+    }
 }

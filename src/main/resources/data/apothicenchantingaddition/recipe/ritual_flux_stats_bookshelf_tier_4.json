@@ -1,0 +1,20 @@
+{
+  "type": "apothicenchantingaddition:ritual",
+  "inputs": [
+    { "item": "apothicenchantingaddition:flux_stats_bookshelf_tier_3" },
+    { "item": "apothic_enchanting:heart_seashelf" },
+    { "item": "apothic_enchanting:blazing_hellshelf" },
+    { "item": "apothic_enchanting:pearl_endshelf" },
+    { "item": "apothic_enchanting:draconic_endshelf" },
+    { "item": "apothic_enchanting:echoing_sculkshelf" },
+    { "item": "apothic_enchanting:soul_touched_sculkshelf" },
+    { "item": "apothic_enchanting:sightshelf_t2" },
+    { "item": "apothic_enchanting:treasure_shelf" },
+    { "item": "apothic_enchanting:geode_shelf" }
+  ],
+  "output_item": {
+    "id": "apothicenchantingaddition:flux_stats_bookshelf_tier_4",
+    "count": 1
+  },
+  "craft_time": 80
+}

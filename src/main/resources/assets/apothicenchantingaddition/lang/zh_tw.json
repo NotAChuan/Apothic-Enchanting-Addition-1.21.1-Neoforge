@@ -46,5 +46,6 @@
   "gui.apothicenchantingaddition.flux_spawner.echoing": "迴響等級: %s",
   "gui.apothicenchantingaddition.flux_spawner.on": "開啟",
   "gui.apothicenchantingaddition.flux_spawner.off": "忽略",
-  "gui.apothicenchantingaddition.flux_spawner.energy": "能量: %s / %s FE"
+  "gui.apothicenchantingaddition.flux_spawner.energy": "能量: %s / %s FE",
+  "jei.apothicenchantingaddition.ritual.time": "製作: %s 秒"
 }

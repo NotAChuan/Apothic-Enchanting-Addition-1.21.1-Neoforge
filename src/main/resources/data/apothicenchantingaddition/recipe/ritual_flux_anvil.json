@@ -1,0 +1,20 @@
+{
+  "type": "apothicenchantingaddition:ritual",
+  "inputs": [
+    { "item": "minecraft:anvil" },
+    { "item": "apothic_enchanting:inert_trident" },
+    { "item": "apothic_enchanting:extraction_tome" },
+    { "item": "apothic_enchanting:inert_trident" },
+    { "item": "apothic_enchanting:extraction_tome" },
+    { "item": "apothic_enchanting:inert_trident" },
+    { "item": "apothic_enchanting:extraction_tome" },
+    { "item": "apothic_enchanting:inert_trident" },
+    { "item": "apothic_enchanting:extraction_tome" }
+  ],
+  "output_item": {
+    "id": "apothicenchantingaddition:flux_anvil",
+    "count": 1
+  },
+  "output_entity": "minecraft:lightning_bolt",
+  "craft_time": 120
+}

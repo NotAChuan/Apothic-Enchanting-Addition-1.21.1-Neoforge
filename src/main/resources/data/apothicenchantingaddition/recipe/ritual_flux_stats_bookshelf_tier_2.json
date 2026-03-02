@@ -1,0 +1,20 @@
+{
+  "type": "apothicenchantingaddition:ritual",
+  "inputs": [
+    { "item": "apothicenchantingaddition:flux_stats_bookshelf_tier_1" },
+    { "item": "apothic_enchanting:hellshelf" },
+    { "item": "apothic_enchanting:hellshelf" },
+    { "item": "apothic_enchanting:hellshelf" },
+    { "item": "apothic_enchanting:seashelf" },
+    { "item": "apothic_enchanting:seashelf" },
+    { "item": "apothic_enchanting:seashelf" },
+    { "item": "apothic_enchanting:dormant_deepshelf" },
+    { "item": "apothic_enchanting:dormant_deepshelf" },
+    { "item": "apothic_enchanting:dormant_deepshelf" }
+  ],
+  "output_item": {
+    "id": "apothicenchantingaddition:flux_stats_bookshelf_tier_2",
+    "count": 1
+  },
+  "craft_time": 80
+}
