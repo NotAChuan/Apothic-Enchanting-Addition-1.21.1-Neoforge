@@ -53,6 +53,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private boolean redstoneControl = false;
     private int echoing = 0;
     private int delay = 200;
+    private int lastEnergy = 0;
 
     // 3. 与 Menu 通信的数据槽
     protected final ContainerData dataAccess = new ContainerData() {
@@ -122,69 +123,95 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
     public static void tick(Level level, BlockPos pos, BlockState state, FluxSpawnerBlockEntity entity) {
         if (level.isClientSide) return;
-        entity.autoOutputToBelow();
 
-        List<SpawnEggItem> validEggs = entity.getValidEggs();
-        if (validEggs.isEmpty()) return;
+        // 【极致优化 1】降低自动输出频率：每 10 tick (0.5秒) 执行一次即可，拯救服务器 TPS
+        if (level.getGameTime() % 10 == 0) {
+            entity.autoOutputToBelow();
+        }
+
+        // 【极致优化 2】零内存分配统计刷怪蛋：避免每 tick 创建 List 导致垃圾回收 (GC) 顿卡
+        int eggCount = 0;
+        for (int i = 0; i < 8; i++) {
+            if (!entity.inventory.getStackInSlot(i).isEmpty()) {
+                eggCount++;
+            }
+        }
+        if (eggCount == 0) return; // 没蛋不工作
 
         if (entity.redstoneControl && !level.hasNeighborSignal(pos)) return;
         if (entity.isOutputFull()) return;
 
-        // 5. 新版耗电计算公式
+        // 计算耗电
         int baseCost = ApothicAdditionConfig.FLUX_SPAWNER_ENERGY_PER_EGG.get();
-        // 基础*刷怪蛋数量 + 基础*(800/最大延迟) + 基础*刷怪数量 + 基础*回响等级*2
-        int energyCost = (baseCost * validEggs.size())
-                + (baseCost * (800 / Math.max(1, entity.maxDelay))) // 防止极少数除零意外
+        int energyCost = (baseCost * eggCount)
+                + (baseCost * (800 / Math.max(1, entity.maxDelay)))
                 + (baseCost * entity.spawnCount)
                 + (baseCost * entity.echoing * 2);
 
         if (entity.energyStorage.getEnergyStored() < energyCost) return;
 
+        // 扣除能量
         entity.energyStorage.extractEnergy(energyCost, false);
+
+        // 【极致优化 3】能量快照：每 20 tick (1秒) 检查一次能量变化并存盘，避免硬盘狂写或进度丢失
+        if (level.getGameTime() % 20 == 0) {
+            int currentEnergy = entity.energyStorage.getEnergyStored();
+            if (currentEnergy != entity.lastEnergy) {
+                entity.lastEnergy = currentEnergy;
+                entity.setChanged();
+            }
+        }
 
         entity.delay--;
         if (entity.delay <= 0) {
-            entity.generateLoot((ServerLevel) level, validEggs);
+            // 将遍历逻辑移入内部，不再传 List
+            entity.generateLoot((ServerLevel) level);
             int range = entity.maxDelay - entity.minDelay;
             entity.delay = entity.minDelay + (range > 0 ? level.random.nextInt(range) : 0);
             entity.setChanged();
         }
     }
 
-    private void generateLoot(ServerLevel serverLevel, List<SpawnEggItem> eggs) {
+    private void generateLoot(ServerLevel serverLevel) {
         FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(serverLevel);
         DamageSource damageSource = serverLevel.damageSources().playerAttack(fakePlayer);
 
-        // 1. 生成怪物战利品掉落
-        for (SpawnEggItem egg : eggs) {
-            EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-            ResourceKey<LootTable> lootTableKey = entityType.getDefaultLootTable();
-            LootTable lootTable = serverLevel.getServer().reloadableRegistries().getLootTable(lootTableKey);
+        int eggCount = 0; // 用于计算经验
 
-            Entity dummyEntity = entityType.create(serverLevel);
-            if (dummyEntity != null) {
-                LootParams params = new LootParams.Builder(serverLevel)
-                        .withParameter(LootContextParams.THIS_ENTITY, dummyEntity)
-                        .withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
-                        .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(this.worldPosition))
-                        .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, fakePlayer)
-                        .create(LootContextParamSets.ENTITY);
+        // 遍历前 8 个输入槽
+        for (int i = 0; i < 8; i++) {
+            ItemStack stack = this.inventory.getStackInSlot(i);
+            if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg) {
+                eggCount++;
 
-                int totalRolls = this.spawnCount * (1 + this.echoing);
-                for (int i = 0; i < totalRolls; i++) {
-                    insertLootToOutputs(lootTable.getRandomItems(params));
+                EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
+                ResourceKey<LootTable> lootTableKey = entityType.getDefaultLootTable();
+                LootTable lootTable = serverLevel.getServer().reloadableRegistries().getLootTable(lootTableKey);
+
+                Entity dummyEntity = entityType.create(serverLevel);
+                if (dummyEntity != null) {
+                    LootParams params = new LootParams.Builder(serverLevel)
+                            .withParameter(LootContextParams.THIS_ENTITY, dummyEntity)
+                            .withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
+                            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(this.worldPosition))
+                            .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, fakePlayer)
+                            .create(LootContextParamSets.ENTITY);
+
+                    int totalRolls = this.spawnCount * (1 + this.echoing);
+                    for (int j = 0; j < totalRolls; j++) {
+                        insertLootToOutputs(lootTable.getRandomItems(params));
+                    }
+                    dummyEntity.discard(); // 必须保留，防止内存泄漏
                 }
-                dummyEntity.discard();
             }
         }
 
-        // 2. 生成固化通量经验掉落
+        // 生成固化通量经验掉落
         int expBase = ApothicAdditionConfig.FLUX_SPAWNER_EXP_BASE_COUNT.get();
-        int expCount = expBase * eggs.size() * (1 + this.echoing);
+        int expCount = expBase * eggCount * (1 + this.echoing);
 
         if (expCount > 0) {
             List<ItemStack> expDrops = new java.util.ArrayList<>();
-            // 将巨大的经验产出数量按照每组 64 个进行安全切分
             while (expCount > 0) {
                 int size = Math.min(expCount, 64);
                 expDrops.add(new ItemStack(ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get(), size));
