@@ -128,9 +128,11 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
+
 tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:deprecation"
 }
+
 dependencies {
     api "curse.maven:ApothicEnchanting-1063926:7659120"
     api "curse.maven:Placebo-283644:6926281"

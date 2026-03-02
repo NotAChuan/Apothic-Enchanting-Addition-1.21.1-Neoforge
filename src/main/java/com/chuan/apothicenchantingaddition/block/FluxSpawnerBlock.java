@@ -123,7 +123,7 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
                 else if (targetStat == SpawnerStats.SPAWN_COUNT) {
                     int val = ((Number) statMod.value()).intValue();
                     int current = fluxBE.getSpawnCount();
-                    int next = Math.max(1, Math.min(16, current + val));
+                    int next = Math.max(2, Math.min(16, current + val));
                     if (current != next) {
                         fluxBE.setSpawnCount(next);
                         appliedAtLeastOne = true;

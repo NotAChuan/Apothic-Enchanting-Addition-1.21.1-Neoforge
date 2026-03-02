@@ -152,38 +152,45 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     private void generateLoot(ServerLevel serverLevel, List<SpawnEggItem> eggs) {
-        // 1. 创建虚拟玩家，作为伤害来源
         FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(serverLevel);
         DamageSource damageSource = serverLevel.damageSources().playerAttack(fakePlayer);
 
+        // 1. 生成怪物战利品掉落
         for (SpawnEggItem egg : eggs) {
             EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
             ResourceKey<LootTable> lootTableKey = entityType.getDefaultLootTable();
             LootTable lootTable = serverLevel.getServer().reloadableRegistries().getLootTable(lootTableKey);
 
-            // 2. 创建一个临时的假实体，用于 LootTable 中某些需要实体属性判定的情况
             Entity dummyEntity = entityType.create(serverLevel);
             if (dummyEntity != null) {
-                // 3. 构建战利品参数 (LootParams)
                 LootParams params = new LootParams.Builder(serverLevel)
                         .withParameter(LootContextParams.THIS_ENTITY, dummyEntity)
                         .withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
                         .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(this.worldPosition))
-                        // [关键修复] 注入虚拟玩家身份，骗过游戏机制，掉落烈焰棒、蜘蛛眼等玩家专属物品！
                         .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, fakePlayer)
                         .create(LootContextParamSets.ENTITY);
 
-                // 根据神化源码逻辑：总生成次数 = 刷怪数量 * (1 + 回响等级)
                 int totalRolls = this.spawnCount * (1 + this.echoing);
-
                 for (int i = 0; i < totalRolls; i++) {
-                    List<ItemStack> drops = lootTable.getRandomItems(params);
-                    insertLootToOutputs(drops);
+                    insertLootToOutputs(lootTable.getRandomItems(params));
                 }
-
-                // 4. 销毁假实体，防止内存泄漏
                 dummyEntity.discard();
             }
+        }
+
+        // 2. 生成固化通量经验掉落
+        int expBase = ApothicAdditionConfig.FLUX_SPAWNER_EXP_BASE_COUNT.get();
+        int expCount = expBase * eggs.size() * (1 + this.echoing);
+
+        if (expCount > 0) {
+            List<ItemStack> expDrops = new java.util.ArrayList<>();
+            // 将巨大的经验产出数量按照每组 64 个进行安全切分
+            while (expCount > 0) {
+                int size = Math.min(expCount, 64);
+                expDrops.add(new ItemStack(ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get(), size));
+                expCount -= size;
+            }
+            insertLootToOutputs(expDrops);
         }
     }
 

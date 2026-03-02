@@ -20,6 +20,7 @@ public class ApothicAdditionConfig {
 
     // 新增：通量刷怪笼配置
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_ENERGY_PER_EGG;
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_EXP_BASE_COUNT;
 
     static {
         BUILDER.push("Energy Settings");
@@ -74,6 +75,13 @@ public class ApothicAdditionConfig {
                         "通量刷怪笼的基础耗电参数。",
                         "每 tick 耗电公式: 基础*刷怪蛋数量 + 基础*(800/最大延迟) + 基础*刷怪数量 + 基础*回响等级*2")
                 .defineInRange("fluxSpawnerEnergyPerEgg", 1000, 0, Integer.MAX_VALUE);
+
+        FLUX_SPAWNER_EXP_BASE_COUNT = BUILDER
+                .comment("Base count for Solidified Flux Experience drop.",
+                        "固化通量经验掉落基础数。",
+                        "Formula / 掉落公式: Base * Eggs * (1 + Echoing)")
+                .defineInRange("fluxSpawnerExpBaseCount", 4, 0, Integer.MAX_VALUE);
+
 
         BUILDER.pop(); // Pop Flux Spawner
 
