@@ -18,8 +18,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,9 +27,6 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.items.ItemStackHandler;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class RitualBlockEntity extends BlockEntity {
 
@@ -43,10 +40,7 @@ public class RitualBlockEntity extends BlockEntity {
     public RitualState ritualState = RitualState.IDLE;
     public int stateTimer = 0;
 
-    // 记录进入 CRAFTING 时的 renderTick，用于计算加速角度差值
     public float craftingStartRenderTick = 0;
-
-    // 标志位：防止 finishRitual 清空物品时触发 onContentsChanged 重置状态
     private boolean isFinishing = false;
 
     public final ItemStackHandler inventory = new ItemStackHandler(17) {
@@ -54,7 +48,6 @@ public class RitualBlockEntity extends BlockEntity {
         protected void onContentsChanged(int slot) {
             setChanged();
             if (level != null && !level.isClientSide) {
-                // isFinishing 为 true 时是合成完成清空物品，不重置状态
                 if (!isFinishing) {
                     currentRecipe = null;
                     progress = 0;
@@ -73,6 +66,21 @@ public class RitualBlockEntity extends BlockEntity {
 
     public RitualBlockEntity(BlockPos pos, BlockState state) {
         super(ModRegistry.RITUAL_BE.get(), pos, state);
+    }
+
+    // [新增] 辅助方法：构建标准的 RecipeInput，将法阵的物品栏包装成配方系统能识别的输入源
+    private RecipeInput createRecipeInput() {
+        return new RecipeInput() {
+            @Override
+            public ItemStack getItem(int index) {
+                return inventory.getStackInSlot(index);
+            }
+
+            @Override
+            public int size() {
+                return inventory.getSlots();
+            }
+        };
     }
 
     public boolean interact(Player player, InteractionHand hand) {
@@ -103,6 +111,22 @@ public class RitualBlockEntity extends BlockEntity {
         return false;
     }
 
+    // [新增] 检测上方是否受阻
+    private boolean isObstructed() {
+        if (level == null) return false;
+        // 检测上方一格是否为空气
+        return !level.getBlockState(worldPosition.above()).isAir();
+    }
+
+    // [新增] 发送受阻提示给附近玩家
+    private void warnObstruction() {
+        if (level == null) return;
+        level.getEntitiesOfClass(Player.class, new AABB(worldPosition).inflate(5)).forEach(p ->
+                p.displayClientMessage(
+                        Component.translatable("ritual.apothicenchantingaddition.obstructed")
+                                .withStyle(ChatFormatting.RED), true));
+    }
+
     public void tick() {
         if (level == null) return;
 
@@ -111,7 +135,19 @@ public class RitualBlockEntity extends BlockEntity {
             return;
         }
 
-        // ===== 状态计时器处理 =====
+        // 读档恢复逻辑：退出重进后，内存中的 currentRecipe 会变成 null
+        if (currentRecipe == null && (ritualState == RitualState.CRAFTING || ritualState == RitualState.ACTIVATING)) {
+            currentRecipe = findMatchingRecipe(level);
+            // 如果玩家在存档期间删除了模组或者配方无效了，才重置状态
+            if (currentRecipe == null) {
+                ritualState = RitualState.IDLE;
+                progress = 0;
+                stateTimer = 0;
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+                return;
+            }
+        }
+
         if (ritualState == RitualState.ACTIVATING || ritualState == RitualState.FINISHING) {
             stateTimer--;
             if (stateTimer <= 0) {
@@ -119,7 +155,6 @@ public class RitualBlockEntity extends BlockEntity {
                     ritualState = RitualState.CRAFTING;
                     level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
                 } else {
-                    // FINISHING 结束：移除方块
                     level.removeBlock(worldPosition, false);
                     return;
                 }
@@ -127,9 +162,15 @@ public class RitualBlockEntity extends BlockEntity {
             if (ritualState == RitualState.ACTIVATING) return;
         }
 
-        // ===== 1. 查找配方（仅 IDLE 状态）=====
+        // 1. IDLE 状态查找配方
         if (currentRecipe == null && ritualState == RitualState.IDLE && (level.getGameTime() % 20 == 0)) {
-            currentRecipe = findMatchingRecipe(level, inventory);
+            // [新增] 启动前检测：如果上方有方块，直接不开始并提示
+            if (isObstructed()) {
+                warnObstruction();
+                return;
+            }
+
+            currentRecipe = findMatchingRecipe(level);
             if (currentRecipe != null) {
                 progress = 0;
                 ritualState = RitualState.ACTIVATING;
@@ -142,9 +183,22 @@ public class RitualBlockEntity extends BlockEntity {
             }
         }
 
-        // ===== 2. 合成进度（仅 CRAFTING 状态）=====
+        // 2. CRAFTING 状态运行仪式
         if (currentRecipe != null && ritualState == RitualState.CRAFTING) {
-            if (!matches(currentRecipe, inventory)) {
+            // [新增] 过程中检测：如果中途被放置了方块，中断仪式
+            if (isObstructed()) {
+                warnObstruction();
+                // 中断重置
+                currentRecipe = null;
+                progress = 0;
+                ritualState = RitualState.IDLE;
+                craftingStartRenderTick = 0;
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+                return;
+            }
+
+            // 配方有效性再次校验
+            if (!currentRecipe.matches(createRecipeInput(), level)) {
                 currentRecipe = null;
                 progress = 0;
                 ritualState = RitualState.IDLE;
@@ -172,36 +226,14 @@ public class RitualBlockEntity extends BlockEntity {
         }
     }
 
-    private RitualCraftingRecipe findMatchingRecipe(Level level, ItemStackHandler inventory) {
+    // [修改] 调用配方自身的 matches 方法进行严格校验
+    private RitualCraftingRecipe findMatchingRecipe(Level level) {
+        RecipeInput input = createRecipeInput();
         return level.getRecipeManager().getAllRecipesFor(ModRegistry.RITUAL_TYPE.get()).stream()
                 .map(RecipeHolder::value)
-                .filter(recipe -> matches(recipe, inventory))
+                .filter(recipe -> recipe.matches(input, level))
                 .findFirst()
                 .orElse(null);
-    }
-
-    private boolean matches(RitualCraftingRecipe recipe, ItemStackHandler inventory) {
-        List<ItemStack> items = new ArrayList<>();
-        for (int i = 0; i < inventory.getSlots(); i++) {
-            if (!inventory.getStackInSlot(i).isEmpty()) items.add(inventory.getStackInSlot(i));
-        }
-
-        List<Ingredient> ingredients = recipe.inputs();
-        if (items.size() != ingredients.size()) return false;
-
-        List<ItemStack> checkItems = new ArrayList<>(items);
-        for (Ingredient ing : ingredients) {
-            boolean found = false;
-            for (int i = 0; i < checkItems.size(); i++) {
-                if (ing.test(checkItems.get(i))) {
-                    checkItems.remove(i);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return false;
-        }
-        return true;
     }
 
     private void finishRitual(Level level, BlockPos pos) {
@@ -210,7 +242,6 @@ public class RitualBlockEntity extends BlockEntity {
         currentRecipe = null;
         progress = 0;
 
-        // 设置标志位，防止清空物品时触发状态重置
         isFinishing = true;
         for (int i = 0; i < inventory.getSlots(); i++) {
             inventory.setStackInSlot(i, ItemStack.EMPTY);
@@ -218,32 +249,39 @@ public class RitualBlockEntity extends BlockEntity {
         isFinishing = false;
         setChanged();
 
-        // 生成物品
+        // [修改] 将物品生成的 Y 轴抬高到 pos.getY() + 1.0 (原为 0.5)
+        // 原因：法阵在下一 tick 才自毁，如果生成在 0.5 可能会被卡没或弹飞
         if (!recipe.outputItem().isEmpty()) {
             ItemStack outputStack = recipe.outputItem().copy();
             ItemEntity itemEntity = new ItemEntity(level,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, outputStack);
+                    pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, outputStack);
             itemEntity.setPickUpDelay(10);
             itemEntity.setInvulnerable(true);
             level.addFreshEntity(itemEntity);
         }
 
-        // 生成流体
+        // [修改] 将流体生成的坐标改为了 pos.above() (原为 pos)
+        // 致命原因：下一 tick 执行 level.removeBlock(pos) 时，会把 pos 的方块变成空气。
+        // 如果把水放在 pos，水一出现就会立刻被跟着法阵一起“删掉”。
         recipe.outputFluid().ifPresent(fluidId -> {
             try {
                 Fluid fluid = BuiltInRegistries.FLUID.get(ResourceLocation.parse(fluidId));
                 if (fluid != Fluids.EMPTY) {
-                    level.setBlock(pos, fluid.defaultFluidState().createLegacyBlock(), 3);
+                    BlockPos fluidPos = pos.above();
+                    if (level.getBlockState(fluidPos).canBeReplaced()) {
+                        level.setBlock(fluidPos, fluid.defaultFluidState().createLegacyBlock(), 3);
+                    }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
 
-        // 生成实体
+        // [修改] 同样将实体的生成 Y 轴抬高到 pos.getY() + 1.0 (原为 pos.getY())
         recipe.outputEntity().ifPresent(entityId -> {
             EntityType.byString(entityId).ifPresent(type -> {
                 Entity entity = type.create(level);
                 if (entity != null) {
-                    entity.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
+                    entity.moveTo(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 0, 0);
                     level.addFreshEntity(entity);
                 }
             });
@@ -258,27 +296,30 @@ public class RitualBlockEntity extends BlockEntity {
         double cy = pos.getY() + 0.5;
         double cz = pos.getZ() + 0.5;
 
+        // 无论配方有几个物品，代表阵法中心粒子都必须无条件渲染
+        serverLevel.sendParticles(ParticleTypes.WITCH,
+                cx, cy, cz, 2, 0.3, 0.1, 0.3, 0.01);
+
         int count = 0;
         for (int i = 1; i < inventory.getSlots(); i++) {
             if (!inventory.getStackInSlot(i).isEmpty()) count++;
         }
-        if (count == 0) return;
 
-        int idx = 0;
-        for (int i = 1; i < inventory.getSlots(); i++) {
-            if (inventory.getStackInSlot(i).isEmpty()) continue;
-            float angle = (float) (idx * 2 * Math.PI / count);
-            double ox = cx + Math.cos(angle) * 1.0;
-            double oz = cz + Math.sin(angle) * 1.0;
-            double dx = (cx - ox) * 0.1;
-            double dz = (cz - oz) * 0.1;
-            serverLevel.sendParticles(ParticleTypes.PORTAL,
-                    ox, cy + 0.5, oz, 1, dx, 0.05, dz, 0.01);
-            idx++;
+        // 只有当外圈有物品时，才去计算和渲染外圈连接到中心的传送门粒子 (PORTAL)
+        if (count > 0) {
+            int idx = 0;
+            for (int i = 1; i < inventory.getSlots(); i++) {
+                if (inventory.getStackInSlot(i).isEmpty()) continue;
+                float angle = (float) (idx * 2 * Math.PI / count);
+                double ox = cx + Math.cos(angle) * 1.0;
+                double oz = cz + Math.sin(angle) * 1.0;
+                double dx = (cx - ox) * 0.1;
+                double dz = (cz - oz) * 0.1;
+                serverLevel.sendParticles(ParticleTypes.PORTAL,
+                        ox, cy + 0.5, oz, 1, dx, 0.05, dz, 0.01);
+                idx++;
+            }
         }
-
-        serverLevel.sendParticles(ParticleTypes.WITCH,
-                cx, cy, cz, 2, 0.3, 0.1, 0.3, 0.01);
     }
 
     private void spawnFinishParticles(Level level, BlockPos pos) {
@@ -316,12 +357,6 @@ public class RitualBlockEntity extends BlockEntity {
         ritualState = RitualState.values()[Math.min(stateOrdinal, RitualState.values().length - 1)];
         stateTimer = tag.getInt("StateTimer");
         craftingStartRenderTick = tag.getFloat("CraftingStartRenderTick");
-
-        if (level != null && !level.isClientSide && ritualState != RitualState.IDLE) {
-            ritualState = RitualState.IDLE;
-            progress = 0;
-            stateTimer = 0;
-        }
     }
 
     @Override
