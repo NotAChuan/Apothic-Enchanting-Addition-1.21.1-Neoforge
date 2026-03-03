@@ -1,6 +1,6 @@
 package com.chuan.apothicenchantingaddition.block;
 
-import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
+import com.chuan.apothicenchantingaddition.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
 import dev.shadowsoffire.apothic_enchanting.api.EnchantmentStatBlock;
 import net.minecraft.core.BlockPos;
@@ -14,17 +14,23 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 public class FluxStatsBookshelfBlock extends Block implements EntityBlock, EnchantmentStatBlock {
 
+    // 添加能量等级属性（1=0%, 2=33%, 3=66%, 4=100%）
+    public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 1, 4);
+
     private final Tier tier;
 
     public FluxStatsBookshelfBlock(Properties properties, Tier tier) {
         super(properties);
         this.tier = tier;
+        this.registerDefaultState(this.stateDefinition.any().setValue(ENERGY_LEVEL, 1));
     }
 
     public Tier getTier() {
@@ -34,14 +40,14 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new StatsBookshelfBlockEntity(pos, state);
+        return new FluxStatsBookshelfBlockEntity(pos, state);
     }
 
     // ========== 神化 API 对接与断电判断 ==========
 
     @Override
     public float getQuantaBonus(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             return be.getQuanta();
         }
         return 0;
@@ -49,7 +55,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
 
     @Override
     public float getArcanaBonus(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             return be.getArcana();
         }
         return 0;
@@ -57,7 +63,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
 
     @Override
     public int getBonusClues(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             return be.getClues();
         }
         return 0;
@@ -65,7 +71,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
 
     @Override
     public boolean allowsTreasure(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             return be.allowsTreasure();
         }
         return false;
@@ -73,7 +79,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
 
     @Override
     public boolean providesStability(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             return be.isStable(); // 校准
         }
         return false;
@@ -87,7 +93,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
     // NeoForge 方法，用于提供位阶 (Eterna)
     @Override
     public float getEnchantPowerBonus(BlockState state, LevelReader level, BlockPos pos) {
-        if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity be) {
+        if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity be) {
             // 注意：根据源码，神化会将这个值乘2，所以我们需要将存储的 eterna 值除以 2 返回
             return be.getEterna() / 2.0F;
         }
@@ -100,7 +106,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
         return level.isClientSide ? null : (lvl, pos, st, be) -> {
-            if (be instanceof StatsBookshelfBlockEntity statsBE) {
+            if (be instanceof FluxStatsBookshelfBlockEntity statsBE) {
                 statsBE.tick(lvl, pos, st);
             }
         };
@@ -109,7 +115,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
     @Override
     public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (!level.isClientSide) {
-            if (level.getBlockEntity(pos) instanceof StatsBookshelfBlockEntity entity) {
+            if (level.getBlockEntity(pos) instanceof FluxStatsBookshelfBlockEntity entity) {
                 ServerPlayer serverPlayer = (ServerPlayer) player;
                 serverPlayer.openMenu(new net.minecraft.world.MenuProvider() {
                     @Override
@@ -125,5 +131,10 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
             }
         }
         return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ENERGY_LEVEL);
     }
 }

@@ -1,10 +1,8 @@
 package com.chuan.apothicenchantingaddition.registry;
 
 import com.chuan.apothicenchantingaddition.block.*;
-import com.chuan.apothicenchantingaddition.block.entity.FluxAnvilBlockEntity;
-import com.chuan.apothicenchantingaddition.block.entity.FluxSpawnerBlockEntity;
-import com.chuan.apothicenchantingaddition.block.entity.RitualBlockEntity;
-import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
+import com.chuan.apothicenchantingaddition.block.entity.*;
+import com.chuan.apothicenchantingaddition.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.item.CompressedSolidifiedFluxExperienceItem;
 import com.chuan.apothicenchantingaddition.item.SolidifiedFluxExperienceItem;
 import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
@@ -31,7 +29,6 @@ import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import com.chuan.apothicenchantingaddition.block.entity.FluxEnchantingTableBlockEntity;
 import com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu;
 import com.chuan.apothicenchantingaddition.menu.FluxAnvilMenu;
 
@@ -83,8 +80,8 @@ public class ModRegistry {
             () -> new BlockItem(FLUX_SPAWNER.get(), new Item.Properties()));
 
     // ================== 方块实体 ==================
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
-            () -> BlockEntityType.Builder.of(StatsBookshelfBlockEntity::new,
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxStatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
+            () -> BlockEntityType.Builder.of(FluxStatsBookshelfBlockEntity::new,
                     FLUX_STATS_BOOKSHELF_TIER_1.get(),
                     FLUX_STATS_BOOKSHELF_TIER_2.get(),
                     FLUX_STATS_BOOKSHELF_TIER_3.get(),

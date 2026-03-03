@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.EnergyStorage;
 
-public class StatsBookshelfBlockEntity extends BlockEntity {
+public class FluxStatsBookshelfBlockEntity extends BlockEntity {
 
     private float eterna = 0;
     private float quanta = 0;
@@ -22,6 +22,9 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
     private boolean stable = false;
 
     private boolean isActive = false;
+
+    // 缓存上一次的能量等级，用于优化 BlockState 更新
+    private int previousEnergyLevel = 1;
 
     public final EnergyStorage energyStorage = new EnergyStorage(1000000, Integer.MAX_VALUE, Integer.MAX_VALUE) {
         @Override
@@ -39,7 +42,7 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
         }
     };
 
-    public StatsBookshelfBlockEntity(BlockPos pos, BlockState state) {
+    public FluxStatsBookshelfBlockEntity(BlockPos pos, BlockState state) {
         super(com.chuan.apothicenchantingaddition.registry.ModRegistry.STATS_BOOKSHELF_BE.get(), pos, state);
     }
 
@@ -88,6 +91,16 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
                 notifyEnchantingTables(); // 断电时刷新周围附魔台
             }
         }
+
+        // ========== 新增：检测能量等级变化并更新 BlockState ==========
+        int currentEnergy = energyStorage.getEnergyStored();
+        int newEnergyLevel = calculateEnergyLevel(currentEnergy);
+
+        if (newEnergyLevel != this.previousEnergyLevel) {
+            this.previousEnergyLevel = newEnergyLevel;
+            BlockState currentState = level.getBlockState(pos);
+            level.setBlock(pos, currentState.setValue(FluxStatsBookshelfBlock.ENERGY_LEVEL, newEnergyLevel), 3);
+        }
     }
 
     private void notifyEnchantingTables() {
@@ -101,6 +114,52 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
                 level.sendBlockUpdated(offset, s, s, 3);
             }
         }
+    }
+
+    public void setEnergyStored(int energy) {
+        int oldEnergy = this.energyStorage.getEnergyStored();
+
+        // 直接修改 EnergyStorage 的内部能量值（因为没有 setEnergy 方法）
+        // 先提取所有能量，再充入目标能量
+        this.energyStorage.extractEnergy(this.energyStorage.getMaxEnergyStored(), false);
+        this.energyStorage.receiveEnergy(energy, false);
+
+        // 计算当前能量等级（1-4）
+        int newEnergyLevel = calculateEnergyLevel(energy);
+
+        // 只在能量等级跨越阈值时更新 BlockState（性能优化）
+        if (newEnergyLevel != this.previousEnergyLevel) {
+            this.previousEnergyLevel = newEnergyLevel;
+
+            if (level != null && !level.isClientSide) {
+                BlockState state = level.getBlockState(worldPosition);
+                level.setBlock(worldPosition, state.setValue(FluxStatsBookshelfBlock.ENERGY_LEVEL, newEnergyLevel), 3);
+            }
+        }
+
+        // 检查激活状态变化
+        boolean wasActive = this.isActive;
+        this.isActive = energy >= getEnergyCost();
+
+        if (wasActive != this.isActive) {
+            setChanged();
+            if (level != null) {
+                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+                notifyEnchantingTables();
+            }
+        }
+
+        if (oldEnergy != energy) {
+            setChanged();
+        }
+    }
+
+    private int calculateEnergyLevel(int energy) {
+        int maxEnergy = this.energyStorage.getMaxEnergyStored();
+        if (energy == 0) return 1;
+        if (energy >= maxEnergy * 0.66) return 4; // 66%-100%
+        if (energy >= maxEnergy * 0.33) return 3; // 33%-66%
+        return 2; // 1%-33%
     }
 
     public float getEterna() {
@@ -192,6 +251,7 @@ public class StatsBookshelfBlockEntity extends BlockEntity {
         if (tag.contains("Energy")) {
             energyStorage.deserializeNBT(registries, tag.get("Energy"));
         }
+        this.previousEnergyLevel = calculateEnergyLevel(this.energyStorage.getEnergyStored());
     }
 
     @Override

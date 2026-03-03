@@ -1,5 +1,6 @@
 {
   "credit": "Made with Blockbench",
+  "render_type": "cutout",
   "textures": {
     "up": "apothicenchantingaddition:block/ritual_core_up",
     "side": "apothicenchantingaddition:block/ritual_core_side",
@@ -15,7 +16,7 @@
         "south": { "uv": [0, 0, 16, 1], "texture": "#side" },
         "west":  { "uv": [0, 0, 16, 1], "texture": "#side" },
         "up":    { "uv": [0, 0, 16, 16], "texture": "#up" },
-        "down":  { "uv": [0, 0, 16, 16], "texture": "#missing" }
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#particle" }
       }
     }
   ],

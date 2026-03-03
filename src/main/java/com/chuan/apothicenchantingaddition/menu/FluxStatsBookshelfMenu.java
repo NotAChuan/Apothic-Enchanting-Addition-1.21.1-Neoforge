@@ -1,6 +1,6 @@
 package com.chuan.apothicenchantingaddition.menu;
 
-import com.chuan.apothicenchantingaddition.block.entity.StatsBookshelfBlockEntity;
+import com.chuan.apothicenchantingaddition.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 
 public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
 
-    private final StatsBookshelfBlockEntity blockEntity;
+    private final FluxStatsBookshelfBlockEntity blockEntity;
     private final ContainerLevelAccess levelAccess;
 
     private final DataSlot eternaSlot = DataSlot.standalone();
@@ -26,10 +26,10 @@ public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
     private final DataSlot energyLower = DataSlot.standalone();
 
     public FluxStatsBookshelfMenu(int containerId, Inventory inv, FriendlyByteBuf extraData) {
-        this(containerId, inv, (StatsBookshelfBlockEntity) inv.player.level().getBlockEntity(extraData.readBlockPos()));
+        this(containerId, inv, (FluxStatsBookshelfBlockEntity) inv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
-    public FluxStatsBookshelfMenu(int containerId, Inventory inv, StatsBookshelfBlockEntity entity) {
+    public FluxStatsBookshelfMenu(int containerId, Inventory inv, FluxStatsBookshelfBlockEntity entity) {
         super(ModRegistry.STATS_BOOKSHELF_MENU.get(), containerId);
         this.blockEntity = entity;
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
@@ -85,7 +85,7 @@ public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
     // 【修改获取方法】将高低位拼回真实能量
     public int getEnergy() { return (energyUpper.get() << 16) | (energyLower.get() & 0xFFFF); }
 
-    public StatsBookshelfBlockEntity getBlockEntity() { return blockEntity; }
+    public FluxStatsBookshelfBlockEntity getBlockEntity() { return blockEntity; }
 
     @Override
     public boolean stillValid(Player player) {

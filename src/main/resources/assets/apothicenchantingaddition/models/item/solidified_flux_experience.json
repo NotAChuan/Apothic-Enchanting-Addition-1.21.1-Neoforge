@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "apothicenchantingaddition:item/solidified_flux_experience"
+  }
+}
