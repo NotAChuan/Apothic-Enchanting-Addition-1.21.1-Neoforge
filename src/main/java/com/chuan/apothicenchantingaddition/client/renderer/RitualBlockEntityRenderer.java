@@ -42,7 +42,7 @@ public class RitualBlockEntityRenderer implements BlockEntityRenderer<RitualBloc
             // 这里由服务端同步过来，但客户端 renderTick 是独立自增的
             // 为了避免闪回，我们用 time 持续累加，乘以动态系数
             // 加速系数 0.05（比之前 0.02 更高）
-            float elapsed = time - localCraftingStartTick;
+            float elapsed = time - be.craftingStartRenderTick;
             // elapsed 可能为负（服务端同步延迟），保底为0
             if (elapsed < 0) elapsed = 0;
             rotationSpeed = baseRotationSpeed + elapsed * 0.05f;

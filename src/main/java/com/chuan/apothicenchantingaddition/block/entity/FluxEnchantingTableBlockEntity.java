@@ -6,6 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -14,18 +16,28 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class FluxEnchantingTableBlockEntity extends BlockEntity {
 
-    // ✨ [新增] 能量快照，用于对比能量是否发生了实质性变化
+    // 能量快照，用于对比能量是否发生了实质性变化
     private int lastEnergy = -1;
 
-    // ✨ [修复] 彻底去除了内部重写的 receiveEnergy 和 extractEnergy。
-    // 不要让外部线缆输入或内部每 tick 消耗时疯狂触发 setChanged()。
+    // 书本动画字段
+    public int time;
+    public float flip;
+    public float oFlip;
+    public float flipT;
+    public float flipA;
+    public float open;
+    public float oOpen;
+    public float rot;
+    public float oRot;
+    public float tRot;
+    private static final RandomSource RANDOM = RandomSource.create();
+
     public final EnergyStorage energyStorage = new EnergyStorage(1000000000, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
     // 槽位 0：附魔物品位，槽位 1：刷新耗材位
     public final ItemStackHandler inventory = new ItemStackHandler(2) {
         @Override
         protected void onContentsChanged(int slot) {
-            // 物品改变的频率极低（只有玩家手动拿放或自动化管道抽入），这里保留 setChanged() 是完全合理的
             setChanged();
         }
 
@@ -38,6 +50,7 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
         }
     };
 
+    // 修复：构造函数只需要两个参数
     public FluxEnchantingTableBlockEntity(BlockPos pos, BlockState state) {
         super(ModRegistry.FLUX_ENCHANTING_TABLE_BE.get(), pos, state);
     }
@@ -45,11 +58,13 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
     public void tick(Level level, BlockPos pos, BlockState state) {
         if (level.isClientSide) return;
 
+        // 能量消耗
         int tickCost = ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get();
         if (tickCost > 0 && energyStorage.getEnergyStored() >= tickCost) {
             energyStorage.extractEnergy(tickCost, false);
         }
-        // 每秒（20 tick）集中检查一次。如果这 1 秒内（无论是因为每 tick 扣电，还是线缆输入）能量变了，才向硬盘汇报一次！
+
+        // 每秒检查一次能量变化
         if (level.getGameTime() % 20 == 0) {
             int currentEnergy = energyStorage.getEnergyStored();
             if (currentEnergy != lastEnergy) {
@@ -57,6 +72,29 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
                 lastEnergy = currentEnergy;
             }
         }
+
+        // 书本动画更新（修复：使用 this 而不是 be）
+        this.time++;
+        this.oFlip = this.flip;
+        this.oOpen = this.open;
+        this.oRot = this.rot;
+
+        // 书本翻页动画
+        this.flipT += 0.1F;
+        if (this.flipT > 1.0F) {
+            this.flipT = 0.0F;
+            this.flipA = RANDOM.nextFloat() * 0.4F + 0.8F;
+        }
+
+        float targetFlip = (this.flipT - this.flip) * 0.4F;
+        this.flip += Mth.clamp(targetFlip, -0.2F, 0.2F);
+
+        // 书本打开/关闭动画（固定为打开状态）
+        this.open += (1.0F - this.open) * 0.1F;
+
+        // 书本旋转动画
+        this.tRot += 0.02F;
+        this.rot += (this.tRot - this.rot) * 0.4F;
     }
 
     @Override
@@ -75,7 +113,6 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
         if (tag.contains("Inventory")) {
             inventory.deserializeNBT(registries, (CompoundTag) tag.get("Inventory"));
         }
-        // 初始化时同步一下能量快照
         this.lastEnergy = energyStorage.getEnergyStored();
     }
 
@@ -89,5 +126,17 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    public float getFlipAngle(float partialTicks) {
+        return Mth.lerp(partialTicks, this.oFlip, this.flip);
+    }
+
+    public float getOpenAngle(float partialTicks) {
+        return Mth.lerp(partialTicks, this.oOpen, this.open);
+    }
+
+    public float getRotationAngle(float partialTicks) {
+        return Mth.lerp(partialTicks, this.oRot, this.rot);
     }
 }

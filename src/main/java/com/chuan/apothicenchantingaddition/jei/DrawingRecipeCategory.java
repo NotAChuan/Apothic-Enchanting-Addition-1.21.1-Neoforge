@@ -8,7 +8,6 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -38,7 +37,7 @@ public class DrawingRecipeCategory implements IRecipeCategory<RitualDrawingRecip
 
     public DrawingRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(WIDTH, HEIGHT);
-        this.icon = guiHelper.createDrawableItemStack(new ItemStack(net.minecraft.world.item.Items.ENCHANTING_TABLE));
+        this.icon = guiHelper.createDrawableItemStack(new ItemStack(ModRegistry.FLUX_ENCHANTING_TABLE.get()));
 
 //        this.icon = guiHelper.createDrawableItemStack(
 //                new ItemStack(ModRegistry.RITUAL_CORE_BLOCK.get())

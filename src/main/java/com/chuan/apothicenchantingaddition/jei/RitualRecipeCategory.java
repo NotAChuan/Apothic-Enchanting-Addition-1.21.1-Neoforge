@@ -57,7 +57,7 @@ public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecip
 
     public RitualRecipeCategory(IGuiHelper guiHelper) {
         this.background = guiHelper.createBlankDrawable(WIDTH, HEIGHT);
-        this.icon = guiHelper.createDrawableItemStack(new ItemStack(net.minecraft.world.item.Items.ENCHANTING_TABLE));
+        this.icon = guiHelper.createDrawableItemStack(new ItemStack(ModRegistry.FLUX_ENCHANTING_TABLE.get()));
     }
 
     @Override
@@ -154,7 +154,7 @@ public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecip
                     pos[0] + 8, pos[1] + 8, 24, ENTITY_TEXTURE);
         }
 
-        // ================== 新增：绘制配方时间 ==================
+        // ================== 绘制配方时间 ==================
 
         // 1 秒 = 20 Tick，将 craftTime() 转化为秒数
 //        int seconds = recipe.craftTime() / 20;
@@ -163,9 +163,9 @@ public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecip
         // 获取翻译文本
         Component timeText = Component.translatable("jei.apothicenchantingaddition.ritual.time", seconds);
 
-        // 测量字体宽度，以实现完美的居中对齐
+        // 测量字体宽度，以
         int textWidth = Minecraft.getInstance().font.width(timeText);
-        int textX = (WIDTH - textWidth) / 2;
+        int textX = (WIDTH - textWidth) / 2 + 10;
         int textY = HEIGHT - 14; // 放置在中下方空余区域
 
         // 使用深灰色 (0x555555) 绘制，且关闭文字阴影 (false)，契合 JEI 风格

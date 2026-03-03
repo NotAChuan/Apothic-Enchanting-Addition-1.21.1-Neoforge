@@ -3,14 +3,12 @@ package com.chuan.apothicenchantingaddition;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.network.NetworkHandler;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import com.chuan.apothicenchantingaddition.client.renderer.FluxEnchantingTableRenderer;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.Level;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -25,7 +23,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -71,8 +68,19 @@ public class ApothicEnchantingAddition {
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(this::registerCapabilities);
 
-        NeoForge.EVENT_BUS.register(this);
+        modEventBus.addListener(this::onClientSetup);
 
+    }
+
+    // 客户端初始化事件
+    @SubscribeEvent
+    public void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            BlockEntityRenderers.register(
+                    ModRegistry.FLUX_ENCHANTING_TABLE_BE.get(),
+                    FluxEnchantingTableRenderer::new
+            );
+        });
     }
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
@@ -107,35 +115,5 @@ public class ApothicEnchantingAddition {
                 ModRegistry.FLUX_SPAWNER_BE.get(),
                 (be, side) -> be.outputItemHandler
         );
-    }
-
-    @SubscribeEvent
-    public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        ItemStack stack = event.getItemStack();
-        Level level = event.getLevel();
-        BlockPos placePos = event.getPos().relative(event.getFace());
-
-        // 检查下方是否有方块
-        if (!level.getBlockState(placePos.below()).isFaceSturdy(level, placePos .below(), Direction.UP)) return;
-
-        // 在所有 RitualDrawingRecipe 中寻找匹配当前物品的配方
-        level.getRecipeManager().getAllRecipesFor(ModRegistry.DRAWING_TYPE.get()).stream()
-                .filter(r -> r.value().tool().test(stack))
-                .findFirst()
-                .ifPresent(recipe -> {
-                    if (!level.isClientSide) {
-                        level.setBlock(placePos, ModRegistry.RITUAL_CORE_BLOCK.get().defaultBlockState(), 3);
-
-                        // 处理消耗逻辑
-                        if (!event.getEntity().isCreative()) {
-                            if (recipe.value().durabilityCost() > 0) {
-                                stack.hurtAndBreak(recipe.value().durabilityCost(), event.getEntity(), LivingEntity.getSlotForHand(event.getHand()));
-                            } else if (recipe.value().consumeItem()) {
-                                stack.shrink(1);
-                            }
-                        }
-                    }
-                    event.setCanceled(true);
-                });
     }
 }
