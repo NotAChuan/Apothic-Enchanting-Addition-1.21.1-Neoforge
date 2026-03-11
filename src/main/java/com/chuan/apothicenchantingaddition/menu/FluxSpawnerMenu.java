@@ -34,12 +34,11 @@ public class FluxSpawnerMenu extends AbstractContainerMenu {
         // 绑定数据槽 (用于同步电量和5个属性)
         this.addDataSlots(data);
 
-        // 1. 刷怪笼的 8 个输入槽 (2行 x 4列 布局居中展示)
-        // 刻意隐藏了后 64 个输出槽，玩家在这里绝对看不见产物
+        // 1. 刷怪笼的 8 个输入槽
         for (int row = 0; row < 2; row++) {
             for (int col = 0; col < 4; col++) {
                 int index = col + row * 4; // 0 ~ 7
-                this.addSlot(new SlotItemHandler(this.blockEntity.inventory, index, 53 + col * 18, 26 + row * 18) {
+                this.addSlot(new SlotItemHandler(this.blockEntity.inventory, index, 53 + col * 18, 22 + row * 18) {
                     @Override
                     public int getMaxStackSize() {
                         return 1; // 核心限制：GUI 中强制每个槽位堆叠上限为 1
