@@ -13,6 +13,8 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.energy.EnergyStorage;
+import com.chuan.apothicenchantingaddition.block.FluxAnvilBlock;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class FluxAnvilBlockEntity extends BlockEntity implements MenuProvider {
@@ -36,12 +38,41 @@ public class FluxAnvilBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    private int lastEnergy = 0;
+
     public FluxAnvilBlockEntity(BlockPos pos, BlockState state) {
         super(ModRegistry.FLUX_ANVIL_BE.get(), pos, state);
     }
 
     public EnergyStorage getEnergyStorage() {
         return energyStorage;
+    }
+
+    public static void tick(Level level, BlockPos pos, BlockState state, FluxAnvilBlockEntity entity) {
+        if (level.isClientSide) return;
+
+        // 每 20 tick 检查一次能量变化
+        if (level.getGameTime() % 20 == 0) {
+            int currentEnergy = entity.energyStorage.getEnergyStored();
+            if (currentEnergy != entity.lastEnergy) {
+                entity.lastEnergy = currentEnergy;
+                entity.setChanged();
+
+                // 更新 BlockState 能量等级
+                int newEnergyLevel = calculateEnergyLevel(currentEnergy);
+                if (state.hasProperty(FluxAnvilBlock.ENERGY_LEVEL) &&
+                        state.getValue(FluxAnvilBlock.ENERGY_LEVEL) != newEnergyLevel) {
+                    level.setBlock(pos, state.setValue(FluxAnvilBlock.ENERGY_LEVEL, newEnergyLevel), 3);
+                }
+            }
+        }
+    }
+
+    private static int calculateEnergyLevel(int energy) {
+        if (energy == 0) return 1;
+        if (energy >= MAX_ENERGY * 0.66) return 4;
+        if (energy >= MAX_ENERGY * 0.33) return 3;
+        return 2;
     }
 
     // --- 1.21.1 NBT 数据保存与加载 ---

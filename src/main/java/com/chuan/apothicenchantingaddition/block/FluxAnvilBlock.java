@@ -8,18 +8,27 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.jetbrains.annotations.Nullable;
 
 public class FluxAnvilBlock extends AnvilBlock implements EntityBlock {
     // 1.21.1 标准 Codec 注册
     public static final MapCodec<FluxAnvilBlock> CODEC = simpleCodec(FluxAnvilBlock::new);
 
+    public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 1, 4);
+
     public FluxAnvilBlock(Properties properties) {
         super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(ENERGY_LEVEL, 1));
     }
 
     @SuppressWarnings("unchecked")
@@ -45,5 +54,21 @@ public class FluxAnvilBlock extends AnvilBlock implements EntityBlock {
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder); // 保留父类 AnvilBlock 的朝向属性
+        builder.add(ENERGY_LEVEL);
+    }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide) return null;
+        return (lvl, pos, st, be) -> {
+            if (be instanceof FluxAnvilBlockEntity fluxAnvil) {
+                FluxAnvilBlockEntity.tick(lvl, pos, st, fluxAnvil);
+            }
+        };
     }
 }

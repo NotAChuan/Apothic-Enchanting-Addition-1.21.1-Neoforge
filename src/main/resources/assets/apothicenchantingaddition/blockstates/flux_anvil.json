@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "energy_level=1": {
+      "model": "apothicenchantingaddition:block/flux_anvil_0"
+    },
+    "energy_level=2": {
+      "model": "apothicenchantingaddition:block/flux_anvil_1"
+    },
+    "energy_level=3": {
+      "model": "apothicenchantingaddition:block/flux_anvil_2"
+    },
+    "energy_level=4": {
+      "model": "apothicenchantingaddition:block/flux_anvil_3"
+    }
+  }
+}
