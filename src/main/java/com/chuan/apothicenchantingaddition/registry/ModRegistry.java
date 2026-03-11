@@ -192,7 +192,6 @@ public class ModRegistry {
             event.accept(FLUX_ANVIL_ITEM.get());
             event.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
             event.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
-            // 把通量刷怪笼也加入创造模式物品栏
             event.accept(FLUX_SPAWNER_ITEM.get());
         }
     }

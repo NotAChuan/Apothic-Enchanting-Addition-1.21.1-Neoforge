@@ -11,11 +11,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,8 +31,12 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
     public static final MapCodec<FluxSpawnerBlock> CODEC = simpleCodec(FluxSpawnerBlock::new);
 
+    public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 1, 4);
+
+
     public FluxSpawnerBlock(Properties properties) {
         super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(ENERGY_LEVEL, 1));
     }
 
     @Override
@@ -191,5 +198,10 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ENERGY_LEVEL);
     }
 }

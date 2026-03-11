@@ -1,5 +1,6 @@
 package com.chuan.apothicenchantingaddition.block.entity;
 
+import com.chuan.apothicenchantingaddition.block.FluxSpawnerBlock;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
@@ -89,10 +90,16 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
             if (slot < 8) return stack.getItem() instanceof SpawnEggItem;
             return true;
         }
+
         @Override
-        public int getSlotLimit(int slot) { return slot < 8 ? 1 : 64; }
+        public int getSlotLimit(int slot) {
+            return slot < 8 ? 1 : 64;
+        }
+
         @Override
-        protected void onContentsChanged(int slot) { setChanged(); }
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
     };
 
     public final IItemHandler outputItemHandler = new RangedWrapper(inventory, 8, 72) {
@@ -124,19 +131,35 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     public static void tick(Level level, BlockPos pos, BlockState state, FluxSpawnerBlockEntity entity) {
         if (level.isClientSide) return;
 
-        // 【极致优化 1】降低自动输出频率：每 10 tick (0.5秒) 执行一次即可，拯救服务器 TPS
+        // 【修复】：能量等级检测独立出来，不受其他条件影响
+        if (level.getGameTime() % 20 == 0) {
+            int currentEnergy = entity.energyStorage.getEnergyStored();
+            if (currentEnergy != entity.lastEnergy) {
+                entity.lastEnergy = currentEnergy;
+                entity.setChanged();
+
+                int newEnergyLevel = calculateEnergyLevel(currentEnergy, entity.energyStorage.getMaxEnergyStored());
+                BlockState currentState = level.getBlockState(pos);
+                if (currentState.hasProperty(FluxSpawnerBlock.ENERGY_LEVEL) &&
+                        currentState.getValue(FluxSpawnerBlock.ENERGY_LEVEL) != newEnergyLevel) {
+                    level.setBlock(pos, currentState.setValue(FluxSpawnerBlock.ENERGY_LEVEL, newEnergyLevel), 3);
+                }
+            }
+        }
+
+        // 【极致优化 1】降低自动输出频率
         if (level.getGameTime() % 10 == 0) {
             entity.autoOutputToBelow();
         }
 
-        // 【极致优化 2】零内存分配统计刷怪蛋：避免每 tick 创建 List 导致垃圾回收 (GC) 顿卡
+        // 统计刷怪蛋
         int eggCount = 0;
         for (int i = 0; i < 8; i++) {
             if (!entity.inventory.getStackInSlot(i).isEmpty()) {
                 eggCount++;
             }
         }
-        if (eggCount == 0) return; // 没蛋不工作
+        if (eggCount == 0) return;
 
         if (entity.redstoneControl && !level.hasNeighborSignal(pos)) return;
         if (entity.isOutputFull()) return;
@@ -150,27 +173,17 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
         if (entity.energyStorage.getEnergyStored() < energyCost) return;
 
-        // 扣除能量
         entity.energyStorage.extractEnergy(energyCost, false);
-
-        // 【极致优化 3】能量快照：每 20 tick (1秒) 检查一次能量变化并存盘，避免硬盘狂写或进度丢失
-        if (level.getGameTime() % 20 == 0) {
-            int currentEnergy = entity.energyStorage.getEnergyStored();
-            if (currentEnergy != entity.lastEnergy) {
-                entity.lastEnergy = currentEnergy;
-                entity.setChanged();
-            }
-        }
 
         entity.delay--;
         if (entity.delay <= 0) {
-            // 将遍历逻辑移入内部，不再传 List
             entity.generateLoot((ServerLevel) level);
             int range = entity.maxDelay - entity.minDelay;
             entity.delay = entity.minDelay + (range > 0 ? level.random.nextInt(range) : 0);
             entity.setChanged();
         }
     }
+
 
     private void generateLoot(ServerLevel serverLevel) {
         FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(serverLevel);
@@ -268,20 +281,50 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     // ================== Getter / Setter ==================
-    public int getMinDelay() { return minDelay; }
-    public void setMinDelay(int minDelay) { this.minDelay = minDelay; setChanged(); }
+    public int getMinDelay() {
+        return minDelay;
+    }
 
-    public int getMaxDelay() { return maxDelay; }
-    public void setMaxDelay(int maxDelay) { this.maxDelay = maxDelay; setChanged(); }
+    public void setMinDelay(int minDelay) {
+        this.minDelay = minDelay;
+        setChanged();
+    }
 
-    public int getSpawnCount() { return spawnCount; }
-    public void setSpawnCount(int spawnCount) { this.spawnCount = spawnCount; setChanged(); }
+    public int getMaxDelay() {
+        return maxDelay;
+    }
 
-    public boolean isRedstoneControl() { return redstoneControl; }
-    public void setRedstoneControl(boolean redstoneControl) { this.redstoneControl = redstoneControl; setChanged(); }
+    public void setMaxDelay(int maxDelay) {
+        this.maxDelay = maxDelay;
+        setChanged();
+    }
 
-    public int getEchoing() { return echoing; }
-    public void setEchoing(int echoing) { this.echoing = echoing; setChanged(); }
+    public int getSpawnCount() {
+        return spawnCount;
+    }
+
+    public void setSpawnCount(int spawnCount) {
+        this.spawnCount = spawnCount;
+        setChanged();
+    }
+
+    public boolean isRedstoneControl() {
+        return redstoneControl;
+    }
+
+    public void setRedstoneControl(boolean redstoneControl) {
+        this.redstoneControl = redstoneControl;
+        setChanged();
+    }
+
+    public int getEchoing() {
+        return echoing;
+    }
+
+    public void setEchoing(int echoing) {
+        this.echoing = echoing;
+        setChanged();
+    }
 
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -307,5 +350,12 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (tag.contains("RedstoneControl")) redstoneControl = tag.getBoolean("RedstoneControl");
         if (tag.contains("Echoing")) echoing = tag.getInt("Echoing");
         if (tag.contains("CurrentDelay")) delay = tag.getInt("CurrentDelay");
+    }
+
+    private static int calculateEnergyLevel(int energy, int maxEnergy) {
+        if (energy == 0) return 1;
+        if (energy >= maxEnergy * 0.66) return 4;
+        if (energy >= maxEnergy * 0.33) return 3;
+        return 2;
     }
 }
