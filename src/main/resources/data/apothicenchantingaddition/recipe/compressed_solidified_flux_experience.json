@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "FFF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "apothicenchantingaddition:solidified_flux_experience"
+    }
+  },
+  "result": {
+    "id": "apothicenchantingaddition:compressed_solidified_flux_experience",
+    "count": 1
+  }
+}

@@ -54,5 +54,9 @@
   "ritual.apothicenchantingaddition.name": "聚靈匯法",
   "ritual.apothicenchantingaddition.crafting": "靈氣匯聚中...",
   "ritual.apothicenchantingaddition.busy": "儀式進行中，無法操作！",
-  "ritual.apothicenchantingaddition.obstructed": "儀式受阻！請清除上方方塊"
+  "ritual.apothicenchantingaddition.obstructed": "儀式受阻！請清除上方方塊",
+  "jade.apothicenchantingaddition.flux_spawner.ctrl_stats": "按住 Ctrl 查看詳細屬性",
+  "jade.apothicenchantingaddition.flux_spawner.redstone": "紅石控制",
+  "jade.apothicenchantingaddition.flux_spawner.echoing": "迴響",
+  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "迴響%s"
 }

@@ -50,5 +50,6 @@
     "count": 1
   },
   "output_fluid": "minecraft:water",
+  "output_entity": "minecraft:cow",
   "craft_time": 120
 }

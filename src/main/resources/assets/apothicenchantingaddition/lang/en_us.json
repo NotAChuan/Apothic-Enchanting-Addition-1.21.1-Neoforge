@@ -54,5 +54,9 @@
   "ritual.apothicenchantingaddition.name": "Spirit Gathering",
   "ritual.apothicenchantingaddition.crafting": "Converging Spiritual Energy...",
   "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!",
-  "ritual.apothicenchantingaddition.obstructed": "Ceremony obstructed! Please remove the blocks above."
+  "ritual.apothicenchantingaddition.obstructed": "Ceremony obstructed! Please remove the blocks above.",
+  "jade.apothicenchantingaddition.flux_spawner.ctrl_stats": "Hold Ctrl for detailed stats",
+  "jade.apothicenchantingaddition.flux_spawner.redstone": "Redstone Control",
+  "jade.apothicenchantingaddition.flux_spawner.echoing": "Echoing",
+  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "Echoing %s"
 }
