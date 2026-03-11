@@ -46,7 +46,6 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
     private static final int REFRESH_BOOK_CENTER_X = 33;
     private static final int REFRESH_BOOK_CENTER_Y = 24;
-    private static final int REFRESH_BOOK_SIZE = 16;
     private static final int REFRESH_BOOK_CLICK_CENTER_X = 33;
     private static final int REFRESH_BOOK_CLICK_CENTER_Y = 34;
     private static final int REFRESH_BOOK_CLICK_SIZE = 20;
