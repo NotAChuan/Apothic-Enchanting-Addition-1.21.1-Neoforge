@@ -1,94 +1,275 @@
 package com.chuan.apothicenchantingaddition.client.screen;
 
 import com.chuan.apothicenchantingaddition.menu.FluxAnvilMenu;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AnvilMenu;
 
+import java.lang.reflect.Field;
+
 public class FluxAnvilScreen extends AnvilScreen {
 
-    private final FluxAnvilMenu menu;
+    private static final ResourceLocation GUI_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath("apothicenchantingaddition", "textures/gui/flux_anvil_gui.png");
 
-    public FluxAnvilScreen(AnvilMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
-        super(pMenu, pPlayerInventory, pTitle);
-        this.menu = (FluxAnvilMenu) pMenu;
+    private static final int TEXTURE_WIDTH = 256;
+    private static final int TEXTURE_HEIGHT = 256;
+
+    private static final int GUI_WIDTH = 176;
+    private static final int GUI_HEIGHT = 166;
+
+    private static final int ENERGY_BAR_X = 21;
+    private static final int ENERGY_BAR_Y = 31;
+    private static final int ENERGY_BAR_WIDTH = 26;
+    private static final int ENERGY_BAR_HEIGHT = 6;
+    private static final int ENERGY_BAR_U = 21;
+    private static final int ENERGY_BAR_V = 31;
+    private static final int ENERGY_FILL_U = 178;
+    private static final int ENERGY_FILL_V = 23;
+
+    private static final int NAME_BOX_X = 59;
+    private static final int NAME_BOX_Y = 20;
+    private static final int NAME_BOX_WIDTH = 110;
+    private static final int NAME_BOX_HEIGHT = 16;
+    private static final int NAME_BOX_ACTIVE_U = 0;
+    private static final int NAME_BOX_ACTIVE_V = 166;
+    private static final int NAME_BOX_INACTIVE_U = 0;
+    private static final int NAME_BOX_INACTIVE_V = 182;
+
+    private static final int ARROW_X = 99;
+    private static final int ARROW_Y = 45;
+    private static final int ARROW_WIDTH = 28;
+    private static final int ARROW_HEIGHT = 21;
+    private static final int ARROW_NORMAL_U = 99;
+    private static final int ARROW_NORMAL_V = 45;
+    private static final int ARROW_DISABLED_U = 176;
+    private static final int ARROW_DISABLED_V = 0;
+
+    private final FluxAnvilMenu fluxMenu;
+    private EditBox cachedNameBox;
+
+    public FluxAnvilScreen(AnvilMenu menu, Inventory playerInventory, Component title) {
+        super(menu, playerInventory, title);
+        this.fluxMenu = (FluxAnvilMenu) menu;
+        this.imageWidth = GUI_WIDTH;
+        this.imageHeight = GUI_HEIGHT;
+        this.titleLabelX = 8;
+        this.titleLabelY = 6;
+        this.inventoryLabelX = 7;
+        this.inventoryLabelY = 1000;
     }
 
-    // 1. 绘制背景与左侧的 FE 能量条
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        this.updateNameBoxState();
+    }
+
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        // 先让原版画出铁砧的基础 GUI 和输入框背景
-        super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
+        RenderSystem.setShaderTexture(0, GUI_TEXTURE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        // 设定能量条的位置（在铁砧主界面左侧外挂）
-        int barX = this.leftPos - 14;
-        int barY = this.topPos + 10;
-        int barWidth = 12;
-        int barHeight = 66;
+        int x = this.leftPos;
+        int y = this.topPos;
 
-        // 绘制能量条底框 (深灰色)
-        guiGraphics.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF333333);
+        guiGraphics.blit(GUI_TEXTURE, x, y, 0, 0, GUI_WIDTH, GUI_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
-        // 计算并绘制当前能量比例 (纯正的 FE 红色)
-        int maxEnergy = this.menu.getMaxEnergy();
-        int currentEnergy = this.menu.getEnergy();
-
-        if (maxEnergy > 0 && currentEnergy > 0) {
-            int filledHeight = (int) (((float) currentEnergy / maxEnergy) * (barHeight - 2));
-            guiGraphics.fill(barX + 1, barY + barHeight - 1 - filledHeight, barX + barWidth - 1, barY + barHeight - 1, 0xFFCC2222);
-        }
+        this.renderNameBoxState(guiGraphics, x, y);
+        this.renderArrow(guiGraphics, x, y);
+        this.renderEnergyBar(guiGraphics, x, y);
+        this.updateNameBoxState();
     }
 
-    // 2. 拦截并重写文字渲染 (将“经验”替换为“FE耗电”)
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // 重点：我们故意不调用 super.renderLabels()，因为原版会在那里画“附魔花费：X 级”
-        // 我们手动补上标题和背包文字的渲染
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 4210752, false);
+//        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752, false);
 
-        // 绘制我们的 FE 耗电提示
-        int feCost = this.menu.getFeCost();
+        int feCost = this.fluxMenu.getFeCost();
         if (feCost > 0) {
-            // 判断电量是否足够，足够显绿，不足显红
-            boolean hasEnoughEnergy = this.menu.getEnergy() >= feCost || this.minecraft.player.getAbilities().instabuild;
-            int color = hasEnoughEnergy ? 8453920 : 16736352; // 8453920=绿, 16736352=红
+            boolean enough = this.fluxMenu.getEnergy() >= feCost || this.minecraft.player.getAbilities().instabuild;
+            int color = enough ? 8453920 : 16736352;
 
             Component costText = Component.translatable("gui.apothicenchantingaddition.anvil.cost", feCost);
-
-            // 计算文字宽度，将其靠右对齐放置在原版经验提示的位置
             int textWidth = this.font.width(costText);
             int textX = this.imageWidth - 8 - textWidth;
             int textY = 67;
 
-            // 画一个半透明的黑色背景框增加辨识度（原版铁砧质感）
             guiGraphics.fill(textX - 2, textY - 2, textX + textWidth + 2, textY + 10, 1325400064);
-            // 画出最终的耗电文字
             guiGraphics.drawString(this.font, costText, textX, textY, color, false);
         }
     }
 
-    // 3. 绘制鼠标悬停在能量条上的 Tooltip 提示
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.hasInputItem() && this.isMouseOverNameBox(mouseX, mouseY)) {
+            return false;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
 
-        // 检测鼠标是否悬停在左侧的能量条上
-        int barX = this.leftPos - 14;
-        int barY = this.topPos + 10;
-        int barWidth = 12;
-        int barHeight = 66;
-
-        if (mouseX >= barX && mouseX <= barX + barWidth && mouseY >= barY && mouseY <= barY + barHeight) {
+        int x = this.leftPos + ENERGY_BAR_X;
+        int y = this.topPos + ENERGY_BAR_Y;
+        if (mouseX >= x && mouseX < x + ENERGY_BAR_WIDTH && mouseY >= y && mouseY < y + ENERGY_BAR_HEIGHT) {
             Component tooltip = Component.translatable(
                     "gui.apothicenchantingaddition.energy.fe",
-                    this.menu.getEnergy(),
-                    this.menu.getMaxEnergy()
+                    this.fluxMenu.getEnergy(),
+                    this.fluxMenu.getMaxEnergy()
             );
             guiGraphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
         }
+    }
+
+    private void renderNameBoxState(GuiGraphics guiGraphics, int x, int y) {
+        if (this.hasInputItem()) {
+            guiGraphics.blit(
+                    GUI_TEXTURE,
+                    x + NAME_BOX_X,
+                    y + NAME_BOX_Y,
+                    NAME_BOX_ACTIVE_U,
+                    NAME_BOX_ACTIVE_V,
+                    NAME_BOX_WIDTH,
+                    NAME_BOX_HEIGHT,
+                    TEXTURE_WIDTH,
+                    TEXTURE_HEIGHT
+            );
+        } else {
+            guiGraphics.blit(
+                    GUI_TEXTURE,
+                    x + NAME_BOX_X,
+                    y + NAME_BOX_Y,
+                    NAME_BOX_INACTIVE_U,
+                    NAME_BOX_INACTIVE_V,
+                    NAME_BOX_WIDTH,
+                    NAME_BOX_HEIGHT,
+                    TEXTURE_WIDTH,
+                    TEXTURE_HEIGHT
+            );
+        }
+    }
+
+    private void renderArrow(GuiGraphics guiGraphics, int x, int y) {
+        if (this.fluxMenu.getSlot(2).hasItem()) {
+            guiGraphics.blit(
+                    GUI_TEXTURE,
+                    x + ARROW_X,
+                    y + ARROW_Y,
+                    ARROW_NORMAL_U,
+                    ARROW_NORMAL_V,
+                    ARROW_WIDTH,
+                    ARROW_HEIGHT,
+                    TEXTURE_WIDTH,
+                    TEXTURE_HEIGHT
+            );
+        } else {
+            guiGraphics.blit(
+                    GUI_TEXTURE,
+                    x + ARROW_X,
+                    y + ARROW_Y,
+                    ARROW_DISABLED_U,
+                    ARROW_DISABLED_V,
+                    ARROW_WIDTH,
+                    ARROW_HEIGHT,
+                    TEXTURE_WIDTH,
+                    TEXTURE_HEIGHT
+            );
+        }
+    }
+
+    private void renderEnergyBar(GuiGraphics guiGraphics, int x, int y) {
+        guiGraphics.blit(
+                GUI_TEXTURE,
+                x + ENERGY_BAR_X,
+                y + ENERGY_BAR_Y,
+                ENERGY_BAR_U,
+                ENERGY_BAR_V,
+                ENERGY_BAR_WIDTH,
+                ENERGY_BAR_HEIGHT,
+                TEXTURE_WIDTH,
+                TEXTURE_HEIGHT
+        );
+
+        int energy = this.fluxMenu.getEnergy();
+        int maxEnergy = this.fluxMenu.getMaxEnergy();
+        if (energy <= 0 || maxEnergy <= 0) {
+            return;
+        }
+
+        int filled = Math.min(ENERGY_BAR_WIDTH, Math.max(1, Math.round((energy / (float) maxEnergy) * ENERGY_BAR_WIDTH)));
+
+        guiGraphics.blit(
+                GUI_TEXTURE,
+                x + ENERGY_BAR_X,
+                y + ENERGY_BAR_Y,
+                ENERGY_FILL_U,
+                ENERGY_FILL_V,
+                filled,
+                ENERGY_BAR_HEIGHT,
+                TEXTURE_WIDTH,
+                TEXTURE_HEIGHT
+        );
+    }
+
+    private void updateNameBoxState() {
+        EditBox nameBox = this.getNameBox();
+        if (nameBox == null) {
+            return;
+        }
+
+        boolean editable = this.hasInputItem();
+        nameBox.setEditable(editable);
+
+        if (editable) {
+            nameBox.setVisible(true);
+        } else {
+            nameBox.setFocused(false);
+            nameBox.setVisible(false);
+        }
+    }
+
+    private boolean hasInputItem() {
+        return this.fluxMenu.getSlot(0).hasItem();
+    }
+
+    private boolean isMouseOverNameBox(double mouseX, double mouseY) {
+        int x = this.leftPos + NAME_BOX_X;
+        int y = this.topPos + NAME_BOX_Y;
+        return mouseX >= x && mouseX < x + NAME_BOX_WIDTH && mouseY >= y && mouseY < y + NAME_BOX_HEIGHT;
+    }
+
+    private EditBox getNameBox() {
+        if (this.cachedNameBox != null) {
+            return this.cachedNameBox;
+        }
+
+        Class<?> current = AnvilScreen.class;
+        while (current != null) {
+            for (Field field : current.getDeclaredFields()) {
+                if (EditBox.class.isAssignableFrom(field.getType())) {
+                    try {
+                        field.setAccessible(true);
+                        Object value = field.get(this);
+                        if (value instanceof EditBox editBox) {
+                            this.cachedNameBox = editBox;
+                            return editBox;
+                        }
+                    } catch (IllegalAccessException ignored) {
+                    }
+                }
+            }
+            current = current.getSuperclass();
+        }
+
+        return null;
     }
 }

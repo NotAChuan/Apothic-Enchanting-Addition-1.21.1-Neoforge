@@ -6,7 +6,8 @@
 	"textures": {
 		"3": "minecraft:block/glass",
 		"4": "apothicenchantingaddition:block/flux_anvil/flux_2",
-		"5": "apothicenchantingaddition:block/flux_anvil/flux_anvil"
+		"5": "apothicenchantingaddition:block/flux_anvil/flux_anvil",
+		"particle": "apothicenchantingaddition:block/flux_anvil/flux_anvil"
 	},
 	"elements": [
 		{
