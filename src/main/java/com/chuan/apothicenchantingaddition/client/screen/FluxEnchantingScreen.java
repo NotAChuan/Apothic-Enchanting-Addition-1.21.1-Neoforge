@@ -3,113 +3,252 @@ package com.chuan.apothicenchantingaddition.client.screen;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu;
 import com.chuan.apothicenchantingaddition.network.FluxActionPayload;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.EnchantmentNames;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentInstance;
 import net.neoforged.neoforge.network.PacketDistributor;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.BookModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.Material;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchantingMenu> {
 
-    private final int MAX_ENERGY = 1000000000;
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
+            "apothicenchantingaddition",
+            "textures/gui/flux_enchanting_table_gui.png"
+    );
+
+    private static final Material ENCHANTING_BOOK_MATERIAL = new Material(
+            ResourceLocation.withDefaultNamespace("textures/atlas/blocks.png"),
+            ResourceLocation.withDefaultNamespace("entity/enchanting_table_book")
+    );
+
+    private BookModel bookModel;
+
+    private static final int REFRESH_BOOK_CENTER_X = 33;
+    private static final int REFRESH_BOOK_CENTER_Y = 24;
+    private static final int REFRESH_BOOK_SIZE = 16;
+    private static final int REFRESH_BOOK_CLICK_CENTER_X = 33;
+    private static final int REFRESH_BOOK_CLICK_CENTER_Y = 34;
+    private static final int REFRESH_BOOK_CLICK_SIZE = 20;
+    private static final Component REFRESH_TOOLTIP = Component.translatable("gui.apothicenchantingaddition.refresh");
+
+    private static final int TEXTURE_WIDTH = 256;
+    private static final int TEXTURE_HEIGHT = 256;
+    private static final int MAX_ENERGY = 1000000000;
+
+    private static final int ENCHANT_BAR_X = 60;
+    private static final int ENCHANT_BAR_Y = 14;
+    private static final int ENCHANT_BAR_WIDTH = 108;
+    private static final int ENCHANT_BAR_HEIGHT = 19;
+    private static final int ENCHANT_BAR_SPACING = 19;
+
+    private static final int ENCHANT_BAR_NORMAL_U = 148;
+    private static final int ENCHANT_BAR_NORMAL_V = 199;
+    private static final int ENCHANT_BAR_DISABLED_U = 148;
+    private static final int ENCHANT_BAR_DISABLED_V = 218;
+    private static final int ENCHANT_BAR_HOVER_U = 148;
+    private static final int ENCHANT_BAR_HOVER_V = 237;
+
+    private static final int ENCHANT_ICON_WIDTH = 12;
+    private static final int ENCHANT_ICON_HEIGHT = 9;
+    private static final int ENCHANT_TEXT_X = 78;
+    private static final int ENCHANT_TEXT_Y_OFFSET = 6;
+    private static final int ENCHANT_TEXT_MAX_WIDTH = 84;
+
+    private static final int[] ENCHANT_ICON_X = {62, 62, 62};
+    private static final int[] ENCHANT_ICON_Y = {18, 37, 56};
+    private static final int[] ENCHANT_ICON_ENABLED_U = {3, 19, 35};
+    private static final int[] ENCHANT_ICON_ENABLED_V = {226, 226, 226};
+    private static final int[] ENCHANT_ICON_DISABLED_U = {3, 19, 35};
+    private static final int[] ENCHANT_ICON_DISABLED_V = {242, 242, 242};
+
+    private static final int STAT_BAR_X = 59;
+    private static final int STAT_BAR_WIDTH = 110;
+    private static final int STAT_BAR_HEIGHT = 5;
+    private static final int ETERNA_BAR_Y = 75;
+    private static final int QUANTA_BAR_Y = 85;
+    private static final int ARCANA_BAR_Y = 95;
+    private static final int ENERGY_BAR_Y = 105;
+
+    private static final int ETERNA_FILL_U = 0;
+    private static final int ETERNA_FILL_V = 199;
+    private static final int QUANTA_FILL_U = 0;
+    private static final int QUANTA_FILL_V = 204;
+    private static final int ARCANA_FILL_U = 0;
+    private static final int ARCANA_FILL_V = 209;
+    private static final int ENERGY_FILL_U = 0;
+    private static final int ENERGY_FILL_V = 214;
+
+    private static final int LABEL_X = 20;
+    private static final int ETERNA_LABEL_Y = 74;
+    private static final int QUANTA_LABEL_Y = 84;
+    private static final int ARCANA_LABEL_Y = 94;
+    private static final int ENERGY_LABEL_Y = 104;
 
     public FluxEnchantingScreen(FluxEnchantingMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
-        this.inventoryLabelY = 1000; // 隐藏默认碍事的 "Inventory" 文字
+        this.imageHeight = 199;
+        this.inventoryLabelY = 1000;
     }
 
     @Override
     protected void init() {
         super.init();
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
-
-        this.addRenderableWidget(Button.builder(Component.literal("刷新"), b -> {
-            PacketDistributor.sendToServer(new FluxActionPayload(menu.getBlockEntity().getBlockPos(), 0));
-        }).bounds(x + 35, y + 25, 22, 14).build());
+        this.bookModel = new BookModel(
+                this.minecraft.getEntityModels().bakeLayer(ModelLayers.BOOK)
+        );
     }
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
+        int x = this.leftPos;
+        int y = this.topPos;
 
-        guiGraphics.fill(x, y, x + imageWidth, y + imageHeight, 0xFFC6C6C6);
-        guiGraphics.fill(x, y, x + imageWidth, y + 1, 0xFFFFFFFF);
-        guiGraphics.fill(x, y, x + 1, y + imageHeight, 0xFFFFFFFF);
-        guiGraphics.fill(x + imageWidth - 1, y + 1, x + imageWidth, y + imageHeight, 0xFF555555);
-        guiGraphics.fill(x + 1, y + imageHeight - 1, x + imageWidth, y + imageHeight, 0xFF555555);
+        guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
-        // 绘制槽位
-        drawSlotBackground(guiGraphics, x + 14, y + 46, 18, 18);
-        drawSlotBackground(guiGraphics, x + 34, y + 46, 18, 18);
+        renderBook(guiGraphics, x, y);
 
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 9; ++j) {
-                drawSlotBackground(guiGraphics, x + 7 + j * 18, y + 83 + i * 18, 18, 18);
-            }
-        }
-        for (int k = 0; k < 9; ++k) {
-            drawSlotBackground(guiGraphics, x + 7 + k * 18, y + 141, 18, 18);
-        }
-
-        // 绘制能量条
-        int energyBarX = x + 4;
-        int energyBarY = y + 10;
-        int energyBarWidth = 6;
-        int energyBarHeight = 70;
-        drawSlotBackground(guiGraphics, energyBarX, energyBarY, energyBarWidth, energyBarHeight);
         int currentEnergy = menu.getEnergy();
-        if (currentEnergy > 0) {
-            int fillHeight = (int) ((currentEnergy / (float) MAX_ENERGY) * (energyBarHeight - 2));
-            guiGraphics.fill(energyBarX + 1, energyBarY + energyBarHeight - 1 - fillHeight, energyBarX + energyBarWidth - 1, energyBarY + energyBarHeight - 1, 0xFFFF0000);
-        }
-
         int baseCost = ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
+
         for (int i = 0; i < 3; i++) {
-            int btnX = x + 60;
-            int btnY = y + 14 + 19 * i;
+            int btnX = x + ENCHANT_BAR_X;
+            int btnY = y + ENCHANT_BAR_Y + ENCHANT_BAR_SPACING * i;
             int costLevel = menu.costs[i];
             int feCost = costLevel * baseCost;
+            boolean hasEnchant = costLevel > 0;
+            boolean canClick = hasEnchant && currentEnergy >= feCost;
+            boolean hovered = isMouseOverEnchantBar(mouseX, mouseY, i);
 
-            if (costLevel == 0) {
-                drawSlotBackground(guiGraphics, btnX, btnY, 108, 19);
-            } else {
-                boolean canAfford = currentEnergy >= feCost;
-                int color = canAfford ? 0xFF00FF00 : 0xFFFF0000;
-                guiGraphics.fill(btnX, btnY, btnX + 108, btnY + 19, 0xFF555555);
-                guiGraphics.drawString(this.font, Component.literal("Lvl " + costLevel), btnX + 2, btnY + 2, color, false);
-                guiGraphics.drawString(this.font, Component.literal(feCost + " FE"), btnX + 2, btnY + 10, canAfford ? 0xFFFFFFFF : 0xFFAAAAAA, false);
+            int textureU = ENCHANT_BAR_NORMAL_U;
+            int textureV = ENCHANT_BAR_NORMAL_V;
+            if (!canClick) {
+                textureU = ENCHANT_BAR_DISABLED_U;
+                textureV = ENCHANT_BAR_DISABLED_V;
+            } else if (hovered) {
+                textureU = ENCHANT_BAR_HOVER_U;
+                textureV = ENCHANT_BAR_HOVER_V;
+            }
+
+            guiGraphics.blit(TEXTURE, btnX, btnY, textureU, textureV, ENCHANT_BAR_WIDTH, ENCHANT_BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+
+            if (hasEnchant) {
+                int iconX = x + ENCHANT_ICON_X[i];
+                int iconY = y + ENCHANT_ICON_Y[i];
+                int iconU = canClick ? ENCHANT_ICON_ENABLED_U[i] : ENCHANT_ICON_DISABLED_U[i];
+                int iconV = canClick ? ENCHANT_ICON_ENABLED_V[i] : ENCHANT_ICON_DISABLED_V[i];
+                guiGraphics.blit(TEXTURE, iconX, iconY, iconU, iconV, ENCHANT_ICON_WIDTH, ENCHANT_ICON_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+
+                EnchantmentNames.getInstance().initSeed(menu.getEnchantmentSeed() + i);
+                FormattedText magicText = EnchantmentNames.getInstance().getRandomName(this.font, ENCHANT_TEXT_MAX_WIDTH);
+                int textColor = canClick ? (hovered ? 0xFFFFD75E : 0xFF8B7C43) : 0xFF5B5850;
+                guiGraphics.drawString(this.font, Language.getInstance().getVisualOrder(magicText), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
             }
         }
 
-        int statY = y + 73;
-        guiGraphics.drawString(this.font, Component.literal("E: " + String.format("%.1f", menu.getEterna())), x + 60, statY, 0x55FF55, false);
-        guiGraphics.drawString(this.font, Component.literal("Q: " + String.format("%.1f%%", menu.getQuanta())), x + 95, statY, 0xFF5555, false);
-        guiGraphics.drawString(this.font, Component.literal("A: " + String.format("%.1f%%", menu.getArcana())), x + 135, statY, 0xFF55FF, false);
+        drawStatBar(guiGraphics, x + STAT_BAR_X, y + ETERNA_BAR_Y, ETERNA_FILL_U, ETERNA_FILL_V, menu.getEterna(), 100.0F);
+        drawStatBar(guiGraphics, x + STAT_BAR_X, y + QUANTA_BAR_Y, QUANTA_FILL_U, QUANTA_FILL_V, menu.getQuanta(), 100.0F);
+        drawStatBar(guiGraphics, x + STAT_BAR_X, y + ARCANA_BAR_Y, ARCANA_FILL_U, ARCANA_FILL_V, menu.getArcana(), 100.0F);
+        drawStatBar(guiGraphics, x + STAT_BAR_X, y + ENERGY_BAR_Y, ENERGY_FILL_U, ENERGY_FILL_V, currentEnergy, (float) MAX_ENERGY);
+
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.eterna"), x + LABEL_X, y + ETERNA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.quanta"), x + LABEL_X, y + QUANTA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.arcana"), x + LABEL_X, y + ARCANA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.energy"), x + LABEL_X, y + ENERGY_LABEL_Y, 0xFFFFFFFF, false);
     }
 
-    private void drawSlotBackground(GuiGraphics guiGraphics, int x, int y, int width, int height) {
-        guiGraphics.fill(x, y, x + width, y + height, 0xFF8B8B8B);
-        guiGraphics.fill(x, y, x + width, y + 1, 0xFF373737);
-        guiGraphics.fill(x, y, x + 1, y + height, 0xFF373737);
-        guiGraphics.fill(x + width - 1, y + 1, x + width, y + height, 0xFFFFFFFF);
-        guiGraphics.fill(x + 1, y + height - 1, x + width, y + height, 0xFFFFFFFF);
+    private void renderBook(GuiGraphics guiGraphics, int x, int y) {
+        if (this.bookModel == null || this.minecraft == null) {
+            return;
+        }
+
+        boolean hasItem = this.menu.getSlot(0).hasItem();
+        float open = hasItem ? 1.0F : 0.0F;
+
+        PoseStack pose = guiGraphics.pose();
+        MultiBufferSource.BufferSource buffer = this.minecraft.renderBuffers().bufferSource();
+
+        pose.pushPose();
+        pose.translate(x + REFRESH_BOOK_CENTER_X, y + REFRESH_BOOK_CENTER_Y + 10.0F, 100.0F);
+        pose.scale(24.0F, 24.0F, 24.0F);
+        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(12.0F));
+        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(20.0F));
+        pose.translate((1.0F - open) * 0.2F, (1.0F - open) * 0.1F, (1.0F - open) * 0.25F);
+        pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-(1.0F - open) * 90.0F - 90.0F));
+        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(180.0F));
+
+        float pageFlipLeft = hasItem ? 0.1F : 0.0F;
+        float pageFlipRight = hasItem ? 0.9F : 0.0F;
+        this.bookModel.setupAnim(0.0F, pageFlipLeft, pageFlipRight, open);
+
+        this.bookModel.renderToBuffer(
+                pose,
+                ENCHANTING_BOOK_MATERIAL.buffer(buffer, RenderType::entitySolid),
+                15728880,
+                OverlayTexture.NO_OVERLAY,
+                0xFFFFFFFF
+        );
+
+        buffer.endBatch();
+        pose.popPose();
+    }
+
+    private void drawStatBar(GuiGraphics guiGraphics, int x, int y, int u, int v, float currentValue, float maxValue) {
+        float ratio = maxValue <= 0 ? 0 : Mth.clamp(currentValue / maxValue, 0.0F, 1.0F);
+        int fillWidth = Mth.floor(STAT_BAR_WIDTH * ratio);
+        if (fillWidth > 0) {
+            guiGraphics.blit(TEXTURE, x, y, u, v, fillWidth, STAT_BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        }
+    }
+
+    private boolean isMouseOverEnchantBar(double mouseX, double mouseY, int index) {
+        int btnX = this.leftPos + ENCHANT_BAR_X;
+        int btnY = this.topPos + ENCHANT_BAR_Y + ENCHANT_BAR_SPACING * index;
+        return mouseX >= btnX && mouseX <= btnX + ENCHANT_BAR_WIDTH && mouseY >= btnY && mouseY <= btnY + ENCHANT_BAR_HEIGHT;
+    }
+
+    private boolean isMouseOverStatBar(double mouseX, double mouseY, int barY) {
+        int x = this.leftPos + STAT_BAR_X;
+        int y = this.topPos + barY;
+        return mouseX >= x && mouseX <= x + STAT_BAR_WIDTH && mouseY >= y && mouseY <= y + STAT_BAR_HEIGHT;
+    }
+
+    private boolean isMouseOverRefreshBook(double mouseX, double mouseY) {
+        int x = this.leftPos + REFRESH_BOOK_CLICK_CENTER_X - REFRESH_BOOK_CLICK_SIZE / 2;
+        int y = this.topPos + REFRESH_BOOK_CLICK_CENTER_Y - REFRESH_BOOK_CLICK_SIZE / 2;
+        return mouseX >= x && mouseX < x + REFRESH_BOOK_CLICK_SIZE && mouseY >= y && mouseY < y + REFRESH_BOOK_CLICK_SIZE;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
-        for (int i = 0; i < 3; i++) {
-            int btnX = x + 60;
-            int btnY = y + 14 + 19 * i;
+        if (isMouseOverRefreshBook(mouseX, mouseY)) {
+            PacketDistributor.sendToServer(new FluxActionPayload(menu.getBlockEntity().getBlockPos(), 0));
+            return true;
+        }
 
-            // 🐛 [修复] 同样缩小实际的点击判定框，防止边角误触
-            if (mouseX > btnX && mouseX < btnX + 107 && mouseY > btnY && mouseY < btnY + 18) {
+        for (int i = 0; i < 3; i++) {
+            if (isMouseOverEnchantBar(mouseX, mouseY, i)) {
                 int costLevel = menu.costs[i];
                 int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
                 if (costLevel > 0 && menu.getEnergy() >= feCost) {
@@ -127,51 +266,85 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
 
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
-
         for (int i = 0; i < 3; i++) {
-            int btnX = x + 60;
-            int btnY = y + 14 + 19 * i;
-
-            // 🐛 [修复3] 悬停判定框严格向内缩小一点，并且去除等号 (=) 避免重叠
-            if (mouseX > btnX && mouseX < btnX + 107 && mouseY > btnY && mouseY < btnY + 18) {
+            if (isMouseOverEnchantBar(mouseX, mouseY, i)) {
                 int costLevel = menu.costs[i];
                 if (costLevel > 0) {
-                    java.util.List<Component> tooltip = new java.util.ArrayList<>();
-                    java.util.List<net.minecraft.world.item.enchantment.EnchantmentInstance> clues = menu.clientClues[i];
+                    List<Component> tooltip = new ArrayList<>();
+                    List<EnchantmentInstance> clues = menu.clientClues[i];
 
                     if (clues != null && !clues.isEmpty()) {
-
-                        // ✨ [修复2] 将全揭示判定移动到这里，优先加进列表，让它显示在第一行！
                         if (menu.clientAllRevealed[i]) {
-                            // ✨ [修复1] 使用我们自己模组的专属翻译键，不再依赖神化内部
-                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed").withStyle(net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.UNDERLINE));
+                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed")
+                                    .withStyle(ChatFormatting.GOLD, ChatFormatting.UNDERLINE));
                         }
 
-                        for (net.minecraft.world.item.enchantment.EnchantmentInstance clue : clues) {
-                            Component enchantName = net.minecraft.world.item.enchantment.Enchantment.getFullname(clue.enchantment, clue.level);
+                        for (EnchantmentInstance clue : clues) {
+                            Component enchantName = Enchantment.getFullname(clue.enchantment, clue.level);
                             tooltip.add(enchantName);
                         }
 
                         if (!menu.clientAllRevealed[i]) {
-                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed").withStyle(net.minecraft.ChatFormatting.GRAY));
+                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed")
+                                    .withStyle(ChatFormatting.GRAY));
                         }
-
                     } else {
-                        tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", "")).withStyle(net.minecraft.ChatFormatting.WHITE));
+                        tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", ""))
+                                .withStyle(ChatFormatting.WHITE));
                     }
+
+                    int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
+                    boolean canAfford = menu.getEnergy() >= feCost;
+                    tooltip.add(Component.translatable(
+                            "gui.apothicenchantingaddition.flux_enchanting.energy_cost",
+                            String.format("%,d", feCost)
+                    ).withStyle(canAfford ? ChatFormatting.GREEN : ChatFormatting.RED));
 
                     guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
                 }
             }
         }
 
-        if (mouseX >= x + 4 && mouseX <= x + 10 && mouseY >= y + 10 && mouseY <= y + 80) {
-            java.util.List<Component> tooltips = java.util.List.of(
-                    Component.translatable("gui.apothicenchantingaddition.energy.fe", String.format("%,d", menu.getEnergy()), String.format("%,d", MAX_ENERGY)),
-                    Component.translatable("gui.apothicenchantingaddition.energy.cost", String.format("%,d", ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get()))
+        if (isMouseOverRefreshBook(mouseX, mouseY)) {
+            guiGraphics.renderComponentTooltip(this.font, List.of(REFRESH_TOOLTIP), mouseX, mouseY);
+        }
+
+        if (isMouseOverStatBar(mouseX, mouseY, ETERNA_BAR_Y)) {
+            guiGraphics.renderComponentTooltip(this.font,
+                    List.of(Component.translatable(
+                            "gui.apothicenchantingaddition.stat.eterna",
+                            String.format("%.2f / 100", menu.getEterna())
+                    )),
+                    mouseX, mouseY);
+
+        } else if (isMouseOverStatBar(mouseX, mouseY, QUANTA_BAR_Y)) {
+            guiGraphics.renderComponentTooltip(this.font,
+                    List.of(Component.translatable(
+                            "gui.apothicenchantingaddition.stat.quanta",
+                            String.format("%.2f%%", menu.getQuanta())
+                    )),
+                    mouseX, mouseY);
+
+        } else if (isMouseOverStatBar(mouseX, mouseY, ARCANA_BAR_Y)) {
+            guiGraphics.renderComponentTooltip(this.font,
+                    List.of(Component.translatable(
+                            "gui.apothicenchantingaddition.stat.arcana",
+                            String.format("%.2f%%", menu.getArcana())
+                    )),
+                    mouseX, mouseY);
+
+        } else if (isMouseOverStatBar(mouseX, mouseY, ENERGY_BAR_Y)) {
+            List<Component> tooltips = List.of(
+                    Component.translatable(
+                            "gui.apothicenchantingaddition.stat.energy",
+                            String.format("%,d / %,d FE", menu.getEnergy(), MAX_ENERGY)
+                    ),
+                    Component.translatable(
+                            "gui.apothicenchantingaddition.energy.cost",
+                            String.format("%,d", ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get())
+                    )
             );
+
             guiGraphics.renderComponentTooltip(this.font, tooltips, mouseX, mouseY);
         }
     }

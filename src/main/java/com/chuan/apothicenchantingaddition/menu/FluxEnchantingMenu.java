@@ -89,7 +89,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
 
         // ✨ [调整] 机器槽位 0：不再限制放入，像原版一样允许塞入任何东西
-        this.addSlot(new SlotItemHandler(entity.inventory, 0, 15, 47) {
+        this.addSlot(new SlotItemHandler(entity.inventory, 0, 14, 46) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -103,7 +103,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         });
 
         // 机器槽位 1：刷新材料槽
-        this.addSlot(new SlotItemHandler(entity.inventory, 1, 35, 47) {
+        this.addSlot(new SlotItemHandler(entity.inventory, 1, 34, 46) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 String configItemStr = ApothicAdditionConfig.FLUX_ENCHANTER_REFRESH_ITEM.get();
@@ -114,11 +114,11 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 9; ++j) {
-                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
+                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 7 + j * 18, 116 + i * 18));
             }
         }
         for (int k = 0; k < 9; ++k) {
-            this.addSlot(new Slot(playerInventory, k, 8 + k * 18, 142));
+            this.addSlot(new Slot(playerInventory, k, 7 + k * 18, 174));
         }
 
         this.addDataSlot(enchantmentSeed).set(playerInventory.player.getEnchantmentSeed());
@@ -292,6 +292,11 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
     public float getArcana() {
         return Float.intBitsToFloat(arcanaSlot.get());
+    }
+
+
+    public int getEnchantmentSeed() {
+        return this.enchantmentSeed.get();
     }
 
     public FluxEnchantingTableBlockEntity getBlockEntity() {
