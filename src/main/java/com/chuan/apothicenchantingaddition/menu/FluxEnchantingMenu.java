@@ -344,7 +344,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
                     blockEntity.inventory.setStackInSlot(0, stack);
 
-                    player.onEnchantmentPerformed(stack, costLevel);
+                    player.onEnchantmentPerformed(stack, 0);
                     this.enchantmentSeed.set(player.getEnchantmentSeed());
                     this.slotsChanged(new SimpleContainer(0));
                     blockEntity.getLevel().playSound(null, blockEntity.getBlockPos(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, player.getRandom().nextFloat() * 0.1F + 0.9F);
