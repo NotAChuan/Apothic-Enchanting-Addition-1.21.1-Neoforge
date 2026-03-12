@@ -14,9 +14,9 @@ import net.neoforged.neoforge.energy.EnergyStorage;
 
 public class FluxStatsBookshelfBlockEntity extends BlockEntity {
 
-    private float eterna = 0;
-    private float quanta = 0;
-    private float arcana = 0;
+    private int eterna = 0;
+    private int quanta = 0;
+    private int arcana = 0;
     private int clues = 0;
     private boolean allowsTreasure = false;
     private boolean stable = false;
@@ -186,15 +186,15 @@ public class FluxStatsBookshelfBlockEntity extends BlockEntity {
         return isActive && stable;
     }
 
-    public float getRawEterna() {
+    public int getRawEterna() {
         return eterna;
     }
 
-    public float getRawQuanta() {
+    public int getRawQuanta() {
         return quanta;
     }
 
-    public float getRawArcana() {
+    public int getRawArcana() {
         return arcana;
     }
 
@@ -210,12 +210,12 @@ public class FluxStatsBookshelfBlockEntity extends BlockEntity {
         return stable;
     }
 
-    public void setStats(float eterna, float quanta, float arcana, int clues, boolean allowsTreasure, boolean stable) {
+    public void setStats(int eterna, int quanta, int arcana, int clues, boolean allowsTreasure, boolean stable) {
         Tier currentTier = getTier();
-        this.eterna = Math.min(eterna, currentTier.getMaxEterna());
-        this.quanta = Math.min(quanta, currentTier.getMaxQuanta());
-        this.arcana = Math.min(arcana, currentTier.getMaxArcana());
-        this.clues = Math.min(clues, currentTier.getMaxClues());
+        this.eterna = Math.min(Math.max(eterna, 0), Math.round(currentTier.getMaxEterna()));
+        this.quanta = Math.min(Math.max(quanta, 0), Math.round(currentTier.getMaxQuanta()));
+        this.arcana = Math.min(Math.max(arcana, 0), Math.round(currentTier.getMaxArcana()));
+        this.clues = Math.min(Math.max(clues, 0), currentTier.getMaxClues());
         this.allowsTreasure = allowsTreasure;
         this.stable = stable;
         setChanged();
@@ -228,9 +228,9 @@ public class FluxStatsBookshelfBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        tag.putFloat("Eterna", eterna);
-        tag.putFloat("Quanta", quanta);
-        tag.putFloat("Arcana", arcana);
+        tag.putInt("Eterna", eterna);
+        tag.putInt("Quanta", quanta);
+        tag.putInt("Arcana", arcana);
         tag.putInt("Clues", clues);
         tag.putBoolean("Treasure", allowsTreasure);
         tag.putBoolean("Stable", stable);
@@ -241,9 +241,9 @@ public class FluxStatsBookshelfBlockEntity extends BlockEntity {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        this.eterna = tag.getFloat("Eterna");
-        this.quanta = tag.getFloat("Quanta");
-        this.arcana = tag.getFloat("Arcana");
+        this.eterna = tag.contains("Eterna", net.minecraft.nbt.Tag.TAG_INT) ? tag.getInt("Eterna") : Math.round(tag.getFloat("Eterna"));
+        this.quanta = tag.contains("Quanta", net.minecraft.nbt.Tag.TAG_INT) ? tag.getInt("Quanta") : Math.round(tag.getFloat("Quanta"));
+        this.arcana = tag.contains("Arcana", net.minecraft.nbt.Tag.TAG_INT) ? tag.getInt("Arcana") : Math.round(tag.getFloat("Arcana"));
         this.clues = tag.getInt("Clues");
         this.allowsTreasure = tag.getBoolean("Treasure");
         this.stable = tag.getBoolean("Stable");

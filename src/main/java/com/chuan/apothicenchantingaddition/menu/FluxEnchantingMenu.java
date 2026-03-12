@@ -7,12 +7,14 @@ import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import dev.shadowsoffire.apothic_enchanting.table.ApothEnchantmentMenu;
 import dev.shadowsoffire.apothic_enchanting.table.ApothEnchantmentHelper;
 import dev.shadowsoffire.apothic_enchanting.table.EnchantmentTableStats;
+import dev.shadowsoffire.apothic_enchanting.table.infusion.InfusionRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -52,6 +54,9 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final DataSlot eternaSlot = DataSlot.standalone();
     private final DataSlot quantaSlot = DataSlot.standalone();
     private final DataSlot arcanaSlot = DataSlot.standalone();
+    private final DataSlot infusionModeSlot = DataSlot.standalone();
+    private final DataSlot infusionReadySlot = DataSlot.standalone();
+    private final DataSlot infusionCostSlot = DataSlot.standalone();
 
     public final List<List<EnchantmentInstance>> clientClues = new ArrayList<>(List.of(
             List.of(),
@@ -141,6 +146,9 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         this.addDataSlot(eternaSlot);
         this.addDataSlot(quantaSlot);
         this.addDataSlot(arcanaSlot);
+        this.addDataSlot(infusionModeSlot);
+        this.addDataSlot(infusionReadySlot);
+        this.addDataSlot(infusionCostSlot);
     }
 
     @Override
@@ -153,7 +161,17 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         quantaSlot.set(Float.floatToIntBits(stats.quanta()));
         arcanaSlot.set(Float.floatToIntBits(stats.arcana()));
 
-        boolean isEnchantable = canEnchantItem(stack);
+        this.clearInfusionState();
+
+        if (stack.getCount() == 1) {
+            InfusionRecipe itemMatch = InfusionRecipe.findItemMatch(blockEntity.getLevel(), stack);
+            if (itemMatch != null) {
+                this.applyInfusionState(stack, stats, itemMatch);
+                return;
+            }
+        }
+
+        boolean isEnchantable = stack.getCount() == 1 && canEnchantItem(stack);
 
         if (isEnchantable) {
             this.random.setSeed(this.enchantmentSeed.get());
@@ -188,31 +206,78 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
                             allRevealed = copyList.isEmpty();
                         }
 
-                        if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                            PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, displayClues, allRevealed));
-                        }
+                        this.sendClues(i, displayClues, allRevealed);
                     } else {
-                        if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                            PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
-                        }
+                        this.sendClues(i, List.of(), true);
                     }
                 } else {
-                    if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                        PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
-                    }
+                    this.sendClues(i, List.of(), true);
                 }
             }
         } else {
-            // ✨ [调整] 放入杂物或槽位为空时，强制将 costs 设为 0，这会让右侧 UI 瞬间全空
-            for (int i = 0; i < 3; ++i) {
-                this.costs[i] = 0;
-                this.enchantClue[i] = -1;
-                this.levelClue[i] = -1;
-                if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                    PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(i, List.of(), true));
-                }
-            }
+            this.clearEnchantState();
         }
+    }
+
+
+    private void clearEnchantState() {
+        for (int i = 0; i < 3; ++i) {
+            this.costs[i] = 0;
+            this.enchantClue[i] = -1;
+            this.levelClue[i] = -1;
+            this.sendClues(i, List.of(), true);
+        }
+    }
+
+    private void clearInfusionState() {
+        this.infusionModeSlot.set(0);
+        this.infusionReadySlot.set(0);
+        this.infusionCostSlot.set(0);
+    }
+
+    private void applyInfusionState(ItemStack stack, EnchantmentTableStats stats, InfusionRecipe itemMatch) {
+        this.clearEnchantState();
+        this.infusionModeSlot.set(1);
+
+        InfusionRecipe statMatch = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, stats.eterna(), stats.quanta(), stats.arcana());
+        InfusionRecipe costRecipe = statMatch != null ? statMatch : itemMatch;
+
+        this.infusionCostSlot.set(this.getInfusionEnergyCost(costRecipe));
+
+        if (statMatch != null) {
+            this.infusionReadySlot.set(1);
+            this.costs[2] = 1;
+        }
+    }
+
+    private void sendClues(int slot, List<EnchantmentInstance> displayClues, boolean allRevealed) {
+        if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new FluxCluePayload(slot, displayClues, allRevealed));
+        }
+    }
+
+    private int getInfusionEnergyCost(InfusionRecipe recipe) {
+        float total = recipe.getRequirements().eterna() + recipe.getRequirements().arcana() + recipe.getRequirements().quanta();
+        return Mth.ceil(total * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get());
+    }
+
+    public boolean isInfusionMode() {
+        return this.infusionModeSlot.get() == 1;
+    }
+
+    public boolean canInfuse() {
+        return this.infusionReadySlot.get() == 1;
+    }
+
+    public boolean isInfusionOption(int slot) {
+        return this.isInfusionMode() && slot == 2;
+    }
+
+    public int getDisplayedEnergyCost(int slot) {
+        if (this.isInfusionOption(slot)) {
+            return this.infusionCostSlot.get();
+        }
+        return this.costs[slot] * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
     }
 
     public void handleAction(Player player, int actionId) {
@@ -234,11 +299,34 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         } else if (actionId >= 1 && actionId <= 3) {
             int slot = actionId - 1;
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
+            if (stack.isEmpty() || stack.getCount() != 1) return;
+
+            EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.getEnchantmentValue());
+
+            if (this.isInfusionMode()) {
+                if (slot != 2 || !this.canInfuse()) return;
+
+                InfusionRecipe recipe = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, stats.eterna(), stats.quanta(), stats.arcana());
+                if (recipe == null) return;
+
+                int feCost = this.getInfusionEnergyCost(recipe);
+                if (blockEntity.energyStorage.getEnergyStored() < feCost) return;
+
+                blockEntity.energyStorage.extractEnergy(feCost, false);
+                ItemStack result = recipe.assemble(stack, stats.eterna(), stats.quanta(), stats.arcana());
+                blockEntity.inventory.setStackInSlot(0, result);
+
+                player.onEnchantmentPerformed(result, 0);
+                this.enchantmentSeed.set(player.getEnchantmentSeed());
+                this.slotsChanged(new SimpleContainer(0));
+                blockEntity.getLevel().playSound(null, blockEntity.getBlockPos(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, player.getRandom().nextFloat() * 0.1F + 0.9F);
+                return;
+            }
+
             int costLevel = this.costs[slot];
             int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
 
-            if (costLevel > 0 && !stack.isEmpty() && blockEntity.energyStorage.getEnergyStored() >= feCost) {
-                EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.getEnchantmentValue());
+            if (costLevel > 0 && blockEntity.energyStorage.getEnergyStored() >= feCost) {
                 this.random.setSeed((long) (this.enchantmentSeed.get() + slot));
                 net.minecraft.core.Registry<Enchantment> enchRegistry = blockEntity.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);
                 List<EnchantmentInstance> list = ApothEnchantmentHelper.selectEnchantment(random, stack, costLevel, stats, enchRegistry.asLookup());

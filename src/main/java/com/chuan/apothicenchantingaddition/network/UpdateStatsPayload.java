@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record UpdateStatsPayload(BlockPos pos, float eterna, float quanta, float arcana, int clues, boolean treasure, boolean stable) implements CustomPacketPayload {
+public record UpdateStatsPayload(BlockPos pos, int eterna, int quanta, int arcana, int clues, boolean treasure, boolean stable) implements CustomPacketPayload {
 
     // 1.21.1 标准的 Type 定义
     public static final Type<UpdateStatsPayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "update_stats"));
@@ -19,14 +19,14 @@ public record UpdateStatsPayload(BlockPos pos, float eterna, float quanta, float
     );
 
     public UpdateStatsPayload(FriendlyByteBuf buffer) {
-        this(buffer.readBlockPos(), buffer.readFloat(), buffer.readFloat(), buffer.readFloat(), buffer.readInt(), buffer.readBoolean(), buffer.readBoolean());
+        this(buffer.readBlockPos(), buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readInt(), buffer.readBoolean(), buffer.readBoolean());
     }
 
     public void write(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(this.pos);
-        buffer.writeFloat(this.eterna);
-        buffer.writeFloat(this.quanta);
-        buffer.writeFloat(this.arcana);
+        buffer.writeInt(this.eterna);
+        buffer.writeInt(this.quanta);
+        buffer.writeInt(this.arcana);
         buffer.writeInt(this.clues);
         buffer.writeBoolean(this.treasure);
         buffer.writeBoolean(this.stable);

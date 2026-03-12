@@ -43,6 +43,7 @@
   "gui.apothicenchantingaddition.flux_spawner.on": "On",
   "gui.apothicenchantingaddition.flux_spawner.off": "Off",
   "gui.apothicenchantingaddition.flux_spawner.energy": "Energy: %s / %s FE",
+  "gui.apothicenchantingaddition.infusion": "Infusion",
   "gui.apothicenchantingaddition.flux_enchanting.energy_cost": "Energy Cost: %s FE",
   "config.apothicenchantingaddition.flux_spawner_energy_per_egg": "Energy Cost Per Egg",
   "jei.apothicenchantingaddition.category.drawing": "Drawing",
@@ -60,5 +61,4 @@
   "jade.apothicenchantingaddition.flux_spawner.echoing": "Echoing",
   "jade.apothicenchantingaddition.flux_spawner.echoing_level": "Echoing %s",
   "itemGroup.apothicenchantingaddition.main": "Flux Apothic Machine"
-
 }

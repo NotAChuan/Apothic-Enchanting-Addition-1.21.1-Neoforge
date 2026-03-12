@@ -12,8 +12,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
@@ -129,15 +127,13 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         renderBook(guiGraphics, x, y);
 
         int currentEnergy = menu.getEnergy();
-        int baseCost = ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
 
         for (int i = 0; i < 3; i++) {
             int btnX = x + ENCHANT_BAR_X;
             int btnY = y + ENCHANT_BAR_Y + ENCHANT_BAR_SPACING * i;
-            int costLevel = menu.costs[i];
-            int feCost = costLevel * baseCost;
-            boolean hasEnchant = costLevel > 0;
-            boolean canClick = hasEnchant && currentEnergy >= feCost;
+            int feCost = menu.getDisplayedEnergyCost(i);
+            boolean hasOption = menu.isInfusionOption(i) || menu.costs[i] > 0;
+            boolean canClick = hasOption && currentEnergy >= feCost && (!menu.isInfusionOption(i) || menu.canInfuse());
             boolean hovered = isMouseOverEnchantBar(mouseX, mouseY, i);
 
             int textureU = ENCHANT_BAR_NORMAL_U;
@@ -152,17 +148,21 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
             guiGraphics.blit(TEXTURE, btnX, btnY, textureU, textureV, ENCHANT_BAR_WIDTH, ENCHANT_BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
-            if (hasEnchant) {
+            if (hasOption) {
                 int iconX = x + ENCHANT_ICON_X[i];
                 int iconY = y + ENCHANT_ICON_Y[i];
                 int iconU = canClick ? ENCHANT_ICON_ENABLED_U[i] : ENCHANT_ICON_DISABLED_U[i];
                 int iconV = canClick ? ENCHANT_ICON_ENABLED_V[i] : ENCHANT_ICON_DISABLED_V[i];
                 guiGraphics.blit(TEXTURE, iconX, iconY, iconU, iconV, ENCHANT_ICON_WIDTH, ENCHANT_ICON_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
-                EnchantmentNames.getInstance().initSeed(menu.getEnchantmentSeed() + i);
-                FormattedText magicText = EnchantmentNames.getInstance().getRandomName(this.font, ENCHANT_TEXT_MAX_WIDTH);
                 int textColor = canClick ? (hovered ? 0xFFFFD75E : 0xFF8B7C43) : 0xFF5B5850;
-                guiGraphics.drawString(this.font, Language.getInstance().getVisualOrder(magicText), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
+                if (menu.isInfusionOption(i)) {
+                    guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.infusion"), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
+                } else {
+                    EnchantmentNames.getInstance().initSeed(menu.getEnchantmentSeed() + i);
+                    FormattedText magicText = EnchantmentNames.getInstance().getRandomName(this.font, ENCHANT_TEXT_MAX_WIDTH);
+                    guiGraphics.drawString(this.font, Language.getInstance().getVisualOrder(magicText), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
+                }
             }
         }
 
@@ -224,7 +224,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
     private boolean isMouseOverEnchantBar(double mouseX, double mouseY, int index) {
         int btnX = this.leftPos + ENCHANT_BAR_X;
         int btnY = this.topPos + ENCHANT_BAR_Y + ENCHANT_BAR_SPACING * index;
-        return mouseX >= btnX && mouseX <= btnX + ENCHANT_BAR_WIDTH && mouseY >= btnY && mouseY <= btnY + ENCHANT_BAR_HEIGHT;
+        return mouseX >= btnX && mouseX < btnX + ENCHANT_BAR_WIDTH && mouseY >= btnY && mouseY < btnY + ENCHANT_BAR_HEIGHT;
     }
 
     private boolean isMouseOverStatBar(double mouseX, double mouseY, int barY) {
@@ -248,9 +248,10 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
         for (int i = 0; i < 3; i++) {
             if (isMouseOverEnchantBar(mouseX, mouseY, i)) {
-                int costLevel = menu.costs[i];
-                int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
-                if (costLevel > 0 && menu.getEnergy() >= feCost) {
+                boolean hasOption = menu.isInfusionOption(i) || menu.costs[i] > 0;
+                int feCost = menu.getDisplayedEnergyCost(i);
+                boolean canClick = hasOption && menu.getEnergy() >= feCost && (!menu.isInfusionOption(i) || menu.canInfuse());
+                if (canClick) {
                     PacketDistributor.sendToServer(new FluxActionPayload(menu.getBlockEntity().getBlockPos(), i + 1));
                     return true;
                 }
@@ -267,39 +268,52 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
         for (int i = 0; i < 3; i++) {
             if (isMouseOverEnchantBar(mouseX, mouseY, i)) {
-                int costLevel = menu.costs[i];
-                if (costLevel > 0) {
-                    List<Component> tooltip = new ArrayList<>();
-                    List<EnchantmentInstance> clues = menu.clientClues.get(i);
-
-                    if (clues != null && !clues.isEmpty()) {
-                        if (menu.clientAllRevealed[i]) {
-                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed")
-                                    .withStyle(ChatFormatting.GOLD, ChatFormatting.UNDERLINE));
-                        }
-
-                        for (EnchantmentInstance clue : clues) {
-                            Component enchantName = Enchantment.getFullname(clue.enchantment, clue.level);
-                            tooltip.add(enchantName);
-                        }
-
-                        if (!menu.clientAllRevealed[i]) {
-                            tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed")
-                                    .withStyle(ChatFormatting.GRAY));
-                        }
-                    } else {
-                        tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", ""))
-                                .withStyle(ChatFormatting.WHITE));
-                    }
-
-                    int feCost = costLevel * ApothicAdditionConfig.FLUX_ENCHANTER_BASE_COST.get();
+                if (menu.isInfusionOption(i)) {
+                    int feCost = menu.getDisplayedEnergyCost(i);
                     boolean canAfford = menu.getEnergy() >= feCost;
+                    List<Component> tooltip = new ArrayList<>();
+                    tooltip.add(Component.translatable("gui.apothicenchantingaddition.infusion").withStyle(ChatFormatting.GOLD));
                     tooltip.add(Component.translatable(
                             "gui.apothicenchantingaddition.flux_enchanting.energy_cost",
                             String.format("%,d", feCost)
                     ).withStyle(canAfford ? ChatFormatting.GREEN : ChatFormatting.RED));
-
                     guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+                    break;
+                } else {
+                    int costLevel = menu.costs[i];
+                    if (costLevel > 0) {
+                        List<Component> tooltip = new ArrayList<>();
+                        List<EnchantmentInstance> clues = menu.clientClues.get(i);
+
+                        if (clues != null && !clues.isEmpty()) {
+                            if (menu.clientAllRevealed[i]) {
+                                tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed")
+                                        .withStyle(ChatFormatting.GOLD, ChatFormatting.UNDERLINE));
+                            }
+
+                            for (EnchantmentInstance clue : clues) {
+                                Component enchantName = Enchantment.getFullname(clue.enchantment, clue.level);
+                                tooltip.add(enchantName);
+                            }
+
+                            if (!menu.clientAllRevealed[i]) {
+                                tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed")
+                                        .withStyle(ChatFormatting.GRAY));
+                            }
+                        } else {
+                            tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", ""))
+                                    .withStyle(ChatFormatting.WHITE));
+                        }
+
+                        int feCost = menu.getDisplayedEnergyCost(i);
+                        boolean canAfford = menu.getEnergy() >= feCost;
+                        tooltip.add(Component.translatable(
+                                "gui.apothicenchantingaddition.flux_enchanting.energy_cost",
+                                String.format("%,d", feCost)
+                        ).withStyle(canAfford ? ChatFormatting.GREEN : ChatFormatting.RED));
+
+                        guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+                    }
                 }
             }
         }

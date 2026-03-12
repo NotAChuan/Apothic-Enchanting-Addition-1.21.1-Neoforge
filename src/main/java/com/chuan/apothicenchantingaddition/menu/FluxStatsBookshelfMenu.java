@@ -35,9 +35,9 @@ public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
 
         if (this.blockEntity != null) {
-            this.eternaSlot.set((int) (this.blockEntity.getRawEterna() * 10));
-            this.quantaSlot.set((int) (this.blockEntity.getRawQuanta() * 10));
-            this.arcanaSlot.set((int) (this.blockEntity.getRawArcana() * 10));
+            this.eternaSlot.set(this.blockEntity.getRawEterna());
+            this.quantaSlot.set(this.blockEntity.getRawQuanta());
+            this.arcanaSlot.set(this.blockEntity.getRawArcana());
             this.cluesSlot.set(this.blockEntity.getRawClues());
             this.treasureSlot.set(this.blockEntity.getRawTreasure() ? 1 : 0);
             this.stableSlot.set(this.blockEntity.getRawStable() ? 1 : 0);
@@ -61,9 +61,9 @@ public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
     public void broadcastChanges() {
         super.broadcastChanges();
         if (blockEntity != null) {
-            eternaSlot.set((int) (blockEntity.getRawEterna() * 10));
-            quantaSlot.set((int) (blockEntity.getRawQuanta() * 10));
-            arcanaSlot.set((int) (blockEntity.getRawArcana() * 10));
+            eternaSlot.set(blockEntity.getRawEterna());
+            quantaSlot.set(blockEntity.getRawQuanta());
+            arcanaSlot.set(blockEntity.getRawArcana());
             cluesSlot.set(blockEntity.getRawClues());
             treasureSlot.set(blockEntity.getRawTreasure() ? 1 : 0);
             stableSlot.set(blockEntity.getRawStable() ? 1 : 0);
@@ -74,10 +74,10 @@ public class FluxStatsBookshelfMenu extends AbstractContainerMenu {
         }
     }
 
-    // 【修改获取方法】将放大的数值缩小回原本的 float
-    public float getEterna() { return eternaSlot.get() / 10.0f; }
-    public float getQuanta() { return quantaSlot.get() / 10.0f; }
-    public float getArcana() { return arcanaSlot.get() / 10.0f; }
+    // 直接同步整数属性
+    public int getEterna() { return eternaSlot.get(); }
+    public int getQuanta() { return quantaSlot.get(); }
+    public int getArcana() { return arcanaSlot.get(); }
     public int getClues() { return cluesSlot.get(); }
     public boolean allowsTreasure() { return treasureSlot.get() == 1; }
     public boolean isStable() { return stableSlot.get() == 1; }
