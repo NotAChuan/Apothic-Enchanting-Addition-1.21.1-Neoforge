@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -157,7 +158,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         }
 
         // 【极致优化 1】降低自动输出频率
-        if (level.getGameTime() % 10 == 0) {
+        if (level.getGameTime() % 5 == 0) {
             entity.autoOutputToBelow();
         }
 
@@ -197,6 +198,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private void generateLoot(ServerLevel serverLevel) {
         FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(serverLevel);
         DamageSource damageSource = serverLevel.damageSources().playerAttack(fakePlayer);
+        IItemHandler belowHandler = getBelowHandler();
 
         int eggCount = 0; // 用于计算经验
 
@@ -225,7 +227,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
                     int totalRolls = this.spawnCount * (1 + this.echoing);
                     for (int j = 0; j < totalRolls; j++) {
-                        insertLootToOutputs(lootTable.getRandomItems(params));
+                        insertLootToOutputs(lootTable.getRandomItems(params), belowHandler);
                     }
                     dummyEntity.discard(); // 必须保留，防止内存泄漏
                 }
@@ -243,18 +245,39 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
                 expDrops.add(new ItemStack(ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get(), size));
                 expCount -= size;
             }
-            insertLootToOutputs(expDrops);
+            insertLootToOutputs(expDrops, belowHandler);
         }
     }
 
-    private void insertLootToOutputs(List<ItemStack> drops) {
+    private void insertLootToOutputs(List<ItemStack> drops, @Nullable IItemHandler belowHandler) {
         for (ItemStack drop : drops) {
             ItemStack remainder = drop.copy();
-            for (int i = 8; i < 72; i++) {
-                if (remainder.isEmpty()) break;
-                remainder = this.inventory.insertItem(i, remainder, false);
+
+            if (belowHandler != null) {
+                remainder = insertIntoHandler(belowHandler, remainder);
+            }
+
+            if (!remainder.isEmpty()) {
+                for (int i = 8; i < 72; i++) {
+                    if (remainder.isEmpty()) break;
+                    remainder = this.inventory.insertItem(i, remainder, false);
+                }
             }
         }
+    }
+
+    private @Nullable IItemHandler getBelowHandler() {
+        if (this.level == null) return null;
+        return this.level.getCapability(Capabilities.ItemHandler.BLOCK, this.worldPosition.below(), Direction.UP);
+    }
+
+    private ItemStack insertIntoHandler(IItemHandler handler, ItemStack stack) {
+        ItemStack remainder = stack;
+        for (int i = 0; i < handler.getSlots(); i++) {
+            if (remainder.isEmpty()) break;
+            remainder = handler.insertItem(i, remainder, false);
+        }
+        return remainder;
     }
 
     public static boolean canUseSpawnEgg(SpawnEggItem egg) {
@@ -262,25 +285,25 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
             return true;
         }
 
+//        EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
+//        Holder.Reference<EntityType<?>> holder = entityType.builtInRegistryHolder();
+//        Holder.Reference<EntityType<?>> holder = entityType.;
+//        return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
+
         EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-        Holder.Reference<EntityType<?>> holder = entityType.builtInRegistryHolder();
+        Holder<EntityType<?>> holder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(entityType);
         return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
 
     private void autoOutputToBelow() {
-        if (this.level == null) return;
-        IItemHandler belowHandler = this.level.getCapability(Capabilities.ItemHandler.BLOCK, this.worldPosition.below(), Direction.UP);
+        IItemHandler belowHandler = getBelowHandler();
         if (belowHandler == null) return;
 
         for (int i = 8; i < 72; i++) {
             ItemStack stackInSlot = this.inventory.getStackInSlot(i);
             if (!stackInSlot.isEmpty()) {
-                ItemStack copy = stackInSlot.copy();
-                for (int j = 0; j < belowHandler.getSlots(); j++) {
-                    if (copy.isEmpty()) break;
-                    copy = belowHandler.insertItem(j, copy, false);
-                }
-                this.inventory.setStackInSlot(i, copy);
+                ItemStack remainder = insertIntoHandler(belowHandler, stackInSlot.copy());
+                this.inventory.setStackInSlot(i, remainder);
             }
         }
     }

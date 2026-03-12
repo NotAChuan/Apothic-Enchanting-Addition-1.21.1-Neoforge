@@ -270,7 +270,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
                 int costLevel = menu.costs[i];
                 if (costLevel > 0) {
                     List<Component> tooltip = new ArrayList<>();
-                    List<EnchantmentInstance> clues = menu.clientClues[i];
+                    List<EnchantmentInstance> clues = menu.clientClues.get(i);
 
                     if (clues != null && !clues.isEmpty()) {
                         if (menu.clientAllRevealed[i]) {

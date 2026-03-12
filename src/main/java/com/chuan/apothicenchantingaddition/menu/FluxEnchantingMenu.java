@@ -53,11 +53,16 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
     private final DataSlot quantaSlot = DataSlot.standalone();
     private final DataSlot arcanaSlot = DataSlot.standalone();
 
-    public final List<EnchantmentInstance>[] clientClues = new List[]{List.of(), List.of(), List.of()};
+    public final List<List<EnchantmentInstance>> clientClues = new ArrayList<>(List.of(
+            List.of(),
+            List.of(),
+            List.of()
+    ));
+
     public final boolean[] clientAllRevealed = new boolean[3];
 
     // ==========================================
-    // ✨ [调整] 严格的附魔资格计算（不拦截放入，只拦截附魔生成）
+    // [调整] 严格的附魔资格计算（不拦截放入，只拦截附魔生成）
     // ==========================================
     public static boolean canEnchantItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
@@ -73,7 +78,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
     public void setClues(int slot, List<EnchantmentInstance> clues, boolean allRevealed) {
         if (slot >= 0 && slot < 3) {
-            this.clientClues[slot] = clues;
+            this.clientClues.set(slot, clues);
             this.clientAllRevealed[slot] = allRevealed;
         }
     }
