@@ -263,7 +263,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         }
 
         EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-        Holder.Reference<EntityType<?>> holder = entityType .builtInRegistryHolder();
+        Holder.Reference<EntityType<?>> holder = entityType.builtInRegistryHolder();
         return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
 
