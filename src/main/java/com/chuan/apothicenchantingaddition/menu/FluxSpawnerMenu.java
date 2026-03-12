@@ -46,7 +46,8 @@ public class FluxSpawnerMenu extends AbstractContainerMenu {
 
                     @Override
                     public boolean mayPlace(@NotNull ItemStack stack) {
-                        return stack.getItem() instanceof SpawnEggItem;
+                        if (!(stack.getItem() instanceof SpawnEggItem egg)) return false;
+                        return FluxSpawnerBlockEntity.canUseSpawnEgg(egg);
                     }
                 });
             }
@@ -92,7 +93,8 @@ public class FluxSpawnerMenu extends AbstractContainerMenu {
             }
             // 如果点击的是玩家背包的物品，尝试移动到刷怪笼的输入槽 (0-7)
             else {
-                if (stackInSlot.getItem() instanceof SpawnEggItem) {
+                if (stackInSlot.getItem() instanceof SpawnEggItem egg
+                        && FluxSpawnerBlockEntity.canUseSpawnEgg(egg)) {
                     // 因为我们在 SlotItemHandler 里写死了 getMaxStackSize() 为 1
                     // 这里的 moveItemStackTo 会极其聪明地将一组刷怪蛋“拆分”并填入空的输入槽！
                     if (!this.moveItemStackTo(stackInSlot, 0, 8, false)) {

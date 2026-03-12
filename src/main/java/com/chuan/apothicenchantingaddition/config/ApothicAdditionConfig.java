@@ -18,9 +18,9 @@ public class ApothicAdditionConfig {
 
     public static final ModConfigSpec.IntValue FLUX_ANVIL_BASE_COST;
 
-    // 新增：通量刷怪笼配置
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_ENERGY_PER_EGG;
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_EXP_BASE_COUNT;
+    public static final ModConfigSpec.BooleanValue FLUX_SPAWNER_ENTITY_BLACKLIST_OPEN;
 
     static {
         BUILDER.push("Energy Settings");
@@ -81,6 +81,13 @@ public class ApothicAdditionConfig {
                         "固化通量经验掉落基础数。",
                         "Formula / 掉落公式: Base * Eggs * (1 + Echoing)")
                 .defineInRange("fluxSpawnerExpBaseCount", 4, 0, Integer.MAX_VALUE);
+
+        FLUX_SPAWNER_ENTITY_BLACKLIST_OPEN = BUILDER
+                .comment("Whether the Flux Spawner can use spawn eggs that are blacklisted from normal spawners.",
+                        "Default: true. When enabled, the Flux Spawner can still process those blacklisted spawn eggs.",
+                        "是否允许通量刷怪笼使用通常不可用于刷怪笼的刷怪蛋。",
+                        "默认值：true。开启后，通量刷怪笼仍然可以处理这些被加入黑名单的刷怪蛋。")
+                .define("fluxSpawnerEntityBlacklistOpen", true);
 
 
         BUILDER.pop();

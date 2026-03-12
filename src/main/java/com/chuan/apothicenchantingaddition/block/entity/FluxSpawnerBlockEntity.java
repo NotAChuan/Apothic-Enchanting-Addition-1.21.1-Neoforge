@@ -6,10 +6,13 @@ import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
@@ -22,6 +25,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
@@ -43,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider {
+
+    private static final TagKey<EntityType<?>> APOTHIC_SPAWNER_BLACKLIST = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath("apothic_spawners", "blacklisted_from_spawners"));
 
     // 1. 能量缓存：10亿 FE
     public final EnergyStorage energyStorage = new EnergyStorage(1_000_000_000, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -87,7 +93,10 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     public final ItemStackHandler inventory = new ItemStackHandler(72) {
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            if (slot < 8) return stack.getItem() instanceof SpawnEggItem;
+            if (slot < 8) {
+                if (!(stack.getItem() instanceof SpawnEggItem egg)) return false;
+                return canUseSpawnEgg(egg);
+            }
             return true;
         }
 
@@ -195,6 +204,10 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
             if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg) {
+                if (!canUseSpawnEgg(egg)) {
+                    continue;
+                }
+
                 eggCount++;
 
                 EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
@@ -242,6 +255,16 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
                 remainder = this.inventory.insertItem(i, remainder, false);
             }
         }
+    }
+
+    public static boolean canUseSpawnEgg(SpawnEggItem egg) {
+        if (ApothicAdditionConfig.FLUX_SPAWNER_ENTITY_BLACKLIST_OPEN.get()) {
+            return true;
+        }
+
+        EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
+        Holder.Reference<EntityType<?>> holder = entityType .builtInRegistryHolder();
+        return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
 
     private void autoOutputToBelow() {
