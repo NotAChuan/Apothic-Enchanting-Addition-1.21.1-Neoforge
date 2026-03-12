@@ -58,5 +58,7 @@
   "jade.apothicenchantingaddition.flux_spawner.ctrl_stats": "Hold Ctrl for detailed stats",
   "jade.apothicenchantingaddition.flux_spawner.redstone": "Redstone Control",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "Echoing",
-  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "Echoing %s"
+  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "Echoing %s",
+  "itemGroup.apothicenchantingaddition.main": "Flux Apothic Machine"
+
 }

@@ -28,6 +28,8 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import static com.chuan.apothicenchantingaddition.registry.ModRegistry.*;
+
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ApothicEnchantingAddition.MOD_ID)
 public class ApothicEnchantingAddition {
@@ -36,28 +38,27 @@ public class ApothicEnchantingAddition {
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // Create a Deferred Register to hold Blocks which will all be registered under the "apothicenchantingaddition" namespace
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
-    // Create a Deferred Register to hold Items which will all be registered under the "apothicenchantingaddition" namespace
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
+//    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
+//    // Create a Deferred Register to hold Items which will all be registered under the "apothicenchantingaddition" namespace
+//    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "apothicenchantingaddition" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
-    // Creates a new Block with the id "apothicenchantingaddition:example_block", combining the namespace and path
-    public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    // Creates a new BlockItem with the id "apothicenchantingaddition:example_block", combining the namespace and path
-    public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
-
-    // Creates a new food item with the id "apothicenchantingaddition:example_id", nutrition 1 and saturation 2
-    public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
-            .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
-
     // Creates a creative tab with the id "apothicenchantingaddition:example_tab" for the example item, that is placed after the combat tab
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.apothicenchantingaddition")) //The language key for the title of your CreativeModeTab
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> APOTHIN_ENCHANTING_ADDITION_TAB = CREATIVE_MODE_TABS.register("apothic_enchanting_addition", () -> CreativeModeTab.builder()
+            .title(Component.translatable("itemGroup.apothicenchantingaddition.main")) //The language key for the title of your CreativeModeTab
             .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
+            .icon(() -> ModRegistry.FLUX_ENCHANTING_TABLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
+                output.accept(FLUX_STATS_BOOKSHELF_TIER_1.get());
+                output.accept(FLUX_STATS_BOOKSHELF_TIER_2.get());
+                output.accept(FLUX_STATS_BOOKSHELF_TIER_3.get());
+                output.accept(FLUX_STATS_BOOKSHELF_TIER_4.get());
+                output.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
+                output.accept(FLUX_ANVIL_ITEM.get());
+                output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
+                output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
+                output.accept(FLUX_SPAWNER_ITEM.get());
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
@@ -67,6 +68,7 @@ public class ApothicEnchantingAddition {
         ModRegistry.register(modEventBus);
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(this::registerCapabilities);
+        CREATIVE_MODE_TABS.register(modEventBus);
 
         modEventBus.addListener(this::onClientSetup);
 

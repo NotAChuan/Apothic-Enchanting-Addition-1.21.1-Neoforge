@@ -16,7 +16,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -26,7 +25,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import com.chuan.apothicenchantingaddition.menu.FluxEnchantingMenu;
@@ -179,20 +177,20 @@ public class ModRegistry {
         RECIPE_TYPES.register(eventBus);
         RECIPE_SERIALIZERS.register(eventBus);
 
-        eventBus.addListener(ModRegistry::addCreative);
+//        eventBus.addListener(ModRegistry::addCreative);
     }
 
-    private static void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
-            event.accept(FLUX_STATS_BOOKSHELF_TIER_1.get());
-            event.accept(FLUX_STATS_BOOKSHELF_TIER_2.get());
-            event.accept(FLUX_STATS_BOOKSHELF_TIER_3.get());
-            event.accept(FLUX_STATS_BOOKSHELF_TIER_4.get());
-            event.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
-            event.accept(FLUX_ANVIL_ITEM.get());
-            event.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
-            event.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
-            event.accept(FLUX_SPAWNER_ITEM.get());
-        }
-    }
+//    private static void addCreative(BuildCreativeModeTabContentsEvent event) {
+//        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+//            event.accept(FLUX_STATS_BOOKSHELF_TIER_1.get());
+//            event.accept(FLUX_STATS_BOOKSHELF_TIER_2.get());
+//            event.accept(FLUX_STATS_BOOKSHELF_TIER_3.get());
+//            event.accept(FLUX_STATS_BOOKSHELF_TIER_4.get());
+//            event.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
+//            event.accept(FLUX_ANVIL_ITEM.get());
+//            event.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
+//            event.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
+//            event.accept(FLUX_SPAWNER_ITEM.get());
+//        }
+//    }
 }

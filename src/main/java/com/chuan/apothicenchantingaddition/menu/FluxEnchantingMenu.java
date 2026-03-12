@@ -89,7 +89,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         this.levelAccess = ContainerLevelAccess.create(entity.getLevel(), entity.getBlockPos());
 
         // ✨ [调整] 机器槽位 0：不再限制放入，像原版一样允许塞入任何东西
-        this.addSlot(new SlotItemHandler(entity.inventory, 0, 14, 46) {
+        this.addSlot(new SlotItemHandler(entity.inventory, 0, 15, 47) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return true;
@@ -103,7 +103,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         });
 
         // 机器槽位 1：刷新材料槽
-        this.addSlot(new SlotItemHandler(entity.inventory, 1, 34, 46) {
+        this.addSlot(new SlotItemHandler(entity.inventory, 1, 35, 47) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 String configItemStr = ApothicAdditionConfig.FLUX_ENCHANTER_REFRESH_ITEM.get();

@@ -58,5 +58,7 @@
   "jade.apothicenchantingaddition.flux_spawner.ctrl_stats": "按住 Ctrl 查看詳細屬性",
   "jade.apothicenchantingaddition.flux_spawner.redstone": "紅石控制",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "迴響",
-  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "迴響%s"
+  "jade.apothicenchantingaddition.flux_spawner.echoing_level": "迴響%s",
+  "itemGroup.apothicenchantingaddition.main": "通量神化機器"
+
 }
