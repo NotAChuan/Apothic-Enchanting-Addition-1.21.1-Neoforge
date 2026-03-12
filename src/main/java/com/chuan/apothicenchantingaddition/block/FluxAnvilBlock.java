@@ -16,7 +16,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.MachineStateDropHelper;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import java.util.List;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,6 +59,21 @@ public class FluxAnvilBlock extends AnvilBlock implements EntityBlock {
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) != null) {
+            return super.getDrops(state, params);
+        }
+
+        BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (blockEntity instanceof FluxAnvilBlockEntity fluxAnvilBlockEntity) {
+            return List.of(MachineStateDropHelper.createFluxAnvilDrop(params.getLevel().registryAccess(), fluxAnvilBlockEntity));
+        }
+
+        return super.getDrops(state, params);
     }
 
     @Override

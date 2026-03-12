@@ -2,6 +2,7 @@ package com.chuan.apothicenchantingaddition.block;
 
 import com.chuan.apothicenchantingaddition.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicenchantingaddition.menu.FluxStatsBookshelfMenu;
+import com.chuan.apothicenchantingaddition.util.MachineStateDropHelper;
 import dev.shadowsoffire.apothic_enchanting.api.EnchantmentStatBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -19,6 +20,10 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import java.util.List;
 
 public class FluxStatsBookshelfBlock extends Block implements EntityBlock, EnchantmentStatBlock {
 
@@ -131,6 +136,21 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
             }
         }
         return InteractionResult.SUCCESS;
+    }
+
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) != null) {
+            return super.getDrops(state, params);
+        }
+
+        BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (blockEntity instanceof FluxStatsBookshelfBlockEntity bookshelfBlockEntity) {
+            return List.of(MachineStateDropHelper.createFluxBookshelfDrop(params.getLevel().registryAccess(), bookshelfBlockEntity));
+        }
+
+        return super.getDrops(state, params);
     }
 
     @Override

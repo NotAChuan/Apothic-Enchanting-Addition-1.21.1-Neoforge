@@ -2,6 +2,7 @@ package com.chuan.apothicenchantingaddition.block;
 
 import com.chuan.apothicenchantingaddition.block.entity.FluxSpawnerBlockEntity;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.MachineStateDropHelper;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,6 +22,9 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import java.util.List;
 
 // 导入神化的 API
 import dev.shadowsoffire.apothic_spawners.modifiers.SpawnerModifier;
@@ -198,6 +202,21 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
             }
             super.onRemove(state, level, pos, newState, isMoving);
         }
+    }
+
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) != null) {
+            return super.getDrops(state, params);
+        }
+
+        BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (blockEntity instanceof FluxSpawnerBlockEntity fluxBE) {
+            return List.of(MachineStateDropHelper.createFluxSpawnerDrop(params.getLevel().registryAccess(), fluxBE));
+        }
+
+        return super.getDrops(state, params);
     }
 
     @Override

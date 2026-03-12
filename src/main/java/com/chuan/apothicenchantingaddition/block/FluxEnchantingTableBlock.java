@@ -1,6 +1,7 @@
 package com.chuan.apothicenchantingaddition.block;
 
 import com.chuan.apothicenchantingaddition.block.entity.FluxEnchantingTableBlockEntity;
+import com.chuan.apothicenchantingaddition.util.MachineStateDropHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -14,6 +15,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import java.util.List;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -64,6 +69,21 @@ public class FluxEnchantingTableBlock extends Block implements EntityBlock {
             }
         }
         return InteractionResult.SUCCESS;
+    }
+
+
+    @Override
+    protected List<ItemStack> getDrops(BlockState state, LootParams.Builder params) {
+        if (params.getOptionalParameter(LootContextParams.EXPLOSION_RADIUS) != null) {
+            return super.getDrops(state, params);
+        }
+
+        BlockEntity blockEntity = params.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+        if (blockEntity instanceof FluxEnchantingTableBlockEntity fluxBlockEntity) {
+            return List.of(MachineStateDropHelper.createFluxEnchantingTableDrop(params.getLevel().registryAccess(), fluxBlockEntity));
+        }
+
+        return super.getDrops(state, params);
     }
 
     // 方块被破坏时，掉落内部的物品
