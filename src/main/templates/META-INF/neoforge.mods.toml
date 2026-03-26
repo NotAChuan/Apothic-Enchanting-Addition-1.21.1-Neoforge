@@ -110,7 +110,7 @@ Apothic Enchanting Addition is an addon mod for Apothic Enchanting.
     side="BOTH"
 
 [[dependencies.${mod_id}]]
-    modId="jade+"
+    modId="jade"
     type="optional"
     versionRange="[15.10.5,)"
     ordering="NONE"
