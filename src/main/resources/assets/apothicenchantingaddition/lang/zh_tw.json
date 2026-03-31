@@ -60,5 +60,7 @@
   "jade.apothicenchantingaddition.flux_spawner.redstone": "紅石控制",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "迴響",
   "jade.apothicenchantingaddition.flux_spawner.echoing_level": "迴響%s",
-  "itemGroup.apothicenchantingaddition.main": "通量神化機器"
+  "itemGroup.apothicenchantingaddition.main": "通量神化機器",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner": "通量生怪磚",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner.desc": "在 Jade 提示中顯示通量生怪磚資訊"
 }

@@ -60,5 +60,7 @@
   "jade.apothicenchantingaddition.flux_spawner.redstone": "红石控制",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "回响",
   "jade.apothicenchantingaddition.flux_spawner.echoing_level": "回响%s",
-  "itemGroup.apothicenchantingaddition.main": "通量神化机器"
+  "itemGroup.apothicenchantingaddition.main": "通量神化机器",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner": "通量刷怪笼",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner.desc": "在 Jade 提示中显示通量刷怪笼信息"
 }

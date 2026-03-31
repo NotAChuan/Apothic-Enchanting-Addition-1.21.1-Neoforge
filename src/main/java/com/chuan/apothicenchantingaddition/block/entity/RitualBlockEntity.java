@@ -83,6 +83,29 @@ public class RitualBlockEntity extends BlockEntity {
         };
     }
 
+    private void tryStartRitual() {
+        if (level == null || level.isClientSide || isFinishing) return;
+        if (ritualState != RitualState.IDLE) return;
+
+        if (isObstructed()) {
+            warnObstruction();
+            return;
+        }
+
+        currentRecipe = findMatchingRecipe(level);
+        if (currentRecipe != null) {
+            progress = 0;
+            stateTimer = 20;
+            craftingStartRenderTick = 0;
+            ritualState = RitualState.ACTIVATING;
+            level.getEntitiesOfClass(Player.class, new AABB(worldPosition).inflate(5)).forEach(p ->
+                    p.displayClientMessage(
+                            Component.translatable("ritual.apothicenchantingaddition.crafting")
+                                    .withStyle(ChatFormatting.GOLD), true));
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
     public boolean interact(Player player, InteractionHand hand) {
         if (level == null || level.isClientSide) return true;
 
@@ -94,6 +117,7 @@ public class RitualBlockEntity extends BlockEntity {
                     ItemStack toInsert = handStack.copy();
                     toInsert.setCount(1);
                     inventory.setStackInSlot(i, toInsert);
+                    tryStartRitual();
                     if (!player.isCreative()) handStack.shrink(1);
                     return true;
                 }
@@ -153,6 +177,7 @@ public class RitualBlockEntity extends BlockEntity {
             if (stateTimer <= 0) {
                 if (ritualState == RitualState.ACTIVATING) {
                     ritualState = RitualState.CRAFTING;
+                    craftingStartRenderTick = 0;
                     level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
                 } else {
                     level.removeBlock(worldPosition, false);
@@ -162,26 +187,8 @@ public class RitualBlockEntity extends BlockEntity {
             if (ritualState == RitualState.ACTIVATING) return;
         }
 
-        // 1. IDLE 状态查找配方
-        if (currentRecipe == null && ritualState == RitualState.IDLE && (level.getGameTime() % 20 == 0)) {
-            // [新增] 启动前检测：如果上方有方块，直接不开始并提示
-            if (isObstructed()) {
-                warnObstruction();
-                return;
-            }
-
-            currentRecipe = findMatchingRecipe(level);
-            if (currentRecipe != null) {
-                progress = 0;
-                ritualState = RitualState.ACTIVATING;
-                stateTimer = 20;
-                level.getEntitiesOfClass(Player.class, new AABB(worldPosition).inflate(5)).forEach(p ->
-                        p.displayClientMessage(
-                                Component.translatable("ritual.apothicenchantingaddition.crafting")
-                                        .withStyle(ChatFormatting.GOLD), true));
-                level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
-            }
-        }
+        // 1. IDLE 状态不再周期性扫描配方；
+        //    改为在放入物品时立即检测并启动，减少空闲时的重复遍历。
 
         // 2. CRAFTING 状态运行仪式
         if (currentRecipe != null && ritualState == RitualState.CRAFTING) {

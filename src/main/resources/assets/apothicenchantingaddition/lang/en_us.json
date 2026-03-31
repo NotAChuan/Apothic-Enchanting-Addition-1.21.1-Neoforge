@@ -60,5 +60,7 @@
   "jade.apothicenchantingaddition.flux_spawner.redstone": "Redstone Control",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "Echoing",
   "jade.apothicenchantingaddition.flux_spawner.echoing_level": "Echoing %s",
-  "itemGroup.apothicenchantingaddition.main": "Flux Apothic Machine"
+  "itemGroup.apothicenchantingaddition.main": "Flux Apothic Machine",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner": "Flux Spawner",
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner.desc": "Show Flux Spawner information in Jade tooltip"
 }
