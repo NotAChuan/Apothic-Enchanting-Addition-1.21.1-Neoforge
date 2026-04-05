@@ -15,6 +15,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -287,10 +289,22 @@ public class RitualBlockEntity extends BlockEntity {
         recipe.outputEntity().ifPresent(entityId -> {
             EntityType.byString(entityId).ifPresent(type -> {
                 Entity entity = type.create(level);
-                if (entity != null) {
-                    entity.moveTo(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 0, 0);
-                    level.addFreshEntity(entity);
+                if (entity == null) return;
+
+                // 最小改动：仅对 Mob 改走标准生成流程，保留其他实体原本逻辑。
+                if (entity instanceof Mob) {
+                    entity.discard();
+                    if (level instanceof ServerLevel serverLevel) {
+                        Entity spawned = type.spawn(serverLevel, pos.above(), MobSpawnType.EVENT);
+                        if (spawned != null) {
+                            spawned.moveTo(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 0, 0);
+                        }
+                    }
+                    return;
                 }
+
+                entity.moveTo(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 0, 0);
+                level.addFreshEntity(entity);
             });
         });
 
