@@ -4,39 +4,31 @@ import com.chuan.apothicenchantingaddition.block.FluxSpawnerBlock;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.FluxSpawnerTaskQueue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -44,12 +36,14 @@ import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider {
 
     private static final TagKey<EntityType<?>> APOTHIC_SPAWNER_BLACKLIST = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath("apothic_spawners", "blacklisted_from_spawners"));
+    private static final int BELOW_HANDLER_CACHE_TICKS = 5;
 
     // 1. 能量缓存：10亿 FE
     public final EnergyStorage energyStorage = new EnergyStorage(1_000_000_000, Integer.MAX_VALUE, Integer.MAX_VALUE);
@@ -62,6 +56,12 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private int echoing = 0;
     private int delay = 200;
     private int lastEnergy = 0;
+    private int cachedEggCount = 0;
+    private boolean outputCacheDirty = true;
+    private boolean cachedOutputHasItems = false;
+    private boolean cachedOutputHasRoom = true;
+    private long belowHandlerCacheExpiryTick = Long.MIN_VALUE;
+    private @Nullable IItemHandler cachedBelowHandler = null;
 
     // 3. 与 Menu 通信的数据槽
     protected final ContainerData dataAccess = new ContainerData() {
@@ -108,6 +108,11 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
         @Override
         protected void onContentsChanged(int slot) {
+            if (slot < 8) {
+                recountEggInputs();
+            } else {
+                outputCacheDirty = true;
+            }
             setChanged();
         }
     };
@@ -121,6 +126,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
     public FluxSpawnerBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.FLUX_SPAWNER_BE.get(), pos, blockState);
+        recountEggInputs();
     }
 
     // ================== GUI 绑定接口 (MenuProvider) ==================
@@ -136,12 +142,11 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         return new FluxSpawnerMenu(containerId, playerInventory, this, this.dataAccess);
     }
 
-    // ================== 核心运行逻辑 (同上) ==================
+    // ================== 核心运行逻辑 ==================
 
     public static void tick(Level level, BlockPos pos, BlockState state, FluxSpawnerBlockEntity entity) {
         if (level.isClientSide) return;
 
-        // 【修复】：能量等级检测独立出来，不受其他条件影响
         if (level.getGameTime() % 20 == 0) {
             int currentEnergy = entity.energyStorage.getEnergyStored();
             if (currentEnergy != entity.lastEnergy) {
@@ -150,31 +155,23 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
                 int newEnergyLevel = calculateEnergyLevel(currentEnergy, entity.energyStorage.getMaxEnergyStored());
                 BlockState currentState = level.getBlockState(pos);
-                if (currentState.hasProperty(FluxSpawnerBlock.ENERGY_LEVEL) &&
-                        currentState.getValue(FluxSpawnerBlock.ENERGY_LEVEL) != newEnergyLevel) {
+                if (currentState.hasProperty(FluxSpawnerBlock.ENERGY_LEVEL)
+                        && currentState.getValue(FluxSpawnerBlock.ENERGY_LEVEL) != newEnergyLevel) {
                     level.setBlock(pos, currentState.setValue(FluxSpawnerBlock.ENERGY_LEVEL, newEnergyLevel), 3);
                 }
             }
         }
 
-        // 【极致优化 1】降低自动输出频率
         if (level.getGameTime() % 5 == 0) {
             entity.autoOutputToBelow();
         }
 
-        // 统计刷怪蛋
-        int eggCount = 0;
-        for (int i = 0; i < 8; i++) {
-            if (!entity.inventory.getStackInSlot(i).isEmpty()) {
-                eggCount++;
-            }
-        }
+        int eggCount = entity.cachedEggCount;
         if (eggCount == 0) return;
 
         if (entity.redstoneControl && !level.hasNeighborSignal(pos)) return;
-        if (entity.isOutputFull()) return;
+        if (!entity.hasOutputRoom()) return;
 
-        // 计算耗电
         int baseCost = ApothicAdditionConfig.FLUX_SPAWNER_ENERGY_PER_EGG.get();
         int energyCost = (baseCost * eggCount)
                 + (baseCost * (800 / Math.max(1, entity.maxDelay)))
@@ -187,71 +184,43 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
         entity.delay--;
         if (entity.delay <= 0) {
-            entity.generateLoot((ServerLevel) level);
+            entity.enqueueLootGeneration((ServerLevel) level);
             int range = entity.maxDelay - entity.minDelay;
             entity.delay = entity.minDelay + (range > 0 ? level.random.nextInt(range) : 0);
             entity.setChanged();
         }
     }
 
-
-    private void generateLoot(ServerLevel serverLevel) {
-        FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(serverLevel);
-        DamageSource damageSource = serverLevel.damageSources().playerAttack(fakePlayer);
-        IItemHandler belowHandler = getBelowHandler();
-
-        int eggCount = 0; // 用于计算经验
-
-        // 遍历前 8 个输入槽
-        for (int i = 0; i < 8; i++) {
-            ItemStack stack = this.inventory.getStackInSlot(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg) {
-                if (!canUseSpawnEgg(egg)) {
-                    continue;
-                }
-
-                eggCount++;
-
-                EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-                ResourceKey<LootTable> lootTableKey = entityType.getDefaultLootTable();
-                LootTable lootTable = serverLevel.getServer().reloadableRegistries().getLootTable(lootTableKey);
-
-                Entity dummyEntity = entityType.create(serverLevel);
-                if (dummyEntity != null) {
-                    LootParams params = new LootParams.Builder(serverLevel)
-                            .withParameter(LootContextParams.THIS_ENTITY, dummyEntity)
-                            .withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
-                            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(this.worldPosition))
-                            .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, fakePlayer)
-                            .create(LootContextParamSets.ENTITY);
-
-                    int totalRolls = this.spawnCount * (1 + this.echoing);
-                    for (int j = 0; j < totalRolls; j++) {
-                        insertLootToOutputs(lootTable.getRandomItems(params), belowHandler);
-                    }
-                    dummyEntity.discard(); // 必须保留，防止内存泄漏
-                }
-            }
+    private void enqueueLootGeneration(ServerLevel serverLevel) {
+        Map<EntityType<?>, Integer> eggTypeCounts = collectValidEggTypeCounts();
+        if (eggTypeCounts.isEmpty()) {
+            return;
         }
 
-        // 生成固化通量经验掉落
+        int validEggCount = eggTypeCounts.values().stream().mapToInt(Integer::intValue).sum();
+        int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
         int expBase = ApothicAdditionConfig.FLUX_SPAWNER_EXP_BASE_COUNT.get();
-        int expCount = expBase * eggCount * (1 + this.echoing);
+        int expCount = expBase * validEggCount * (1 + this.echoing);
 
-        if (expCount > 0) {
-            List<ItemStack> expDrops = new java.util.ArrayList<>();
-            while (expCount > 0) {
-                int size = Math.min(expCount, 64);
-                expDrops.add(new ItemStack(ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get(), size));
-                expCount -= size;
-            }
-            insertLootToOutputs(expDrops, belowHandler);
+        FluxSpawnerTaskQueue.enqueue(serverLevel, this.worldPosition, eggTypeCounts, totalRollsPerEgg, expCount);
+    }
+
+    public void acceptGeneratedDrops(List<ItemStack> drops) {
+        if (drops.isEmpty()) {
+            return;
         }
+
+        insertLootToOutputs(drops, getBelowHandler());
+        setChanged();
     }
 
     private void insertLootToOutputs(List<ItemStack> drops, @Nullable IItemHandler belowHandler) {
         for (ItemStack drop : drops) {
-            ItemStack remainder = drop.copy();
+            if (drop.isEmpty()) {
+                continue;
+            }
+
+            ItemStack remainder = drop;
 
             if (belowHandler != null) {
                 remainder = insertIntoHandler(belowHandler, remainder);
@@ -267,8 +236,16 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     private @Nullable IItemHandler getBelowHandler() {
-        if (this.level == null) return null;
-        return this.level.getCapability(Capabilities.ItemHandler.BLOCK, this.worldPosition.below(), Direction.UP);
+        if (this.level == null) {
+            return null;
+        }
+
+        long gameTime = this.level.getGameTime();
+        if (gameTime >= this.belowHandlerCacheExpiryTick) {
+            this.cachedBelowHandler = this.level.getCapability(Capabilities.ItemHandler.BLOCK, this.worldPosition.below(), Direction.UP);
+            this.belowHandlerCacheExpiryTick = gameTime + BELOW_HANDLER_CACHE_TICKS;
+        }
+        return this.cachedBelowHandler;
     }
 
     private ItemStack insertIntoHandler(IItemHandler handler, ItemStack stack) {
@@ -285,45 +262,94 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
             return true;
         }
 
-//        EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-//        Holder.Reference<EntityType<?>> holder = entityType.builtInRegistryHolder();
-//        Holder.Reference<EntityType<?>> holder = entityType.;
-//        return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
-
         EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
         Holder<EntityType<?>> holder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(entityType);
         return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
 
     private void autoOutputToBelow() {
+        if (!hasOutputItems()) {
+            return;
+        }
+
         IItemHandler belowHandler = getBelowHandler();
         if (belowHandler == null) return;
 
         for (int i = 8; i < 72; i++) {
             ItemStack stackInSlot = this.inventory.getStackInSlot(i);
-            if (!stackInSlot.isEmpty()) {
-                ItemStack remainder = insertIntoHandler(belowHandler, stackInSlot.copy());
+            if (stackInSlot.isEmpty()) {
+                continue;
+            }
+
+            ItemStack original = stackInSlot.copy();
+            ItemStack remainder = insertIntoHandler(belowHandler, original.copy());
+            if (!ItemStack.matches(original, remainder)) {
                 this.inventory.setStackInSlot(i, remainder);
             }
         }
     }
 
-    private List<SpawnEggItem> getValidEggs() {
-        List<SpawnEggItem> eggs = new ArrayList<>();
+    private Map<EntityType<?>, Integer> collectValidEggTypeCounts() {
+        Map<EntityType<?>, Integer> eggTypeCounts = new LinkedHashMap<>();
         for (int i = 0; i < 8; i++) {
-            ItemStack stack = inventory.getStackInSlot(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg) {
-                eggs.add(egg);
+            ItemStack stack = this.inventory.getStackInSlot(i);
+            if (stack.isEmpty() || !(stack.getItem() instanceof SpawnEggItem egg) || !canUseSpawnEgg(egg)) {
+                continue;
             }
+
+            EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
+            eggTypeCounts.merge(entityType, 1, Integer::sum);
         }
-        return eggs;
+        return eggTypeCounts;
     }
 
-    private boolean isOutputFull() {
-        for (int i = 8; i < 72; i++) {
-            if (this.inventory.getStackInSlot(i).isEmpty()) return false;
+    private boolean hasOutputItems() {
+        refreshOutputCacheIfNeeded();
+        return this.cachedOutputHasItems;
+    }
+
+    private boolean hasOutputRoom() {
+        refreshOutputCacheIfNeeded();
+        return this.cachedOutputHasRoom;
+    }
+
+    private void recountEggInputs() {
+        int eggCount = 0;
+        for (int i = 0; i < 8; i++) {
+            ItemStack stack = this.inventory.getStackInSlot(i);
+            if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg && canUseSpawnEgg(egg)) {
+                eggCount++;
+            }
         }
-        return true;
+        this.cachedEggCount = eggCount;
+    }
+
+    private void refreshOutputCacheIfNeeded() {
+        if (!this.outputCacheDirty) {
+            return;
+        }
+
+        boolean hasItems = false;
+        boolean hasRoom = false;
+        for (int i = 8; i < 72; i++) {
+            ItemStack stack = this.inventory.getStackInSlot(i);
+            if (stack.isEmpty()) {
+                hasRoom = true;
+            } else {
+                hasItems = true;
+                if (stack.getCount() < stack.getMaxStackSize()) {
+                    hasRoom = true;
+                }
+            }
+
+            if (hasItems && hasRoom) {
+                break;
+            }
+        }
+
+        this.cachedOutputHasItems = hasItems;
+        this.cachedOutputHasRoom = hasRoom;
+        this.outputCacheDirty = false;
     }
 
     // ================== Getter / Setter ==================
@@ -396,6 +422,11 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (tag.contains("RedstoneControl")) redstoneControl = tag.getBoolean("RedstoneControl");
         if (tag.contains("Echoing")) echoing = tag.getInt("Echoing");
         if (tag.contains("CurrentDelay")) delay = tag.getInt("CurrentDelay");
+        recountEggInputs();
+        outputCacheDirty = true;
+        refreshOutputCacheIfNeeded();
+        belowHandlerCacheExpiryTick = Long.MIN_VALUE;
+        cachedBelowHandler = null;
     }
 
     private static int calculateEnergyLevel(int energy, int maxEnergy) {
