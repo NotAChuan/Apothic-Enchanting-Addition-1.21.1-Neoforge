@@ -62,5 +62,9 @@
   "jade.apothicenchantingaddition.flux_spawner.echoing_level": "迴響%s",
   "itemGroup.apothicenchantingaddition.main": "通量神化機器",
   "config.jade.plugin_apothicenchantingaddition.flux_spawner": "通量生怪磚",
-  "config.jade.plugin_apothicenchantingaddition.flux_spawner.desc": "在 Jade 提示中顯示通量生怪磚資訊"
+  "config.jade.plugin_apothicenchantingaddition.flux_spawner.desc": "在 Jade 提示中顯示通量生怪磚資訊",
+  "jei.apothicenchantingaddition.category.flux_spawner": "通量刷怪",
+  "jei.apothicenchantingaddition.category.flux_spawner_remove": "通量刷怪移除",
+  "jei.apothicenchantingaddition.flux_spawner.probability": "機率: %s",
+  "jei.apothicenchantingaddition.flux_spawner_remove.blocked": "該物品無法放置在通量生怪磚中。"
 }

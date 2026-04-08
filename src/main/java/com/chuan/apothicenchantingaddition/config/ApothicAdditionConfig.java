@@ -21,6 +21,10 @@ public class ApothicAdditionConfig {
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_ENERGY_PER_EGG;
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_EXP_BASE_COUNT;
     public static final ModConfigSpec.BooleanValue FLUX_SPAWNER_ENTITY_BLACKLIST_OPEN;
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_MIN_DELAY_LIMIT;
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_MAX_DELAY_LIMIT;
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_SPAWN_COUNT_LIMIT;
+    public static final ModConfigSpec.IntValue FLUX_SPAWNER_ECHOING_LIMIT;
 
     static {
         BUILDER.push("Energy Settings");
@@ -89,6 +93,29 @@ public class ApothicAdditionConfig {
                         "默认值：true。开启后，通量刷怪笼仍然可以处理这些被加入黑名单的刷怪蛋。")
                 .define("fluxSpawnerEntityBlacklistOpen", true);
 
+        FLUX_SPAWNER_MIN_DELAY_LIMIT = BUILDER
+                .comment("Lower bound used by Flux Spawner min delay upgrades and downgrades.",
+                        "Only affects this mod's own modifier behavior.",
+                        "通量刷怪笼 MIN_DELAY 升降级可到达的下限，仅影响本模组自己的升级逻辑。")
+                .defineInRange("fluxSpawnerMinDelayLimit", 20, 1, 200);
+
+        FLUX_SPAWNER_MAX_DELAY_LIMIT = BUILDER
+                .comment("Lower bound used by Flux Spawner max delay upgrades and downgrades.",
+                        "Only affects this mod's own modifier behavior.",
+                        "通量刷怪笼 MAX_DELAY 升降级可到达的下限，仅影响本模组自己的升级逻辑。")
+                .defineInRange("fluxSpawnerMaxDelayLimit", 20, 1, 800);
+
+        FLUX_SPAWNER_SPAWN_COUNT_LIMIT = BUILDER
+                .comment("Upper bound used by Flux Spawner spawn count upgrades.",
+                        "Only affects this mod's own modifier behavior.",
+                        "通量刷怪笼 SPAWN_COUNT 升级可到达的上限，仅影响本模组自己的升级逻辑。")
+                .defineInRange("fluxSpawnerSpawnCountLimit", 16, 1, 64);
+
+        FLUX_SPAWNER_ECHOING_LIMIT = BUILDER
+                .comment("Upper bound used by Flux Spawner echoing upgrades.",
+                        "Only affects this mod's own modifier behavior.",
+                        "通量刷怪笼 ECHOING 升级可到达的上限，仅影响本模组自己的升级逻辑。")
+                .defineInRange("fluxSpawnerEchoingLimit", 5, 0, 16);
 
         BUILDER.pop();
 

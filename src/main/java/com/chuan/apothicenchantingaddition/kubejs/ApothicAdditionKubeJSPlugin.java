@@ -12,5 +12,9 @@ public class ApothicAdditionKubeJSPlugin implements KubeJSPlugin {
                 .register("ritual", RitualRecipeSchema.SCHEMA);
         registry.namespace(ModRegistry.MOD_ID)
                 .register("drawing", RitualDrawingRecipeSchema.SCHEMA);
+        registry.namespace(ModRegistry.MOD_ID)
+                .register("spawner", SpawnerRecipeSchema.SCHEMA);
+        registry.namespace(ModRegistry.MOD_ID)
+                .register("spawner_remove", SpawnerRemoveRecipeSchema.SCHEMA);
     }
 }

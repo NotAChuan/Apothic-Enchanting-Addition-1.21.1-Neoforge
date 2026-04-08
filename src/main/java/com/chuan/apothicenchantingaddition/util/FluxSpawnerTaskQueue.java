@@ -2,6 +2,7 @@ package com.chuan.apothicenchantingaddition.util;
 
 import com.chuan.apothicenchantingaddition.ApothicEnchantingAddition;
 import com.chuan.apothicenchantingaddition.block.entity.FluxSpawnerBlockEntity;
+import com.chuan.apothicenchantingaddition.recipe.SpawnerRecipe;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -25,9 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-/**
- * 将 Flux Spawner 的掉落 roll 改成分帧结算，避免在单个 tick 内一次性跑完全部 loot table。
- */
 @EventBusSubscriber(modid = ApothicEnchantingAddition.MOD_ID)
 public final class FluxSpawnerTaskQueue {
 
@@ -40,15 +38,15 @@ public final class FluxSpawnerTaskQueue {
     private FluxSpawnerTaskQueue() {
     }
 
-    public static void enqueue(ServerLevel level, BlockPos pos, Map<EntityType<?>, Integer> eggTypeCounts, int totalRollsPerEgg, int expCount) {
-        if (eggTypeCounts.isEmpty() && expCount <= 0) {
+    public static void enqueue(ServerLevel level, BlockPos pos, List<FluxSpawnerRecipeResolver.EntityDropProfile> profiles, int expCount) {
+        if (profiles.isEmpty() && expCount <= 0) {
             return;
         }
 
         LinkedHashMap<BlockPos, QueuedSpawnerTask> levelTasks = TASKS.computeIfAbsent(level, ignored -> new LinkedHashMap<>());
         BlockPos immutablePos = pos.immutable();
         QueuedSpawnerTask task = levelTasks.computeIfAbsent(immutablePos, QueuedSpawnerTask::new);
-        task.enqueueJob(eggTypeCounts, totalRollsPerEgg, expCount);
+        task.enqueueJob(profiles, expCount);
     }
 
     @SubscribeEvent
@@ -109,8 +107,8 @@ public final class FluxSpawnerTaskQueue {
             this.spawnerPos = spawnerPos;
         }
 
-        private void enqueueJob(Map<EntityType<?>, Integer> eggTypeCounts, int totalRollsPerEgg, int expCount) {
-            this.pendingJobs.addLast(new LootJob(this.spawnerPos, eggTypeCounts, totalRollsPerEgg, expCount));
+        private void enqueueJob(List<FluxSpawnerRecipeResolver.EntityDropProfile> profiles, int expCount) {
+            this.pendingJobs.addLast(new LootJob(this.spawnerPos, profiles, expCount));
         }
 
         private boolean isFinished() {
@@ -147,12 +145,11 @@ public final class FluxSpawnerTaskQueue {
         private int expRemaining;
         private boolean canceled;
 
-        private LootJob(BlockPos spawnerPos, Map<EntityType<?>, Integer> eggTypeCounts, int totalRollsPerEgg, int expCount) {
+        private LootJob(BlockPos spawnerPos, List<FluxSpawnerRecipeResolver.EntityDropProfile> profiles, int expCount) {
             this.spawnerPos = spawnerPos;
-            for (Map.Entry<EntityType<?>, Integer> entry : eggTypeCounts.entrySet()) {
-                int totalRolls = Math.max(0, totalRollsPerEgg * entry.getValue());
-                if (totalRolls > 0) {
-                    this.workUnits.addLast(new EntityWorkUnit(entry.getKey(), totalRolls));
+            for (FluxSpawnerRecipeResolver.EntityDropProfile profile : profiles) {
+                if (profile.totalRolls() > 0) {
+                    this.workUnits.addLast(new EntityWorkUnit(profile.entityType(), profile.totalRolls(), profile.recipe()));
                 }
             }
             this.expRemaining = Math.max(0, expCount);
@@ -168,8 +165,12 @@ public final class FluxSpawnerTaskQueue {
                 return hasTime ? 8 : 4;
             }
 
-            FluxSpawnerLootProbabilityModelCache.LootProbabilityModel model = currentUnit.getCachedModel();
-            return model == null ? (hasTime ? 6 : 3) : model.recommendedRollBudget(hasTime);
+            if (currentUnit.isLootTableMode()) {
+                FluxSpawnerLootProbabilityModelCache.LootProbabilityModel model = currentUnit.getCachedModel();
+                return model == null ? (hasTime ? 6 : 3) : model.recommendedRollBudget(hasTime);
+            }
+
+            return hasTime ? 16 : 8;
         }
 
         private int process(ServerLevel level, int budget) {
@@ -189,8 +190,12 @@ public final class FluxSpawnerTaskQueue {
             while (consumed < budget) {
                 if (!this.workUnits.isEmpty()) {
                     EntityWorkUnit workUnit = this.workUnits.peekFirst();
-                    FluxSpawnerLootProbabilityModelCache.LootProbabilityModel model = workUnit.getOrCreateModel(level);
-                    this.accumulator.mergeDrops(model.sample(level, this.spawnerPos, damageSource, fakePlayer));
+                    if (workUnit.isLootTableMode()) {
+                        FluxSpawnerLootProbabilityModelCache.LootProbabilityModel model = workUnit.getOrCreateModel(level);
+                        this.accumulator.mergeDrops(model.sample(level, this.spawnerPos, damageSource, fakePlayer));
+                    } else {
+                        this.accumulator.mergeDrops(workUnit.rollCustomDrops(level));
+                    }
                     workUnit.remainingRolls--;
                     consumed++;
 
@@ -229,12 +234,18 @@ public final class FluxSpawnerTaskQueue {
 
     private static final class EntityWorkUnit {
         private final EntityType<?> entityType;
+        private final SpawnerRecipe customRecipe;
         private int remainingRolls;
         private FluxSpawnerLootProbabilityModelCache.LootProbabilityModel cachedModel;
 
-        private EntityWorkUnit(EntityType<?> entityType, int remainingRolls) {
+        private EntityWorkUnit(EntityType<?> entityType, int remainingRolls, SpawnerRecipe customRecipe) {
             this.entityType = entityType;
             this.remainingRolls = remainingRolls;
+            this.customRecipe = customRecipe;
+        }
+
+        private boolean isLootTableMode() {
+            return this.customRecipe == null;
         }
 
         private FluxSpawnerLootProbabilityModelCache.LootProbabilityModel getOrCreateModel(ServerLevel level) {
@@ -246,6 +257,10 @@ public final class FluxSpawnerTaskQueue {
 
         private FluxSpawnerLootProbabilityModelCache.LootProbabilityModel getCachedModel() {
             return this.cachedModel;
+        }
+
+        private List<ItemStack> rollCustomDrops(ServerLevel level) {
+            return this.customRecipe == null ? List.of() : this.customRecipe.rollDrops(level.random);
         }
     }
 

@@ -4,6 +4,7 @@ import com.chuan.apothicenchantingaddition.block.FluxSpawnerBlock;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.FluxSpawnerRecipeResolver;
 import com.chuan.apothicenchantingaddition.util.FluxSpawnerTaskQueue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,7 +52,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     // 2. 核心属性
     private int minDelay = 200;
     private int maxDelay = 800;
-    private int spawnCount = 4;
+    private int spawnCount = 2;
     private boolean redstoneControl = false;
     private int echoing = 0;
     private int delay = 200;
@@ -95,8 +96,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             if (slot < 8) {
-                if (!(stack.getItem() instanceof SpawnEggItem egg)) return false;
-                return canUseSpawnEgg(egg);
+                return canInsertSpawnEgg(stack);
             }
             return true;
         }
@@ -170,7 +170,6 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (eggCount == 0) return;
 
         if (entity.redstoneControl && !level.hasNeighborSignal(pos)) return;
-        if (!entity.hasOutputRoom()) return;
 
         int baseCost = ApothicAdditionConfig.FLUX_SPAWNER_ENERGY_PER_EGG.get();
         int energyCost = (baseCost * eggCount)
@@ -180,29 +179,39 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
         if (entity.energyStorage.getEnergyStored() < energyCost) return;
 
-        entity.energyStorage.extractEnergy(energyCost, false);
-
-        entity.delay--;
-        if (entity.delay <= 0) {
-            entity.enqueueLootGeneration((ServerLevel) level);
-            int range = entity.maxDelay - entity.minDelay;
-            entity.delay = entity.minDelay + (range > 0 ? level.random.nextInt(range) : 0);
-            entity.setChanged();
-        }
-    }
-
-    private void enqueueLootGeneration(ServerLevel serverLevel) {
-        Map<EntityType<?>, Integer> eggTypeCounts = collectValidEggTypeCounts();
-        if (eggTypeCounts.isEmpty()) {
+        if (entity.delay > 1) {
+            entity.energyStorage.extractEnergy(energyCost, false);
+            entity.delay--;
             return;
         }
 
-        int validEggCount = eggTypeCounts.values().stream().mapToInt(Integer::intValue).sum();
-        int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
-        int expBase = ApothicAdditionConfig.FLUX_SPAWNER_EXP_BASE_COUNT.get();
-        int expCount = expBase * validEggCount * (1 + this.echoing);
+        FluxSpawnerRecipeResolver.SpawnPlan plan = entity.buildSpawnPlan((ServerLevel) level);
+        if (!plan.hasValidEggs()) {
+            return;
+        }
 
-        FluxSpawnerTaskQueue.enqueue(serverLevel, this.worldPosition, eggTypeCounts, totalRollsPerEgg, expCount);
+        if (plan.producesItems() && !entity.hasOutputRoom()) {
+            return;
+        }
+
+        entity.energyStorage.extractEnergy(energyCost, false);
+        entity.enqueueLootGeneration((ServerLevel) level, plan);
+
+        int range = entity.maxDelay - entity.minDelay;
+        entity.delay = entity.minDelay + (range > 0 ? level.random.nextInt(range) : 0);
+        entity.setChanged();
+    }
+
+    private FluxSpawnerRecipeResolver.SpawnPlan buildSpawnPlan(ServerLevel serverLevel) {
+        Map<EntityType<?>, Integer> eggTypeCounts = collectProcessableEggTypeCounts();
+        int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
+        return FluxSpawnerRecipeResolver.buildPlan(serverLevel, eggTypeCounts, totalRollsPerEgg, this.echoing);
+    }
+
+    private void enqueueLootGeneration(ServerLevel serverLevel, FluxSpawnerRecipeResolver.SpawnPlan plan) {
+        if (!plan.profiles().isEmpty() || plan.expCount() > 0) {
+            FluxSpawnerTaskQueue.enqueue(serverLevel, this.worldPosition, plan.profiles(), plan.expCount());
+        }
     }
 
     public void acceptGeneratedDrops(List<ItemStack> drops) {
@@ -267,6 +276,16 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
 
+    public boolean canInsertSpawnEgg(ItemStack stack) {
+        if (!(stack.getItem() instanceof SpawnEggItem egg)) {
+            return false;
+        }
+        if (!canUseSpawnEgg(egg)) {
+            return false;
+        }
+        return this.level == null || FluxSpawnerRecipeResolver.canInsertEgg(this.level, egg);
+    }
+
     private void autoOutputToBelow() {
         if (!hasOutputItems()) {
             return;
@@ -289,7 +308,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-    private Map<EntityType<?>, Integer> collectValidEggTypeCounts() {
+    private Map<EntityType<?>, Integer> collectProcessableEggTypeCounts() {
         Map<EntityType<?>, Integer> eggTypeCounts = new LinkedHashMap<>();
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
