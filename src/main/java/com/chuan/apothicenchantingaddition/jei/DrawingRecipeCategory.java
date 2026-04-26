@@ -89,10 +89,21 @@ public class DrawingRecipeCategory implements IRecipeCategory<RitualDrawingRecip
             statusKey = "jei.apothicenchantingaddition.drawing.no_consume";
         }
 
+        var font = Minecraft.getInstance().font;
         guiGraphics.drawString(
-                Minecraft.getInstance().font,
+                font,
                 Component.translatable(statusKey),
                 2,
+                HEIGHT - 10,
+                0x555555,
+                false
+        );
+
+        Component tip = Component.translatable("jei.apothicenchantingaddition.drawing.right_click_block");
+        guiGraphics.drawString(
+                font,
+                tip,
+                WIDTH - font.width(tip) - 2,
                 HEIGHT - 10,
                 0x555555,
                 false

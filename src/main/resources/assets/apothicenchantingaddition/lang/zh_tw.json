@@ -52,6 +52,7 @@
   "jei.apothicenchantingaddition.drawing.no_consume": "不消耗",
   "jei.apothicenchantingaddition.drawing.damage": "損傷",
   "jei.apothicenchantingaddition.ritual.time": "製作: %s 秒",
+  "jei.apothicenchantingaddition.drawing.right_click_block": "右鍵方塊",
   "ritual.apothicenchantingaddition.name": "聚靈匯法",
   "ritual.apothicenchantingaddition.crafting": "靈氣匯聚中...",
   "ritual.apothicenchantingaddition.busy": "儀式進行中，無法操作！",

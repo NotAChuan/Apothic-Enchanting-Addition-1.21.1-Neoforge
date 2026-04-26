@@ -56,6 +56,7 @@
   "jei.apothicenchantingaddition.drawing.no_consume": "不消耗",
   "jei.apothicenchantingaddition.drawing.damage": "损伤",
   "jei.apothicenchantingaddition.ritual.time": "制作: %s 秒",
+  "jei.apothicenchantingaddition.drawing.right_click_block": "右键方块",
   "jade.apothicenchantingaddition.flux_spawner.ctrl_stats": "按住 Ctrl 查看详细属性",
   "jade.apothicenchantingaddition.flux_spawner.redstone": "红石控制",
   "jade.apothicenchantingaddition.flux_spawner.echoing": "回响",

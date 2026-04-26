@@ -13,7 +13,12 @@ import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @JeiPlugin
 public class ApothicAdditionJeiPlugin implements IModPlugin {
@@ -103,12 +108,43 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         try {
+            registerDrawingRecipeCatalysts(registration);
+
             ItemStack catalyst = new ItemStack(ModRegistry.FLUX_SPAWNER_ITEM.get());
             registration.addRecipeCatalyst(catalyst, SPAWNER_JEI_TYPE);
             registration.addRecipeCatalyst(catalyst, SPAWNER_REMOVE_JEI_TYPE);
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    private void registerDrawingRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        Set<Item> addedItems = new HashSet<>();
+        for (RitualDrawingRecipe recipe : getDrawingRecipesForCatalysts()) {
+            for (ItemStack stack : recipe.tool().getItems()) {
+                if (stack.isEmpty() || !addedItems.add(stack.getItem())) {
+                    continue;
+                }
+
+                ItemStack catalyst = stack.copy();
+                catalyst.setCount(1);
+                registration.addRecipeCatalyst(catalyst, DRAWING_TYPE);
+                registration.addRecipeCatalyst(catalyst.copy(), RITUAL_TYPE);
+            }
+        }
+    }
+
+    private List<RitualDrawingRecipe> getDrawingRecipesForCatalysts() {
+        var connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return RecipeCache.drawingRecipes;
+        }
+
+        return connection.getRecipeManager()
+                .getAllRecipesFor(ModRegistry.DRAWING_TYPE.get())
+                .stream()
+                .map(holder -> holder.value())
+                .toList();
     }
 
     @Override

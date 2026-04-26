@@ -52,6 +52,7 @@
   "jei.apothicenchantingaddition.drawing.no_consume": "Not Consumed",
   "jei.apothicenchantingaddition.drawing.damage": "Damaged",
   "jei.apothicenchantingaddition.ritual.time": "Crafting: %s s",
+  "jei.apothicenchantingaddition.drawing.right_click_block": "Right-click Block",
   "ritual.apothicenchantingaddition.name": "Spirit Gathering",
   "ritual.apothicenchantingaddition.crafting": "Converging Spiritual Energy...",
   "ritual.apothicenchantingaddition.busy": "Ritual in progress, cannot interact!",
