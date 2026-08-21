@@ -10,7 +10,6 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +45,7 @@ public class FluxSpawnerMenu extends AbstractContainerMenu {
 
                     @Override
                     public boolean mayPlace(@NotNull ItemStack stack) {
-                        return FluxSpawnerMenu.this.blockEntity.canInsertSpawnEgg(stack);
+                        return FluxSpawnerMenu.this.blockEntity.canInsertSpawnerInput(stack);
                     }
                 });
             }
@@ -92,7 +91,7 @@ public class FluxSpawnerMenu extends AbstractContainerMenu {
             }
             // 如果点击的是玩家背包的物品，尝试移动到刷怪笼的输入槽 (0-7)
             else {
-                if (this.blockEntity.canInsertSpawnEgg(stackInSlot)) {
+                if (this.blockEntity.canInsertSpawnerInput(stackInSlot)) {
                     if (!this.moveItemStackTo(stackInSlot, 0, 8, false)) {
                         return ItemStack.EMPTY;
                     }

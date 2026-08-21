@@ -4,6 +4,7 @@ import com.chuan.apothicenchantingaddition.block.FluxSpawnerBlock;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.menu.FluxSpawnerMenu;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.FluxSpawnerInputResolver;
 import com.chuan.apothicenchantingaddition.util.FluxSpawnerRecipeResolver;
 import com.chuan.apothicenchantingaddition.util.FluxSpawnerTaskQueue;
 import net.minecraft.core.BlockPos;
@@ -57,7 +58,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private int echoing = 0;
     private int delay = 200;
     private int lastEnergy = 0;
-    private int cachedEggCount = 0;
+    private int cachedSpawnerInputCount = 0;
     private boolean outputCacheDirty = true;
     private boolean cachedOutputHasItems = false;
     private boolean cachedOutputHasRoom = true;
@@ -96,7 +97,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             if (slot < 8) {
-                return canInsertSpawnEgg(stack);
+                return canInsertSpawnerInput(stack);
             }
             return true;
         }
@@ -109,7 +110,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         @Override
         protected void onContentsChanged(int slot) {
             if (slot < 8) {
-                recountEggInputs();
+                recountSpawnerInputs();
             } else {
                 outputCacheDirty = true;
             }
@@ -126,7 +127,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
     public FluxSpawnerBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModRegistry.FLUX_SPAWNER_BE.get(), pos, blockState);
-        recountEggInputs();
+        recountSpawnerInputs();
     }
 
     // ================== GUI 绑定接口 (MenuProvider) ==================
@@ -166,13 +167,13 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
             entity.autoOutputToBelow();
         }
 
-        int eggCount = entity.cachedEggCount;
-        if (eggCount == 0) return;
+        int spawnerInputCount = entity.cachedSpawnerInputCount;
+        if (spawnerInputCount == 0) return;
 
         if (entity.redstoneControl && !level.hasNeighborSignal(pos)) return;
 
         int baseCost = ApothicAdditionConfig.FLUX_SPAWNER_ENERGY_PER_EGG.get();
-        int energyCost = (baseCost * eggCount)
+        int energyCost = (baseCost * spawnerInputCount)
                 + (baseCost * (800 / Math.max(1, entity.maxDelay)))
                 + (baseCost * entity.spawnCount)
                 + (baseCost * entity.echoing * 2);
@@ -203,7 +204,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     private FluxSpawnerRecipeResolver.SpawnPlan buildSpawnPlan(ServerLevel serverLevel) {
-        Map<EntityType<?>, Integer> eggTypeCounts = collectProcessableEggTypeCounts();
+        Map<EntityType<?>, Integer> eggTypeCounts = collectProcessableInputTypeCounts();
         int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
         return FluxSpawnerRecipeResolver.buildPlan(serverLevel, eggTypeCounts, totalRollsPerEgg, this.echoing);
     }
@@ -267,11 +268,14 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     public static boolean canUseSpawnEgg(SpawnEggItem egg) {
+        return canUseSpawnerEntity(egg.getType(ItemStack.EMPTY));
+    }
+
+    public static boolean canUseSpawnerEntity(EntityType<?> entityType) {
         if (ApothicAdditionConfig.FLUX_SPAWNER_ENTITY_BLACKLIST_OPEN.get()) {
             return true;
         }
 
-        EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
         Holder<EntityType<?>> holder = BuiltInRegistries.ENTITY_TYPE.wrapAsHolder(entityType);
         return !holder.is(APOTHIC_SPAWNER_BLACKLIST);
     }
@@ -284,6 +288,13 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
             return false;
         }
         return this.level == null || FluxSpawnerRecipeResolver.canInsertEgg(this.level, egg);
+    }
+
+    public boolean canInsertSpawnerInput(ItemStack stack) {
+        return FluxSpawnerInputResolver.getEntityType(stack)
+                .filter(FluxSpawnerBlockEntity::canUseSpawnerEntity)
+                .filter(entityType -> this.level == null || !FluxSpawnerRecipeResolver.isRemoved(this.level, entityType))
+                .isPresent();
     }
 
     private void autoOutputToBelow() {
@@ -308,16 +319,13 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-    private Map<EntityType<?>, Integer> collectProcessableEggTypeCounts() {
+    private Map<EntityType<?>, Integer> collectProcessableInputTypeCounts() {
         Map<EntityType<?>, Integer> eggTypeCounts = new LinkedHashMap<>();
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
-            if (stack.isEmpty() || !(stack.getItem() instanceof SpawnEggItem egg) || !canUseSpawnEgg(egg)) {
-                continue;
-            }
-
-            EntityType<?> entityType = egg.getType(ItemStack.EMPTY);
-            eggTypeCounts.merge(entityType, 1, Integer::sum);
+            FluxSpawnerInputResolver.getEntityType(stack)
+                    .filter(FluxSpawnerBlockEntity::canUseSpawnerEntity)
+                    .ifPresent(entityType -> eggTypeCounts.merge(entityType, 1, Integer::sum));
         }
         return eggTypeCounts;
     }
@@ -332,15 +340,15 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         return this.cachedOutputHasRoom;
     }
 
-    private void recountEggInputs() {
-        int eggCount = 0;
+    private void recountSpawnerInputs() {
+        int inputCount = 0;
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
-            if (!stack.isEmpty() && stack.getItem() instanceof SpawnEggItem egg && canUseSpawnEgg(egg)) {
-                eggCount++;
+            if (canInsertSpawnerInput(stack)) {
+                inputCount++;
             }
         }
-        this.cachedEggCount = eggCount;
+        this.cachedSpawnerInputCount = inputCount;
     }
 
     private void refreshOutputCacheIfNeeded() {
@@ -441,7 +449,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (tag.contains("RedstoneControl")) redstoneControl = tag.getBoolean("RedstoneControl");
         if (tag.contains("Echoing")) echoing = tag.getInt("Echoing");
         if (tag.contains("CurrentDelay")) delay = tag.getInt("CurrentDelay");
-        recountEggInputs();
+        recountSpawnerInputs();
         outputCacheDirty = true;
         refreshOutputCacheIfNeeded();
         belowHandlerCacheExpiryTick = Long.MIN_VALUE;

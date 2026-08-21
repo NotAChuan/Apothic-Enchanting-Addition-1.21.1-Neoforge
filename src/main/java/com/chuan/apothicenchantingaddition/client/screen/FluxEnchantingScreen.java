@@ -24,6 +24,9 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.Material;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.RandomSource;
+import com.mojang.blaze3d.platform.Lighting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +44,15 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
     );
 
     private BookModel bookModel;
+    private final RandomSource bookRandom = RandomSource.create();
+    private ItemStack lastBookItem = ItemStack.EMPTY;
+    private int bookTime;
+    private float bookFlip;
+    private float oldBookFlip;
+    private float bookFlipTarget;
+    private float bookFlipAcceleration;
+    private float bookOpen;
+    private float oldBookOpen;
 
     private static final int REFRESH_BOOK_CENTER_X = 33;
     private static final int REFRESH_BOOK_CENTER_Y = 24;
@@ -118,13 +130,41 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
     }
 
     @Override
+    public void containerTick() {
+        super.containerTick();
+
+        ItemStack itemStack = this.menu.getSlot(0).getItem();
+        if (!ItemStack.matches(itemStack, this.lastBookItem)) {
+            this.lastBookItem = itemStack.copy();
+            do {
+                this.bookFlipTarget += this.bookRandom.nextInt(4) - this.bookRandom.nextInt(4);
+            } while (this.bookFlip >= this.bookFlipTarget - 1.0F && this.bookFlip <= this.bookFlipTarget + 1.0F);
+        }
+
+        this.bookTime++;
+        this.oldBookFlip = this.bookFlip;
+        this.oldBookOpen = this.bookOpen;
+
+        if (this.menu.getSlot(0).hasItem()) {
+            this.bookOpen += 0.2F;
+        } else {
+            this.bookOpen -= 0.2F;
+        }
+        this.bookOpen = Mth.clamp(this.bookOpen, 0.0F, 1.0F);
+
+        float flipDelta = Mth.clamp((this.bookFlipTarget - this.bookFlip) * 0.4F, -0.2F, 0.2F);
+        this.bookFlipAcceleration += (flipDelta - this.bookFlipAcceleration) * 0.9F;
+        this.bookFlip += this.bookFlipAcceleration;
+    }
+
+    @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int x = this.leftPos;
         int y = this.topPos;
 
         guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 
-        renderBook(guiGraphics, x, y);
+        renderBook(guiGraphics, x, y, partialTick);
 
         int currentEnergy = menu.getEnergy();
 
@@ -177,30 +217,30 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.energy"), x + LABEL_X, y + ENERGY_LABEL_Y, 0xFFFFFFFF, false);
     }
 
-    private void renderBook(GuiGraphics guiGraphics, int x, int y) {
+    private void renderBook(GuiGraphics guiGraphics, int x, int y, float partialTick) {
         if (this.bookModel == null || this.minecraft == null) {
             return;
         }
 
-        boolean hasItem = this.menu.getSlot(0).hasItem();
-        float open = hasItem ? 1.0F : 0.0F;
+        float open = Mth.lerp(partialTick, this.oldBookOpen, this.bookOpen);
+        float flip = Mth.lerp(partialTick, this.oldBookFlip, this.bookFlip);
 
+        Lighting.setupForEntityInInventory();
         PoseStack pose = guiGraphics.pose();
-        MultiBufferSource.BufferSource buffer = this.minecraft.renderBuffers().bufferSource();
 
         pose.pushPose();
-        pose.translate(x + REFRESH_BOOK_CENTER_X, y + REFRESH_BOOK_CENTER_Y + 10.0F, 100.0F);
-        pose.scale(24.0F, 24.0F, 24.0F);
-        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(12.0F));
-        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(20.0F));
+        pose.translate(x + 33.0F, y + 31.0F, 100.0F);
+        pose.scale(-40.0F, 40.0F, 40.0F);
+        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(25.0F));
         pose.translate((1.0F - open) * 0.2F, (1.0F - open) * 0.1F, (1.0F - open) * 0.25F);
         pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-(1.0F - open) * 90.0F - 90.0F));
         pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(180.0F));
 
-        float pageFlipLeft = hasItem ? 0.1F : 0.0F;
-        float pageFlipRight = hasItem ? 0.9F : 0.0F;
-        this.bookModel.setupAnim(0.0F, pageFlipLeft, pageFlipRight, open);
+        float pageFlipRight = Mth.clamp(Mth.frac(flip + 0.25F) * 1.6F - 0.3F, 0.0F, 1.0F);
+        float pageFlipLeft = Mth.clamp(Mth.frac(flip + 0.75F) * 1.6F - 0.3F, 0.0F, 1.0F);
+        this.bookModel.setupAnim(this.bookTime, pageFlipRight, pageFlipLeft, open);
 
+        MultiBufferSource.BufferSource buffer = guiGraphics.bufferSource();
         this.bookModel.renderToBuffer(
                 pose,
                 ENCHANTING_BOOK_MATERIAL.buffer(buffer, RenderType::entitySolid),
@@ -209,8 +249,9 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
                 0xFFFFFFFF
         );
 
-        buffer.endBatch();
+        guiGraphics.flush();
         pose.popPose();
+        Lighting.setupFor3DItems();
     }
 
     private void drawStatBar(GuiGraphics guiGraphics, int x, int y, int u, int v, float currentValue, float maxValue) {
