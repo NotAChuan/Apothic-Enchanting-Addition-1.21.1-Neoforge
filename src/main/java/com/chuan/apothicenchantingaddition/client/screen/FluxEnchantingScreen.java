@@ -286,23 +286,18 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
                         List<EnchantmentInstance> clues = menu.clientClues.get(i);
 
                         if (clues != null && !clues.isEmpty()) {
-                            if (menu.clientAllRevealed[i]) {
-                                tooltip.add(Component.translatable("gui.apothicenchantingaddition.all_revealed")
-                                        .withStyle(ChatFormatting.GOLD, ChatFormatting.UNDERLINE));
-                            }
+                            tooltip.add(Component.translatable(menu.clientAllRevealed[i]
+                                            ? "info.apothic_enchanting.runes_all"
+                                            : "info.apothic_enchanting.runes")
+                                    .withStyle(ChatFormatting.YELLOW, ChatFormatting.UNDERLINE));
 
                             for (EnchantmentInstance clue : clues) {
                                 Component enchantName = Enchantment.getFullname(clue.enchantment, clue.level);
                                 tooltip.add(enchantName);
                             }
-
-                            if (!menu.clientAllRevealed[i]) {
-                                tooltip.add(Component.translatable("gui.apothicenchantingaddition.some_revealed")
-                                        .withStyle(ChatFormatting.GRAY));
-                            }
                         } else {
-                            tooltip.add(Component.empty().append(Component.translatable("container.enchant.clue", ""))
-                                    .withStyle(ChatFormatting.WHITE));
+                            tooltip.add(Component.translatable("info.apothic_enchanting.no_clue")
+                                    .withStyle(ChatFormatting.DARK_RED, ChatFormatting.UNDERLINE));
                         }
 
                         int feCost = menu.getDisplayedEnergyCost(i);

@@ -30,9 +30,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentInstance;
+import net.minecraft.world.level.LevelReader;
 import net.neoforged.neoforge.items.SlotItemHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,7 +159,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         if (blockEntity.getLevel().isClientSide) return;
         ItemStack stack = blockEntity.inventory.getStackInSlot(0);
 
-        EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+        EnchantmentTableStats stats = this.gatherStats(stack);
         float effectiveEterna = stats.eterna(this.player);
         eternaSlot.set(Float.floatToIntBits(effectiveEterna));
         quantaSlot.set(Float.floatToIntBits(stats.quanta()));
@@ -303,7 +306,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
             if (stack.isEmpty() || stack.getCount() != 1) return;
 
-            EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+            EnchantmentTableStats stats = this.gatherStats(stack);
             float effectiveEterna = stats.eterna(player);
 
             if (this.isInfusionMode()) {
@@ -359,7 +362,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
         if (!blockEntity.getLevel().isClientSide && blockEntity.getLevel().getGameTime() % 20 == 0) {
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
-            EnchantmentTableStats currentStats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+            EnchantmentTableStats currentStats = this.gatherStats(stack);
             if (Float.floatToIntBits(currentStats.eterna(this.player)) != eternaSlot.get() ||
                     Float.floatToIntBits(currentStats.quanta()) != quantaSlot.get() ||
                     Float.floatToIntBits(currentStats.arcana()) != arcanaSlot.get()) {
@@ -370,6 +373,50 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
     public int getEnergy() {
         return (energyUpper.get() << 16) | (energyLower.get() & 0xFFFF);
+    }
+
+    private EnchantmentTableStats gatherStats(ItemStack stack) {
+        LevelReader level = blockEntity.getLevel();
+        BlockPos pos = blockEntity.getBlockPos();
+        int enchantValue = stack.isEmpty() ? 0 : stack.getEnchantmentValue();
+
+        try {
+            Method gatherStats = EnchantmentTableStats.class.getMethod("gatherStats", LevelReader.class, BlockPos.class);
+            return (EnchantmentTableStats) gatherStats.invoke(null, level, pos);
+        } catch (NoSuchMethodException ignored) {
+            // Apothic Enchanting versions before the builder/stat API split require the item enchant value.
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to gather enchanting table stats.", e);
+        }
+
+        try {
+            Method gatherStats = EnchantmentTableStats.class.getMethod("gatherStats", LevelReader.class, BlockPos.class, int.class);
+            return (EnchantmentTableStats) gatherStats.invoke(null, level, pos, enchantValue);
+        } catch (NoSuchMethodException ignored) {
+            // Fall through to the builder API used by intermediate Apothic Enchanting builds.
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to gather enchanting table stats.", e);
+        }
+
+        try {
+            Object builder = this.createStatsBuilder(enchantValue);
+            Method gatherStats = EnchantmentTableStats.class.getMethod("gatherStats", EnchantmentTableStats.Builder.class, LevelReader.class, BlockPos.class);
+            gatherStats.invoke(null, builder, level, pos);
+            Method build = builder.getClass().getMethod("build");
+            return (EnchantmentTableStats) build.invoke(builder);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Failed to gather enchanting table stats.", e);
+        }
+    }
+
+    private Object createStatsBuilder(int enchantValue) throws ReflectiveOperationException {
+        try {
+            Constructor<EnchantmentTableStats.Builder> constructor = EnchantmentTableStats.Builder.class.getConstructor();
+            return constructor.newInstance();
+        } catch (NoSuchMethodException ignored) {
+            Constructor<EnchantmentTableStats.Builder> constructor = EnchantmentTableStats.Builder.class.getConstructor(int.class);
+            return constructor.newInstance(enchantValue);
+        }
     }
 
     public float getEterna() {
