@@ -4,6 +4,7 @@ import com.chuan.apothicenchantingaddition.block.entity.FluxSpawnerBlockEntity;
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
 import com.chuan.apothicenchantingaddition.util.MachineStateDropHelper;
+import com.chuan.apothicenchantingaddition.util.SpawnerStatApplicator;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -117,7 +118,12 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
                 if (targetStat == SpawnerStats.MIN_DELAY) {
                     int val = ((Number) statMod.value()).intValue();
                     int current = fluxBE.getMinDelay();
-                    int next = applyLowerBoundModifier(current, val, ApothicAdditionConfig.FLUX_SPAWNER_MIN_DELAY_LIMIT.get(), 200);
+                    int next = SpawnerStatApplicator.applyLowerBoundStat(
+                            current,
+                            val,
+                            toApplicatorMode(statMod.mode()),
+                            ApothicAdditionConfig.FLUX_SPAWNER_MIN_DELAY_LIMIT.get(),
+                            200);
                     if (current != next) {
                         fluxBE.setMinDelay(next);
                         appliedAtLeastOne = true;
@@ -126,7 +132,12 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
                 else if (targetStat == SpawnerStats.MAX_DELAY) {
                     int val = ((Number) statMod.value()).intValue();
                     int current = fluxBE.getMaxDelay();
-                    int next = applyLowerBoundModifier(current, val, ApothicAdditionConfig.FLUX_SPAWNER_MAX_DELAY_LIMIT.get(), 800);
+                    int next = SpawnerStatApplicator.applyLowerBoundStat(
+                            current,
+                            val,
+                            toApplicatorMode(statMod.mode()),
+                            ApothicAdditionConfig.FLUX_SPAWNER_MAX_DELAY_LIMIT.get(),
+                            800);
                     if (current != next) {
                         fluxBE.setMaxDelay(next);
                         appliedAtLeastOne = true;
@@ -135,7 +146,12 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
                 else if (targetStat == SpawnerStats.SPAWN_COUNT) {
                     int val = ((Number) statMod.value()).intValue();
                     int current = fluxBE.getSpawnCount();
-                    int next = applyUpperBoundModifier(current, val, 1, ApothicAdditionConfig.FLUX_SPAWNER_SPAWN_COUNT_LIMIT.get());
+                    int next = SpawnerStatApplicator.applyUpperBoundStat(
+                            current,
+                            val,
+                            toApplicatorMode(statMod.mode()),
+                            1,
+                            ApothicAdditionConfig.FLUX_SPAWNER_SPAWN_COUNT_LIMIT.get());
                     if (current != next) {
                         fluxBE.setSpawnCount(next);
                         appliedAtLeastOne = true;
@@ -151,7 +167,12 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
                 else if (targetStat == SpawnerStats.ECHOING) {
                     int val = ((Number) statMod.value()).intValue();
                     int current = fluxBE.getEchoing();
-                    int next = applyUpperBoundModifier(current, val, 0, ApothicAdditionConfig.FLUX_SPAWNER_ECHOING_LIMIT.get());
+                    int next = SpawnerStatApplicator.applyUpperBoundStat(
+                            current,
+                            val,
+                            toApplicatorMode(statMod.mode()),
+                            0,
+                            ApothicAdditionConfig.FLUX_SPAWNER_ECHOING_LIMIT.get());
                     if (current != next) {
                         fluxBE.setEchoing(next);
                         appliedAtLeastOne = true;
@@ -186,36 +207,8 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
         return false;
     }
 
-    private static int applyLowerBoundModifier(int current, int delta, int lowerBound, int hardUpperBound) {
-        if (delta < 0) {
-            if (current <= lowerBound) {
-                return current;
-            }
-            return Math.max(lowerBound, current + delta);
-        }
-        if (delta > 0) {
-            if (current >= hardUpperBound) {
-                return current;
-            }
-            return Math.min(hardUpperBound, current + delta);
-        }
-        return current;
-    }
-
-    private static int applyUpperBoundModifier(int current, int delta, int hardLowerBound, int upperBound) {
-        if (delta > 0) {
-            if (current >= upperBound) {
-                return current;
-            }
-            return Math.min(upperBound, current + delta);
-        }
-        if (delta < 0) {
-            if (current <= hardLowerBound) {
-                return current;
-            }
-            return Math.max(hardLowerBound, current + delta);
-        }
-        return current;
+    private static SpawnerStatApplicator.Mode toApplicatorMode(StatModifier.Mode mode) {
+        return mode == StatModifier.Mode.SET ? SpawnerStatApplicator.Mode.SET : SpawnerStatApplicator.Mode.ADD;
     }
 
     @Override

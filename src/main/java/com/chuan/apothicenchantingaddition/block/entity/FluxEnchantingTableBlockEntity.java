@@ -2,12 +2,14 @@ package com.chuan.apothicenchantingaddition.block.entity;
 
 import com.chuan.apothicenchantingaddition.config.ApothicAdditionConfig;
 import com.chuan.apothicenchantingaddition.registry.ModRegistry;
+import com.chuan.apothicenchantingaddition.util.BookAnimationHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,7 +58,10 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
     }
 
     public void tick(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
+        if (level.isClientSide) {
+            bookAnimationTick(level, pos);
+            return;
+        }
 
         // 能量消耗
         int tickCost = ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get();
@@ -73,28 +78,34 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
             }
         }
 
-        // 书本动画更新（修复：使用 this 而不是 be）
-        this.time++;
-        this.oFlip = this.flip;
+    }
+
+    private void bookAnimationTick(Level level, BlockPos pos) {
         this.oOpen = this.open;
         this.oRot = this.rot;
 
-        // 书本翻页动画
-        this.flipT += 0.1F;
-        if (this.flipT > 1.0F) {
-            this.flipT = 0.0F;
-            this.flipA = RANDOM.nextFloat() * 0.4F + 0.8F;
+        Player player = level.getNearestPlayer(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 3.0D, false);
+        if (player != null) {
+            this.tRot = BookAnimationHelper.targetRotation(pos.getX() + 0.5D, pos.getZ() + 0.5D, player.getX(), player.getZ());
+            if (this.open < 0.5F || RANDOM.nextInt(40) == 0) {
+                float previousFlipTarget = this.flipT;
+
+                do {
+                    this.flipT = this.flipT + (float) (RANDOM.nextInt(4) - RANDOM.nextInt(4));
+                } while (previousFlipTarget == this.flipT);
+            }
+        } else {
+            this.tRot += 0.02F;
         }
 
-        float targetFlip = (this.flipT - this.flip) * 0.4F;
-        this.flip += Mth.clamp(targetFlip, -0.2F, 0.2F);
-
-        // 书本打开/关闭动画（固定为打开状态）
-        this.open += (1.0F - this.open) * 0.1F;
-
-        // 书本旋转动画
-        this.tRot += 0.02F;
-        this.rot += (this.tRot - this.rot) * 0.4F;
+        this.open = BookAnimationHelper.nextOpen(this.open, player != null);
+        this.rot = BookAnimationHelper.nextRotation(this.rot, this.tRot);
+        this.time++;
+        this.oFlip = this.flip;
+        float flipDelta = (this.flipT - this.flip) * 0.4F;
+        flipDelta = Mth.clamp(flipDelta, -0.2F, 0.2F);
+        this.flipA = this.flipA + (flipDelta - this.flipA) * 0.9F;
+        this.flip = this.flip + this.flipA;
     }
 
     @Override

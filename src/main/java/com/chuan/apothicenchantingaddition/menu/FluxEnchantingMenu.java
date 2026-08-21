@@ -156,8 +156,9 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         if (blockEntity.getLevel().isClientSide) return;
         ItemStack stack = blockEntity.inventory.getStackInSlot(0);
 
-        EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.isEmpty() ? 0 : stack.getEnchantmentValue());
-        eternaSlot.set(Float.floatToIntBits(stats.eterna()));
+        EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+        float effectiveEterna = stats.eterna(this.player);
+        eternaSlot.set(Float.floatToIntBits(effectiveEterna));
         quantaSlot.set(Float.floatToIntBits(stats.quanta()));
         arcanaSlot.set(Float.floatToIntBits(stats.arcana()));
 
@@ -176,7 +177,7 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         if (isEnchantable) {
             this.random.setSeed(this.enchantmentSeed.get());
             for (int i = 0; i < 3; ++i) {
-                this.costs[i] = ApothEnchantmentHelper.getEnchantmentCost(random, i, stats.eterna(), stack);
+                this.costs[i] = ApothEnchantmentHelper.getEnchantmentCost(random, i, effectiveEterna, stack);
                 this.enchantClue[i] = -1;
                 this.levelClue[i] = -1;
             }
@@ -239,7 +240,8 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
         this.clearEnchantState();
         this.infusionModeSlot.set(1);
 
-        InfusionRecipe statMatch = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, stats.eterna(), stats.quanta(), stats.arcana());
+        float effectiveEterna = stats.eterna(this.player);
+        InfusionRecipe statMatch = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, effectiveEterna, stats.quanta(), stats.arcana());
         InfusionRecipe costRecipe = statMatch != null ? statMatch : itemMatch;
 
         this.infusionCostSlot.set(this.getInfusionEnergyCost(costRecipe));
@@ -301,19 +303,20 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
             if (stack.isEmpty() || stack.getCount() != 1) return;
 
-            EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.getEnchantmentValue());
+            EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+            float effectiveEterna = stats.eterna(player);
 
             if (this.isInfusionMode()) {
                 if (slot != 2 || !this.canInfuse()) return;
 
-                InfusionRecipe recipe = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, stats.eterna(), stats.quanta(), stats.arcana());
+                InfusionRecipe recipe = InfusionRecipe.findMatch(blockEntity.getLevel(), stack, effectiveEterna, stats.quanta(), stats.arcana());
                 if (recipe == null) return;
 
                 int feCost = this.getInfusionEnergyCost(recipe);
                 if (blockEntity.energyStorage.getEnergyStored() < feCost) return;
 
                 blockEntity.energyStorage.extractEnergy(feCost, false);
-                ItemStack result = recipe.assemble(stack, stats.eterna(), stats.quanta(), stats.arcana());
+                ItemStack result = recipe.assemble(stack, effectiveEterna, stats.quanta(), stats.arcana());
                 blockEntity.inventory.setStackInSlot(0, result);
 
                 player.onEnchantmentPerformed(result, 0);
@@ -356,8 +359,8 @@ public class FluxEnchantingMenu extends AbstractContainerMenu {
 
         if (!blockEntity.getLevel().isClientSide && blockEntity.getLevel().getGameTime() % 20 == 0) {
             ItemStack stack = blockEntity.inventory.getStackInSlot(0);
-            EnchantmentTableStats currentStats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos(), stack.isEmpty() ? 0 : stack.getEnchantmentValue());
-            if (Float.floatToIntBits(currentStats.eterna()) != eternaSlot.get() ||
+            EnchantmentTableStats currentStats = EnchantmentTableStats.gatherStats(blockEntity.getLevel(), blockEntity.getBlockPos());
+            if (Float.floatToIntBits(currentStats.eterna(this.player)) != eternaSlot.get() ||
                     Float.floatToIntBits(currentStats.quanta()) != quantaSlot.get() ||
                     Float.floatToIntBits(currentStats.arcana()) != arcanaSlot.get()) {
                 this.slotsChanged(new SimpleContainer(0));

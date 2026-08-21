@@ -135,11 +135,12 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
-    api "curse.maven:ApothicEnchanting-1063926:7659120"
-    api "curse.maven:Placebo-283644:6926281"
-    api "curse.maven:ApothicAttributes-898963:7445079"
+    api "curse.maven:Apotheosis-313970:8564919"
+    api "curse.maven:ApothicEnchanting-1063926:8682996"
+    api "curse.maven:Placebo-283644:8463693"
+    api "curse.maven:ApothicAttributes-898963:8502288"
     api "curse.maven:jei-238222:7420587"
-    api "curse.maven:ApothicSpawners-986583:7492121"
+    api "curse.maven:ApothicSpawners-986583:8469405"
     api "curse.maven:jade-324717:7545219"
 
     compileOnly api("dev.latvian.mods:kubejs-neoforge:2101.7.2-build.348")

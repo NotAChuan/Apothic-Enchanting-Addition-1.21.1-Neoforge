@@ -49,7 +49,7 @@ public class FluxEnchantingTableBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return level.isClientSide ? null : (lvl, pos, st, be) -> {
+        return (lvl, pos, st, be) -> {
             if (be instanceof FluxEnchantingTableBlockEntity fluxBE) {
                 fluxBE.tick(lvl, pos, st);
             }

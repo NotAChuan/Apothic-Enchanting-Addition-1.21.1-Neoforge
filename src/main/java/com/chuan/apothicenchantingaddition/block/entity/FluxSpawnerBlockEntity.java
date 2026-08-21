@@ -52,7 +52,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     // 2. 核心属性
     private int minDelay = 200;
     private int maxDelay = 800;
-    private int spawnCount = 2;
+    private int spawnCount = 4;
     private boolean redstoneControl = false;
     private int echoing = 0;
     private int delay = 200;

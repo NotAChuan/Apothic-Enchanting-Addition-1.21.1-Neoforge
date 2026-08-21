@@ -98,7 +98,14 @@ Apothic Enchanting Addition is an addon mod for Apothic Enchanting.
 [[dependencies.${mod_id}]]
     modId="apothic_enchanting"
     type="required"
-    versionRange="[1.5.2,)"
+    versionRange="[1.6.0,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="apothic_spawners"
+    type="required"
+    versionRange="[1.4.0,)"
     ordering="NONE"
     side="BOTH"
 
