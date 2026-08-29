@@ -112,7 +112,7 @@ public class SpawnerRecipeCategory implements IRecipeCategory<JeiSpawnerRecipeVi
         guiGraphics.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF8B8B8B);
         guiGraphics.fill(x + 1, y + 1, x + SLOT_SIZE - 1, y + SLOT_SIZE - 1, 0xFF373737);
         guiGraphics.fill(x + 2, y + 2, x + SLOT_SIZE - 2, y + SLOT_SIZE - 2, 0xFF8F8F8F);
-        guiGraphics.fill(x + 3, y + 3, x + SLOT_SIZE - 3, y + SLOT_SIZE - 3, 0xFF141414);
+        guiGraphics.fill(x + 3, y + 3, x + SLOT_SIZE - 3, y + SLOT_SIZE - 3, 0xFFE8E8E8);
     }
 
     private static void drawArrow(GuiGraphics guiGraphics) {

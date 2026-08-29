@@ -4,6 +4,7 @@ import com.chuan.apothicflux.block.*;
 import com.chuan.apothicflux.block.entity.*;
 import com.chuan.apothicflux.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicflux.item.CompressedSolidifiedFluxExperienceItem;
+import com.chuan.apothicflux.item.FluxSpawnerBlockItem;
 import com.chuan.apothicflux.item.SolidifiedFluxExperienceItem;
 import com.chuan.apothicflux.menu.FluxEnchantingMenu;
 import com.chuan.apothicflux.menu.FluxAnvilMenu;
@@ -70,7 +71,7 @@ public class ModRegistry {
             () -> new CompressedSolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
 
     public static final DeferredHolder<Item, BlockItem> FLUX_SPAWNER_ITEM = ITEMS.register("flux_spawner",
-            () -> new BlockItem(FLUX_SPAWNER.get(), new Item.Properties()));
+            () -> new FluxSpawnerBlockItem(FLUX_SPAWNER.get(), new Item.Properties()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxStatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
             () -> BlockEntityType.Builder.of(FluxStatsBookshelfBlockEntity::new,

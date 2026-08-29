@@ -1,0 +1,29 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "minecraft:sheep",
+  "drops": [
+    {
+      "stack": {
+        "id": "minecraft:mutton",
+        "count": 1
+      }
+    },{
+      "stack": {
+        "id": "minecraft:mutton",
+        "count": 1
+      },
+      "chance": 0.75
+    },{
+      "stack": {
+        "id": "minecraft:white_wool",
+        "count": 3
+      },
+      "chance": 0.75
+    },{
+      "stack": {
+        "id": "apothic_flux:solidified_flux_experience",
+        "count": 4
+      }
+    }
+  ]
+}

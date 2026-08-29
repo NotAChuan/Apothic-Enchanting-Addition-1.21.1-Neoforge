@@ -1,0 +1,35 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "minecraft:drowned",
+  "drops": [
+    {
+      "stack": {
+        "id": "minecraft:rotten_flesh",
+        "count": 2
+      }
+    },{
+      "stack": {
+        "id": "minecraft:rotten_flesh",
+        "count": 1
+      },
+      "chance": 0.45
+    },{
+      "stack": {
+        "id": "minecraft:copper_ingot",
+        "count": 1
+      },
+      "chance": 0.25
+    },{
+      "stack": {
+        "id": "minecraft:nautilus_shell",
+        "count": 1
+      },
+      "chance": 0.15
+    },{
+      "stack": {
+        "id": "apothic_flux:solidified_flux_experience",
+        "count": 4
+      }
+    }
+  ]
+}

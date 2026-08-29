@@ -1,0 +1,15 @@
+{
+  "type": "apothic_enchanting:infusion",
+  "input": {
+    "item": "minecraft:dragon_egg"
+  },
+  "requirements": {
+    "eterna": 100,
+    "quanta": 15,
+    "arcana": 80
+  },
+  "result": {
+    "id": "minecraft:ender_dragon_spawn_egg",
+    "count": 1
+  }
+}

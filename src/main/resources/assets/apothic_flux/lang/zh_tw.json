@@ -63,6 +63,7 @@
   "gui.apothic_flux.flux_spawner.on": "開啟",
   "gui.apothic_flux.flux_spawner.off": "忽略",
   "gui.apothic_flux.flux_spawner.energy": "能量: %s / %s FE",
+  "tooltip.apothic_flux.flux_spawner.auto_output": "自動向下方容器輸出產物",
   "gui.apothic_flux.infusion": "灌注",
   "gui.apothic_flux.flux_enchanting.energy_cost": "能量要求：%s FE",
   "jei.apothic_flux.category.drawing": "繪製",

@@ -65,6 +65,7 @@
   "gui.apothic_flux.flux_spawner.energy": "Energy: %s / %s FE",
   "gui.apothic_flux.infusion": "Infusion",
   "gui.apothic_flux.flux_enchanting.energy_cost": "Energy Cost: %s FE",
+  "tooltip.apothic_flux.flux_spawner.auto_output": "Automatically outputs drops into the container below",
   "jei.apothic_flux.category.drawing": "Drawing",
   "jei.apothic_flux.category.ritual": "Spirit Gathering",
   "jei.apothic_flux.drawing.consume": "Consumed",

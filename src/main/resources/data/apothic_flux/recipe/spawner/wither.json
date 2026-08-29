@@ -1,0 +1,52 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "minecraft:wither",
+  "drops": [
+    {
+      "stack": {
+        "id": "minecraft:echo_shard",
+        "count": 1
+      }
+    },{
+      "stack": {
+        "id": "apothic_enchanting:warden_tendril",
+        "count": 1
+      }
+    },{
+      "stack": {
+        "id": "minecraft:sculk",
+        "count": 1
+      },
+      "chance": 0.75
+    },{
+      "stack": {
+        "id": "minecraft:sculk_catalyst",
+        "count": 1
+      },
+      "chance": 0.75
+    },{
+      "stack": {
+        "id": "minecraft:sculk_sensor",
+        "count": 1
+      },
+      "chance": 0.65
+    },{
+      "stack": {
+        "id": "minecraft:sculk_shrieker",
+        "count": 1
+      },
+      "chance": 0.45
+    },{
+      "stack": {
+        "id": "minecraft:sculk_vein",
+        "count": 1
+      },
+      "chance": 0.45
+    },{
+      "stack": {
+        "id": "apothic_flux:solidified_flux_experience",
+        "count": 4
+      }
+    }
+  ]
+}

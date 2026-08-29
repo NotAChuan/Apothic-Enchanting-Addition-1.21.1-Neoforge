@@ -63,6 +63,7 @@
   "gui.apothic_flux.flux_spawner.on": "开启",
   "gui.apothic_flux.flux_spawner.off": "忽略",
   "gui.apothic_flux.flux_spawner.energy": "能量: %s / %s FE",
+  "tooltip.apothic_flux.flux_spawner.auto_output": "自动向下方容器输出产物",
   "gui.apothic_flux.infusion": "灌注",
   "gui.apothic_flux.flux_enchanting.energy_cost": "能量要求：%s FE",
   "config.apothic_flux.flux_spawner_energy_per_egg": "刷怪笼耗电量 (每个刷怪蛋)",
