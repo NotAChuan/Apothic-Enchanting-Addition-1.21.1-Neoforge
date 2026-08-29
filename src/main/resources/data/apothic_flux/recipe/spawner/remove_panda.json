@@ -1,0 +1,4 @@
+{
+  "type": "apothic_flux:spawner_remove",
+  "entity": "minecraft:panda"
+}

@@ -1,0 +1,19 @@
+{
+  "type": "apothic_flux:ritual",
+  "inputs": [
+    { "item": "minecraft:enchanting_table" },
+    { "item": "apothic_enchanting:library" },
+    { "item": "apothic_enchanting:filtering_shelf" },
+    { "item": "apothic_enchanting:library" },
+    { "item": "apothic_enchanting:filtering_shelf" },
+    { "item": "apothic_enchanting:library" },
+    { "item": "apothic_enchanting:filtering_shelf" },
+    { "item": "apothic_enchanting:library" },
+    { "item": "apothic_enchanting:filtering_shelf" }
+  ],
+  "output_item": {
+    "id": "apothic_flux:flux_enchanting_table",
+    "count": 1
+  },
+  "craft_time": 120
+}

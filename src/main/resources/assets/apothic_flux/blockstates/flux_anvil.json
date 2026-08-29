@@ -1,0 +1,23 @@
+{
+  "variants": {
+    "facing=north,energy_level=1": { "model": "apothic_flux:block/flux_anvil_0", "y": 0 },
+    "facing=east,energy_level=1":  { "model": "apothic_flux:block/flux_anvil_0", "y": 90 },
+    "facing=south,energy_level=1": { "model": "apothic_flux:block/flux_anvil_0", "y": 180 },
+    "facing=west,energy_level=1":  { "model": "apothic_flux:block/flux_anvil_0", "y": 270 },
+
+    "facing=north,energy_level=2": { "model": "apothic_flux:block/flux_anvil_1", "y": 0 },
+    "facing=east,energy_level=2":  { "model": "apothic_flux:block/flux_anvil_1", "y": 90 },
+    "facing=south,energy_level=2": { "model": "apothic_flux:block/flux_anvil_1", "y": 180 },
+    "facing=west,energy_level=2":  { "model": "apothic_flux:block/flux_anvil_1", "y": 270 },
+
+    "facing=north,energy_level=3": { "model": "apothic_flux:block/flux_anvil_2", "y": 0 },
+    "facing=east,energy_level=3":  { "model": "apothic_flux:block/flux_anvil_2", "y": 90 },
+    "facing=south,energy_level=3": { "model": "apothic_flux:block/flux_anvil_2", "y": 180 },
+    "facing=west,energy_level=3":  { "model": "apothic_flux:block/flux_anvil_2", "y": 270 },
+
+    "facing=north,energy_level=4": { "model": "apothic_flux:block/flux_anvil_3", "y": 0 },
+    "facing=east,energy_level=4":  { "model": "apothic_flux:block/flux_anvil_3", "y": 90 },
+    "facing=south,energy_level=4": { "model": "apothic_flux:block/flux_anvil_3", "y": 180 },
+    "facing=west,energy_level=4":  { "model": "apothic_flux:block/flux_anvil_3", "y": 270 }
+  }
+}

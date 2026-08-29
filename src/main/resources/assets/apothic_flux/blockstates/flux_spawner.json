@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "energy_level=1": {
+      "model": "apothic_flux:block/flux_spawner_0"
+    },
+    "energy_level=2": {
+      "model": "apothic_flux:block/flux_spawner_1"
+    },
+    "energy_level=3": {
+      "model": "apothic_flux:block/flux_spawner_2"
+    },
+    "energy_level=4": {
+      "model": "apothic_flux:block/flux_spawner_3"
+    }
+  }
+}

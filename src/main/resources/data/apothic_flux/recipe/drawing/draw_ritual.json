@@ -1,0 +1,8 @@
+{
+  "type": "apothic_flux:drawing",
+  "tool": {
+    "item": "apothic_enchanting:infused_breath"
+  },
+  "consume_item": true,
+  "consume_durability": 0
+}

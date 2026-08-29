@@ -1,0 +1,13 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "minecraft:allay",
+  "drops": [
+    {
+      "stack": {
+        "id": "apothic_flux:solidified_flux_experience",
+        "count": 3
+      },
+      "chance": 0.75
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "FFF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "apothic_flux:solidified_flux_experience"
+    }
+  },
+  "result": {
+    "id": "apothic_flux:compressed_solidified_flux_experience",
+    "count": 1
+  }
+}
