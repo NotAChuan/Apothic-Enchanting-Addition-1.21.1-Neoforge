@@ -1,13 +1,13 @@
 {
   "replace": false,
   "values": [
-    "apothicenchantingaddition:flux_anvil",
-    "apothicenchantingaddition:flux_anvil",
-    "apothicenchantingaddition:flux_stats_bookshelf_tier_1",
-    "apothicenchantingaddition:flux_stats_bookshelf_tier_2",
-    "apothicenchantingaddition:flux_stats_bookshelf_tier_3",
-    "apothicenchantingaddition:flux_stats_bookshelf_tier_4",
-    "apothicenchantingaddition:flux_enchanting_table",
-    "apothicenchantingaddition:flux_spawner"
+    "apothic_flux:flux_anvil",
+    "apothic_flux:flux_anvil",
+    "apothic_flux:flux_stats_bookshelf_tier_1",
+    "apothic_flux:flux_stats_bookshelf_tier_2",
+    "apothic_flux:flux_stats_bookshelf_tier_3",
+    "apothic_flux:flux_stats_bookshelf_tier_4",
+    "apothic_flux:flux_enchanting_table",
+    "apothic_flux:flux_spawner"
   ]
 }

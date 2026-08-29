@@ -94,7 +94,7 @@ public class FluxAnvilBlockEntity extends BlockEntity implements MenuProvider {
     // --- MenuProvider 接口实现 ---
     @Override
     public Component getDisplayName() {
-        return Component.translatable("block.apothicenchantingaddition.flux_anvil");
+        return Component.translatable("block.apothic_flux.flux_anvil");
     }
 
     @Nullable

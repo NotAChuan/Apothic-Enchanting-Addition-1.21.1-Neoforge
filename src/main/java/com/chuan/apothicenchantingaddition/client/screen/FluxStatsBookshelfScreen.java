@@ -16,7 +16,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
     // GUI 贴图资源位置
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
-            "apothicenchantingaddition",
+            "apothic_flux",
             "textures/gui/flux_stats_bookshelf_tier_gui.png"
     );
 
@@ -99,28 +99,28 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         // 创建 4 个滑块
         this.eternaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[0], SLIDER_WIDTH, SLIDER_HEIGHT,
-                Component.translatable("gui.apothicenchantingaddition.stat.eterna", ""),
+                Component.translatable("gui.apothic_flux.stat.eterna", ""),
                 (double) currentEterna / tier.getMaxEterna(),
                 Math.round(tier.getMaxEterna())
         ));
 
         this.quantaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[1], SLIDER_WIDTH, SLIDER_HEIGHT,
-                Component.translatable("gui.apothicenchantingaddition.stat.quanta", ""),
+                Component.translatable("gui.apothic_flux.stat.quanta", ""),
                 (double) currentQuanta / tier.getMaxQuanta(),
                 Math.round(tier.getMaxQuanta())
         ));
 
         this.arcanaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[2], SLIDER_WIDTH, SLIDER_HEIGHT,
-                Component.translatable("gui.apothicenchantingaddition.stat.arcana", ""),
+                Component.translatable("gui.apothic_flux.stat.arcana", ""),
                 (double) currentArcana / tier.getMaxArcana(),
                 Math.round(tier.getMaxArcana())
         ));
 
         this.cluesSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[3], SLIDER_WIDTH, SLIDER_HEIGHT,
-                Component.translatable("gui.apothicenchantingaddition.stat.clues", ""),
+                Component.translatable("gui.apothic_flux.stat.clues", ""),
                 (double) currentClues / tier.getMaxClues(),
                 tier.getMaxClues()
         ));
@@ -131,7 +131,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
         // 保存按钮
         addRenderableWidget(Button.builder(
-                Component.translatable("gui.apothicenchantingaddition.save", "保存"),
+                Component.translatable("gui.apothic_flux.save", "保存"),
                 button -> sendUpdatePacket()
         ).pos(guiLeft + 144, guiTop + CHECKBOX_Y).size(33, 20).build());
     }
@@ -289,25 +289,25 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 //        int sliderLabelX = guiLeft + 8;  // 滑块左侧，距离 GUI 左边缘 8 像素
 
         // 第一条滑块（位阶）
-        Component eternaLabel = Component.translatable("gui.apothicenchantingaddition.stat.eterna", "");
+        Component eternaLabel = Component.translatable("gui.apothic_flux.stat.eterna", "");
         int eternaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(eternaLabel)) / 2;
         int eternaLabelY = guiTop + SLIDER_Y_POSITIONS[0] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
         guiGraphics.drawString(this.font, eternaLabel, eternaLabelX, eternaLabelY, 0xFFFFFF, false);
 
         // 第二条滑块（量子化）
-        Component quantaLabel = Component.translatable("gui.apothicenchantingaddition.stat.quanta", "");
+        Component quantaLabel = Component.translatable("gui.apothic_flux.stat.quanta", "");
         int quantaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(quantaLabel)) / 2;
         int quantaLabelY = guiTop + SLIDER_Y_POSITIONS[1] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
         guiGraphics.drawString(this.font, quantaLabel, quantaLabelX, quantaLabelY, 0xFFFFFF, false);
 
         // 第三条滑块（阿卡那）
-        Component arcanaLabel = Component.translatable("gui.apothicenchantingaddition.stat.arcana", "");
+        Component arcanaLabel = Component.translatable("gui.apothic_flux.stat.arcana", "");
         int arcanaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(arcanaLabel)) / 2;
         int arcanaLabelY = guiTop + SLIDER_Y_POSITIONS[2] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
         guiGraphics.drawString(this.font, arcanaLabel, arcanaLabelX, arcanaLabelY, 0xFFFFFF, false);
 
         // 第四条滑块（魔咒线索）
-        Component cluesLabel = Component.translatable("gui.apothicenchantingaddition.stat.clues", "");
+        Component cluesLabel = Component.translatable("gui.apothic_flux.stat.clues", "");
         int cluesLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(cluesLabel)) / 2;
         int cluesLabelY = guiTop + SLIDER_Y_POSITIONS[3] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
         guiGraphics.drawString(this.font, cluesLabel, cluesLabelX, cluesLabelY, 0xFFFFFF, false);
@@ -316,11 +316,11 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         // 绘制勾选框文字标签
         int checkboxTextY = guiTop + CHECKBOX_Y + (CHECKBOX_SIZE - this.font.lineHeight) / 2;
 
-        Component treasureText = Component.translatable("gui.apothicenchantingaddition.stat.treasure", "");
+        Component treasureText = Component.translatable("gui.apothic_flux.stat.treasure", "");
         guiGraphics.drawString(this.font, treasureText,
                 guiLeft + CHECKBOX_1_X + CHECKBOX_SIZE + 3, checkboxTextY, 0x404040, false);
 
-        Component stableText = Component.translatable("gui.apothicenchantingaddition.stat.rectification", "");
+        Component stableText = Component.translatable("gui.apothic_flux.stat.rectification", "");
         guiGraphics.drawString(this.font, stableText,
                 guiLeft + CHECKBOX_2_X + CHECKBOX_SIZE + 3, checkboxTextY, 0x404040, false);
 
@@ -342,8 +342,8 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
             };
 
             java.util.List<Component> tooltip = java.util.List.of(
-                    Component.translatable("gui.apothicenchantingaddition.energy.fe", menu.getEnergy(), MAX_ENERGY),
-                    Component.translatable("gui.apothicenchantingaddition.energy.cost", cost)
+                    Component.translatable("gui.apothic_flux.energy.fe", menu.getEnergy(), MAX_ENERGY),
+                    Component.translatable("gui.apothic_flux.energy.cost", cost)
             );
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         }

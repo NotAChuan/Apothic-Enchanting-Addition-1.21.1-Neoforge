@@ -134,7 +134,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("gui.apothicenchantingaddition.flux_spawner");
+        return Component.translatable("gui.apothic_flux.flux_spawner");
     }
 
     @Nullable

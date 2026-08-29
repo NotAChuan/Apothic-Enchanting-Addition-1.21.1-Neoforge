@@ -54,7 +54,7 @@ public class SpawnerRecipeCategory implements IRecipeCategory<JeiSpawnerRecipeVi
 
     @Override
     public Component getTitle() {
-        return Component.translatable("jei.apothicenchantingaddition.category.flux_spawner");
+        return Component.translatable("jei.apothic_flux.category.flux_spawner");
     }
 
     @Override
@@ -137,7 +137,7 @@ public class SpawnerRecipeCategory implements IRecipeCategory<JeiSpawnerRecipeVi
                 return;
             }
             tooltip.add(Component.translatable(
-                    "jei.apothicenchantingaddition.flux_spawner.probability",
+                    "jei.apothic_flux.flux_spawner.probability",
                     formatChancePercent(this.chance)
             ).withStyle(ChatFormatting.GRAY));
         }

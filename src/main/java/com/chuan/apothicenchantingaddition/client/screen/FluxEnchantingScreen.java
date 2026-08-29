@@ -34,7 +34,7 @@ import java.util.List;
 public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchantingMenu> {
 
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
-            "apothicenchantingaddition",
+            "apothic_flux",
             "textures/gui/flux_enchanting_table_gui.png"
     );
 
@@ -59,7 +59,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
     private static final int REFRESH_BOOK_CLICK_CENTER_X = 33;
     private static final int REFRESH_BOOK_CLICK_CENTER_Y = 34;
     private static final int REFRESH_BOOK_CLICK_SIZE = 20;
-    private static final Component REFRESH_TOOLTIP = Component.translatable("gui.apothicenchantingaddition.refresh");
+    private static final Component REFRESH_TOOLTIP = Component.translatable("gui.apothic_flux.refresh");
 
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
@@ -197,7 +197,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
 
                 int textColor = canClick ? (hovered ? 0xFFFFD75E : 0xFF8B7C43) : 0xFF5B5850;
                 if (menu.isInfusionOption(i)) {
-                    guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.infusion"), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
+                    guiGraphics.drawString(this.font, Component.translatable("gui.apothic_flux.infusion"), x + ENCHANT_TEXT_X, btnY + ENCHANT_TEXT_Y_OFFSET, textColor, false);
                 } else {
                     EnchantmentNames.getInstance().initSeed(menu.getEnchantmentSeed() + i);
                     FormattedText magicText = EnchantmentNames.getInstance().getRandomName(this.font, ENCHANT_TEXT_MAX_WIDTH);
@@ -211,10 +211,10 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         drawStatBar(guiGraphics, x + STAT_BAR_X, y + ARCANA_BAR_Y, ARCANA_FILL_U, ARCANA_FILL_V, menu.getArcana(), 100.0F);
         drawStatBar(guiGraphics, x + STAT_BAR_X, y + ENERGY_BAR_Y, ENERGY_FILL_U, ENERGY_FILL_V, currentEnergy, (float) MAX_ENERGY);
 
-        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.eterna"), x + LABEL_X, y + ETERNA_LABEL_Y, 0xFFFFFFFF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.quanta"), x + LABEL_X, y + QUANTA_LABEL_Y, 0xFFFFFFFF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.arcana"), x + LABEL_X, y + ARCANA_LABEL_Y, 0xFFFFFFFF, false);
-        guiGraphics.drawString(this.font, Component.translatable("gui.apothicenchantingaddition.label.energy"), x + LABEL_X, y + ENERGY_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothic_flux.label.eterna"), x + LABEL_X, y + ETERNA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothic_flux.label.quanta"), x + LABEL_X, y + QUANTA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothic_flux.label.arcana"), x + LABEL_X, y + ARCANA_LABEL_Y, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, Component.translatable("gui.apothic_flux.label.energy"), x + LABEL_X, y + ENERGY_LABEL_Y, 0xFFFFFFFF, false);
     }
 
     private void renderBook(GuiGraphics guiGraphics, int x, int y, float partialTick) {
@@ -313,9 +313,9 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
                     int feCost = menu.getDisplayedEnergyCost(i);
                     boolean canAfford = menu.getEnergy() >= feCost;
                     List<Component> tooltip = new ArrayList<>();
-                    tooltip.add(Component.translatable("gui.apothicenchantingaddition.infusion").withStyle(ChatFormatting.GOLD));
+                    tooltip.add(Component.translatable("gui.apothic_flux.infusion").withStyle(ChatFormatting.GOLD));
                     tooltip.add(Component.translatable(
-                            "gui.apothicenchantingaddition.flux_enchanting.energy_cost",
+                            "gui.apothic_flux.flux_enchanting.energy_cost",
                             String.format("%,d", feCost)
                     ).withStyle(canAfford ? ChatFormatting.GREEN : ChatFormatting.RED));
                     guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
@@ -344,7 +344,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
                         int feCost = menu.getDisplayedEnergyCost(i);
                         boolean canAfford = menu.getEnergy() >= feCost;
                         tooltip.add(Component.translatable(
-                                "gui.apothicenchantingaddition.flux_enchanting.energy_cost",
+                                "gui.apothic_flux.flux_enchanting.energy_cost",
                                 String.format("%,d", feCost)
                         ).withStyle(canAfford ? ChatFormatting.GREEN : ChatFormatting.RED));
 
@@ -361,7 +361,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         if (isMouseOverStatBar(mouseX, mouseY, ETERNA_BAR_Y)) {
             guiGraphics.renderComponentTooltip(this.font,
                     List.of(Component.translatable(
-                            "gui.apothicenchantingaddition.stat.eterna",
+                            "gui.apothic_flux.stat.eterna",
                             String.format("%.2f / 100", menu.getEterna())
                     )),
                     mouseX, mouseY);
@@ -369,7 +369,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         } else if (isMouseOverStatBar(mouseX, mouseY, QUANTA_BAR_Y)) {
             guiGraphics.renderComponentTooltip(this.font,
                     List.of(Component.translatable(
-                            "gui.apothicenchantingaddition.stat.quanta",
+                            "gui.apothic_flux.stat.quanta",
                             String.format("%.2f%%", menu.getQuanta())
                     )),
                     mouseX, mouseY);
@@ -377,7 +377,7 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         } else if (isMouseOverStatBar(mouseX, mouseY, ARCANA_BAR_Y)) {
             guiGraphics.renderComponentTooltip(this.font,
                     List.of(Component.translatable(
-                            "gui.apothicenchantingaddition.stat.arcana",
+                            "gui.apothic_flux.stat.arcana",
                             String.format("%.2f%%", menu.getArcana())
                     )),
                     mouseX, mouseY);
@@ -385,11 +385,11 @@ public class FluxEnchantingScreen extends AbstractContainerScreen<FluxEnchanting
         } else if (isMouseOverStatBar(mouseX, mouseY, ENERGY_BAR_Y)) {
             List<Component> tooltips = List.of(
                     Component.translatable(
-                            "gui.apothicenchantingaddition.stat.energy",
+                            "gui.apothic_flux.stat.energy",
                             String.format("%,d / %,d FE", menu.getEnergy(), MAX_ENERGY)
                     ),
                     Component.translatable(
-                            "gui.apothicenchantingaddition.energy.cost",
+                            "gui.apothic_flux.energy.cost",
                             String.format("%,d", ApothicAdditionConfig.FLUX_ENCHANTER_TICK_COST.get())
                     )
             );

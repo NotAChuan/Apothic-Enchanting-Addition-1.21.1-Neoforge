@@ -67,7 +67,7 @@ public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecip
 
     @Override
     public Component getTitle() {
-        return Component.translatable("jei.apothicenchantingaddition.category.ritual");
+        return Component.translatable("jei.apothic_flux.category.ritual");
     }
 
     @Override
@@ -161,7 +161,7 @@ public class RitualRecipeCategory implements IRecipeCategory<RitualCraftingRecip
         int seconds = Math.max(1, recipe.craftTime() / 20);
 
         // 获取翻译文本
-        Component timeText = Component.translatable("jei.apothicenchantingaddition.ritual.time", seconds);
+        Component timeText = Component.translatable("jei.apothic_flux.ritual.time", seconds);
 
         // 测量字体宽度，以
         int textWidth = Minecraft.getInstance().font.width(timeText);

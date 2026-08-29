@@ -102,7 +102,7 @@ public class RitualBlockEntity extends BlockEntity {
             ritualState = RitualState.ACTIVATING;
             level.getEntitiesOfClass(Player.class, new AABB(worldPosition).inflate(5)).forEach(p ->
                     p.displayClientMessage(
-                            Component.translatable("ritual.apothicenchantingaddition.crafting")
+                            Component.translatable("ritual.apothic_flux.crafting")
                                     .withStyle(ChatFormatting.GOLD), true));
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
@@ -149,7 +149,7 @@ public class RitualBlockEntity extends BlockEntity {
         if (level == null) return;
         level.getEntitiesOfClass(Player.class, new AABB(worldPosition).inflate(5)).forEach(p ->
                 p.displayClientMessage(
-                        Component.translatable("ritual.apothicenchantingaddition.obstructed")
+                        Component.translatable("ritual.apothic_flux.obstructed")
                                 .withStyle(ChatFormatting.RED), true));
     }
 

@@ -125,7 +125,7 @@ public class FluxStatsBookshelfBlock extends Block implements EntityBlock, Encha
                 serverPlayer.openMenu(new net.minecraft.world.MenuProvider() {
                     @Override
                     public net.minecraft.network.chat.Component getDisplayName() {
-                        return net.minecraft.network.chat.Component.translatable("gui.apothicenchantingaddition.title.stats_bookshelf");
+                        return net.minecraft.network.chat.Component.translatable("gui.apothic_flux.title.stats_bookshelf");
                     }
 
                     @Override

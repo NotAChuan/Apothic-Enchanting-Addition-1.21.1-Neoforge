@@ -53,8 +53,8 @@ public class ApothicAdditionConfig {
 
         FLUX_ENCHANTER_REFRESH_ITEM = BUILDER.comment(
                         "The item required to refresh the enchantments (Registry Name).",
-                        "刷新附魔时消耗的物品 ID。默认：apothicenchantingaddition:compressed_solidified_flux_experience (压缩固化通量经验)。")
-                .define("fluxEnchanterRefreshItem", "apothicenchantingaddition:compressed_solidified_flux_experience");
+                        "刷新附魔时消耗的物品 ID。默认：apothic_flux:compressed_solidified_flux_experience (压缩固化通量经验)。")
+                .define("fluxEnchanterRefreshItem", "apothic_flux:compressed_solidified_flux_experience");
 
         FLUX_ENCHANTER_REFRESH_COUNT = BUILDER.comment(
                         "The amount of the refresh item required.",

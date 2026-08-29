@@ -1,1 +1,1 @@
-com.chuan.apothicenchantingaddition.kubejs.ApothicAdditionKubeJSPlugin apothicenchantingaddition
+com.chuan.apothicenchantingaddition.kubejs.ApothicAdditionKubeJSPlugin apothic_flux

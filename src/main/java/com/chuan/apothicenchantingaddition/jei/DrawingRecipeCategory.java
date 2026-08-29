@@ -51,7 +51,7 @@ public class DrawingRecipeCategory implements IRecipeCategory<RitualDrawingRecip
 
     @Override
     public Component getTitle() {
-        return Component.translatable("jei.apothicenchantingaddition.category.drawing");
+        return Component.translatable("jei.apothic_flux.category.drawing");
     }
 
     @Override
@@ -82,11 +82,11 @@ public class DrawingRecipeCategory implements IRecipeCategory<RitualDrawingRecip
 
         String statusKey;
         if (recipe.consumeItem() && recipe.durabilityCost() > 0) {
-            statusKey = "jei.apothicenchantingaddition.drawing.damage";
+            statusKey = "jei.apothic_flux.drawing.damage";
         } else if (recipe.consumeItem()) {
-            statusKey = "jei.apothicenchantingaddition.drawing.consume";
+            statusKey = "jei.apothic_flux.drawing.consume";
         } else {
-            statusKey = "jei.apothicenchantingaddition.drawing.no_consume";
+            statusKey = "jei.apothic_flux.drawing.no_consume";
         }
 
         var font = Minecraft.getInstance().font;
@@ -99,7 +99,7 @@ public class DrawingRecipeCategory implements IRecipeCategory<RitualDrawingRecip
                 false
         );
 
-        Component tip = Component.translatable("jei.apothicenchantingaddition.drawing.right_click_block");
+        Component tip = Component.translatable("jei.apothic_flux.drawing.right_click_block");
         guiGraphics.drawString(
                 font,
                 tip,

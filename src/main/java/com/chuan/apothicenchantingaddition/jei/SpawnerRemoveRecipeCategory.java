@@ -40,7 +40,7 @@ public class SpawnerRemoveRecipeCategory implements IRecipeCategory<JeiSpawnerRe
 
     @Override
     public Component getTitle() {
-        return Component.translatable("jei.apothicenchantingaddition.category.flux_spawner_remove");
+        return Component.translatable("jei.apothic_flux.category.flux_spawner_remove");
     }
 
     @Override
@@ -83,7 +83,7 @@ public class SpawnerRemoveRecipeCategory implements IRecipeCategory<JeiSpawnerRe
 
         @Override
         public void onRichTooltip(IRecipeSlotView slotView, ITooltipBuilder tooltip) {
-            tooltip.add(Component.translatable("jei.apothicenchantingaddition.flux_spawner_remove.blocked")
+            tooltip.add(Component.translatable("jei.apothic_flux.flux_spawner_remove.blocked")
                     .withStyle(ChatFormatting.GRAY));
         }
     }

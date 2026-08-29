@@ -34,19 +34,19 @@ import static com.chuan.apothicenchantingaddition.registry.ModRegistry.*;
 @Mod(ApothicEnchantingAddition.MOD_ID)
 public class ApothicEnchantingAddition {
     // Define mod id in a common place for everything to reference
-    public static final String MOD_ID = "apothicenchantingaddition";
+    public static final String MOD_ID = "apothic_flux";
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
-    // Create a Deferred Register to hold Blocks which will all be registered under the "apothicenchantingaddition" namespace
+    // Create a Deferred Register to hold Blocks which will all be registered under the "apothic_flux" namespace
 //    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
-//    // Create a Deferred Register to hold Items which will all be registered under the "apothicenchantingaddition" namespace
+//    // Create a Deferred Register to hold Items which will all be registered under the "apothic_flux" namespace
 //    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "apothicenchantingaddition" namespace
+    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "apothic_flux" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
-    // Creates a creative tab with the id "apothicenchantingaddition:example_tab" for the example item, that is placed after the combat tab
+    // Creates a creative tab with the id "apothic_flux:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> APOTHIN_ENCHANTING_ADDITION_TAB = CREATIVE_MODE_TABS.register("apothic_enchanting_addition", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.apothicenchantingaddition.main")) //The language key for the title of your CreativeModeTab
+            .title(Component.translatable("itemGroup.apothic_flux.main")) //The language key for the title of your CreativeModeTab
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> ModRegistry.FLUX_ENCHANTING_TABLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {

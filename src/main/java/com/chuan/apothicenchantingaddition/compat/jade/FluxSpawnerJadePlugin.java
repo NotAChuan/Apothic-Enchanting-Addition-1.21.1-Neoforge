@@ -50,30 +50,30 @@ public class FluxSpawnerJadePlugin implements IWailaPlugin, IBlockComponentProvi
     public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
         CompoundTag data = accessor.getServerData();
 
-        tooltip.add(Component.translatable("gui.apothicenchantingaddition.flux_spawner.min_delay", data.getInt(KEY_MIN_DELAY)));
-        tooltip.add(Component.translatable("gui.apothicenchantingaddition.flux_spawner.max_delay", data.getInt(KEY_MAX_DELAY)));
-        tooltip.add(Component.translatable("gui.apothicenchantingaddition.flux_spawner.spawn_count", data.getInt(KEY_SPAWN_COUNT)));
+        tooltip.add(Component.translatable("gui.apothic_flux.flux_spawner.min_delay", data.getInt(KEY_MIN_DELAY)));
+        tooltip.add(Component.translatable("gui.apothic_flux.flux_spawner.max_delay", data.getInt(KEY_MAX_DELAY)));
+        tooltip.add(Component.translatable("gui.apothic_flux.flux_spawner.spawn_count", data.getInt(KEY_SPAWN_COUNT)));
 
         if (Screen.hasControlDown()) {
             if (data.getBoolean(KEY_REDSTONE)) {
-                tooltip.add(Component.translatable("jade.apothicenchantingaddition.flux_spawner.redstone"));
+                tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.redstone"));
             }
 
             int echoing = data.getInt(KEY_ECHOING);
             if (echoing > 0) {
                 if (echoing == 1) {
-                    tooltip.add(Component.translatable("jade.apothicenchantingaddition.flux_spawner.echoing"));
+                    tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.echoing"));
                 } else {
-                    tooltip.add(Component.translatable("jade.apothicenchantingaddition.flux_spawner.echoing_level", echoing));
+                    tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.echoing_level", echoing));
                 }
             }
         } else {
-            tooltip.add(Component.translatable("jade.apothicenchantingaddition.flux_spawner.ctrl_stats"));
+            tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.ctrl_stats"));
         }
     }
 
     @Override
     public ResourceLocation getUid() {
-        return ResourceLocation.parse("apothicenchantingaddition:flux_spawner");
+        return ResourceLocation.parse("apothic_flux:flux_spawner");
     }
 }

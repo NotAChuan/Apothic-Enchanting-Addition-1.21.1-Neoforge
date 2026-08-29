@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 public class FluxAnvilScreen extends AnvilScreen {
 
     private static final ResourceLocation GUI_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("apothicenchantingaddition", "textures/gui/flux_anvil_gui.png");
+            ResourceLocation.fromNamespaceAndPath("apothic_flux", "textures/gui/flux_anvil_gui.png");
 
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
@@ -95,7 +95,7 @@ public class FluxAnvilScreen extends AnvilScreen {
             boolean enough = this.fluxMenu.getEnergy() >= feCost || this.minecraft.player.getAbilities().instabuild;
             int color = enough ? 8453920 : 16736352;
 
-            Component costText = Component.translatable("gui.apothicenchantingaddition.anvil.cost", feCost);
+            Component costText = Component.translatable("gui.apothic_flux.anvil.cost", feCost);
             int textWidth = this.font.width(costText);
             int textX = this.imageWidth - 8 - textWidth;
             int textY = 67;
@@ -122,7 +122,7 @@ public class FluxAnvilScreen extends AnvilScreen {
         int y = this.topPos + ENERGY_BAR_Y;
         if (mouseX >= x && mouseX < x + ENERGY_BAR_WIDTH && mouseY >= y && mouseY < y + ENERGY_BAR_HEIGHT) {
             Component tooltip = Component.translatable(
-                    "gui.apothicenchantingaddition.energy.fe",
+                    "gui.apothic_flux.energy.fe",
                     this.fluxMenu.getEnergy(),
                     this.fluxMenu.getMaxEnergy()
             );

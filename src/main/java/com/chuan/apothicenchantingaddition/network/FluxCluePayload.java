@@ -12,7 +12,7 @@ import java.util.List;
 
 public record FluxCluePayload(int slot, List<EnchantmentInstance> clues, boolean allRevealed) implements CustomPacketPayload {
 
-    public static final Type<FluxCluePayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("apothicenchantingaddition", "flux_clue"));
+    public static final Type<FluxCluePayload> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath("apothic_flux", "flux_clue"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, FluxCluePayload> STREAM_CODEC = StreamCodec.ofMember(
             FluxCluePayload::write, FluxCluePayload::new

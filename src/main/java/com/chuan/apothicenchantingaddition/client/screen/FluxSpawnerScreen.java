@@ -17,7 +17,7 @@ public class FluxSpawnerScreen extends AbstractContainerScreen<FluxSpawnerMenu> 
 
     private static final NumberFormat FORMATTER = NumberFormat.getInstance(Locale.US);
     private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath(
-            "apothicenchantingaddition",
+            "apothic_flux",
             "textures/gui/flux_spawner_gui.png"
     );
 
@@ -53,7 +53,7 @@ public class FluxSpawnerScreen extends AbstractContainerScreen<FluxSpawnerMenu> 
             String maxEnergy = FORMATTER.format(1_000_000_000);
             guiGraphics.renderTooltip(
                     this.font,
-                    Component.translatable("gui.apothicenchantingaddition.flux_spawner.energy", currentEnergy, maxEnergy),
+                    Component.translatable("gui.apothic_flux.flux_spawner.energy", currentEnergy, maxEnergy),
                     mouseX,
                     mouseY
             );
