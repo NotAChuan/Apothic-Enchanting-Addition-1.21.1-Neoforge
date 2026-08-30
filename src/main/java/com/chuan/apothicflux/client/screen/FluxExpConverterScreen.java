@@ -2,6 +2,7 @@ package com.chuan.apothicflux.client.screen;
 
 import com.chuan.apothicflux.menu.FluxExpConverterMenu;
 import com.chuan.apothicflux.network.FluxExpConverterActionPayload;
+import com.chuan.apothicflux.registry.ModRegistry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -9,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConverterMenu> {
@@ -58,6 +60,12 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         guiGraphics.blit(GUI_TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        if (!this.menu.getSlot(0).hasItem()) {
+            ItemStack ghostStack = ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get().getDefaultInstance();
+            RenderSystem.setShaderColor(0.6f, 0.8f, 0.8f, 0.8f);
+            guiGraphics.renderFakeItem(ghostStack, this.leftPos + 80, this.topPos + 9);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
 
         drawButton(guiGraphics, this.leftPos + 48, this.topPos + BUTTON_Y + BUTTON_10_HEIGHT_OFFSET, STORE_ALL_U, STORE_ALL_V, 6, 10);
         drawButton(guiGraphics, this.leftPos + 63, this.topPos + BUTTON_Y + BUTTON_7_HEIGHT_OFFSET, STORE_10_U, STORE_10_V, 6, 7);
