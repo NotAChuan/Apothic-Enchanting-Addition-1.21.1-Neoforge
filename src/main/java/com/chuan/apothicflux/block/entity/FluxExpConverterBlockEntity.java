@@ -11,6 +11,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
@@ -21,11 +23,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProvider {
     public static final long MAX_STORED_XP = Long.MAX_VALUE;
+    public static final int MB_PER_XP = 20;
     public static final int INPUT_SLOT = 0;
 
     private long storedXp = 0L;
@@ -118,6 +124,10 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
         return storedXp;
     }
 
+    public IFluidHandler getFluidHandler() {
+        return new ConverterFluidHandler();
+    }
+
     public void setStoredXp(long storedXp) {
         this.storedXp = Math.max(0L, Math.min(MAX_STORED_XP, storedXp));
         setChanged();
@@ -145,46 +155,105 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
             return;
         }
 
+        boolean success = false;
         switch (action) {
-            case STORE_1 -> storePlayerXp(player, 1);
-            case STORE_10 -> storePlayerXp(player, 10);
-            case STORE_ALL -> storePlayerXp(player, Integer.MAX_VALUE);
-            case TAKE_1 -> takeToPlayer(player, 1);
-            case TAKE_10 -> takeToPlayer(player, 10);
-            case TAKE_ALL -> takeToPlayer(player, Integer.MAX_VALUE);
+            case STORE_1 -> success = storePlayerXp(player, 1);
+            case STORE_10 -> success = storePlayerXp(player, 10);
+            case STORE_ALL -> success = storePlayerXp(player, Integer.MAX_VALUE);
+            case TAKE_1 -> success = takeToPlayer(player, 1);
+            case TAKE_10 -> success = takeToPlayer(player, 10);
+            case TAKE_ALL -> success = takeToPlayer(player, Integer.MAX_VALUE);
+        }
+
+        if (success) {
+            playActionSound(action, player);
         }
     }
 
-    private void storePlayerXp(Player player, int levels) {
+    private boolean storePlayerXp(Player player, int levels) {
         if (player.isCreative()) {
-            return;
+            return false;
         }
 
         int before = Math.max(0, player.totalExperience);
         if (before <= 0) {
-            return;
+            return false;
         }
 
         long requestedXp = levels == Integer.MAX_VALUE ? before : ExperienceMath.xpNeededToGainLevels(player, levels);
         long actual = Math.min(requestedXp, before);
         if (actual <= 0L) {
-            return;
+            return false;
         }
 
         ExperienceMath.setPlayerXp(player, (int) Math.max(0L, (long) before - actual));
         this.giveXp(actual);
+        return true;
     }
 
-    private void takeToPlayer(Player player, int levels) {
+    private boolean takeToPlayer(Player player, int levels) {
         long requestedXp = levels == Integer.MAX_VALUE ? this.storedXp : ExperienceMath.xpNeededToGainLevels(player, levels);
         long actual = Math.min(requestedXp, this.storedXp);
         if (actual <= 0L) {
-            return;
+            return false;
         }
 
         ExperienceMath.setPlayerXp(player, (int) Math.min(Integer.MAX_VALUE, (long) player.totalExperience + actual));
         this.storedXp -= actual;
         setChanged();
+        return true;
+    }
+
+    private void playActionSound(FluxExpConverterActionPayload.Action action, Player player) {
+        if (this.level == null) {
+            return;
+        }
+
+        float volume;
+        float pitch;
+        switch (action) {
+            case STORE_1 -> {
+                volume = 0.6F;
+                pitch = 1.8F;
+            }
+            case STORE_10 -> {
+                volume = 1.0F;
+                pitch = 1.5F;
+            }
+            case STORE_ALL -> {
+                volume = 1.4F;
+                pitch = 1.2F;
+            }
+            case TAKE_1 -> {
+                volume = 0.6F;
+                pitch = 0.6F;
+            }
+            case TAKE_10 -> {
+                volume = 1.0F;
+                pitch = 0.8F;
+            }
+            case TAKE_ALL -> {
+                volume = 1.4F;
+                pitch = 1.0F;
+            }
+            default -> {
+                volume = 1.0F;
+                pitch = 1.0F;
+            }
+        }
+
+        this.level.playSound(null, player.blockPosition(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, volume, pitch);
+    }
+
+    private long xpToMb(long xp) {
+        if (xp <= 0L) {
+            return 0L;
+        }
+        long maxXpWithoutOverflow = Integer.MAX_VALUE / MB_PER_XP;
+        if (xp >= maxXpWithoutOverflow) {
+            return Integer.MAX_VALUE;
+        }
+        return xp * MB_PER_XP;
     }
 
     public static boolean isSupportedXpItem(ItemStack stack) {
@@ -258,5 +327,73 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     public void setRemoved() {
         super.setRemoved();
         setChanged();
+    }
+
+    private final class ConverterFluidHandler implements IFluidHandler {
+        @Override
+        public int getTanks() {
+            return 1;
+        }
+
+        @Override
+        public @NotNull FluidStack getFluidInTank(int tank) {
+            if (tank != 0) {
+                return FluidStack.EMPTY;
+            }
+            int amount = (int) xpToMb(FluxExpConverterBlockEntity.this.storedXp);
+            return amount <= 0 ? FluidStack.EMPTY : new FluidStack(ModRegistry.EXPERIENCE_FLUID.get(), amount);
+        }
+
+        @Override
+        public int getTankCapacity(int tank) {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
+            return tank == 0 && !stack.isEmpty() && stack.getFluid() == ModRegistry.EXPERIENCE_FLUID.get();
+        }
+
+        @Override
+        public int fill(FluidStack resource, FluidAction action) {
+            if (resource.isEmpty() || resource.getFluid() != ModRegistry.EXPERIENCE_FLUID.get()) {
+                return 0;
+            }
+
+            int accepted = resource.getAmount() - resource.getAmount() % MB_PER_XP;
+            if (accepted <= 0) {
+                return 0;
+            }
+
+            if (action.execute()) {
+                FluxExpConverterBlockEntity.this.giveXp(accepted / MB_PER_XP);
+            }
+
+            return accepted;
+        }
+
+        @Override
+        public @NotNull FluidStack drain(FluidStack resource, FluidAction action) {
+            if (resource.isEmpty() || resource.getFluid() != ModRegistry.EXPERIENCE_FLUID.get()) {
+                return FluidStack.EMPTY;
+            }
+            return drain(resource.getAmount(), action);
+        }
+
+        @Override
+        public @NotNull FluidStack drain(int maxDrain, FluidAction action) {
+            int availableMb = (int) xpToMb(FluxExpConverterBlockEntity.this.storedXp);
+            int drained = Math.min(maxDrain, availableMb);
+            drained -= drained % MB_PER_XP;
+            if (drained <= 0) {
+                return FluidStack.EMPTY;
+            }
+
+            if (action.execute()) {
+                FluxExpConverterBlockEntity.this.takeXp(drained / MB_PER_XP);
+            }
+
+            return new FluidStack(ModRegistry.EXPERIENCE_FLUID.get(), drained);
+        }
     }
 }

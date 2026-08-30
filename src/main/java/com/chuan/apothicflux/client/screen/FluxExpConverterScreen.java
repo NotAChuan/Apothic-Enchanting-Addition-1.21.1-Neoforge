@@ -69,7 +69,7 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
         long storedXp = this.menu.getStoredXp();
         guiGraphics.drawCenteredString(this.font, Component.literal(Long.toString(storedXp)), this.leftPos + BAR_X + BAR_WIDTH / 2, this.topPos + BAR_TEXT_Y, 0xFFFFFF);
         if (storedXp > 0L) {
-            int fillWidth = Mth.clamp((int) Math.ceil(BAR_WIDTH * Math.min(storedXp / 10000.0F, 1.0F)), 0, BAR_WIDTH);
+            int fillWidth = Mth.clamp((int) Math.ceil(BAR_WIDTH * Math.min(storedXp / 100000000.0F, 1.0F)), 0, BAR_WIDTH);
             if (fillWidth > 0) {
                 guiGraphics.blit(GUI_TEXTURE, this.leftPos + BAR_X, this.topPos + BAR_Y, 0, 166, fillWidth, BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
             }

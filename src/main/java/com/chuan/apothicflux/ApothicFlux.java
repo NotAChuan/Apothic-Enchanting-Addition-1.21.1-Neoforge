@@ -5,10 +5,12 @@ import com.chuan.apothicflux.network.NetworkHandler;
 import com.chuan.apothicflux.registry.ModRegistry;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import com.chuan.apothicflux.client.renderer.FluxEnchantingTableRenderer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -57,6 +59,7 @@ public class ApothicFlux {
                 output.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
                 output.accept(FLUX_ANVIL_ITEM.get());
                 output.accept(FLUX_EXP_CONVERTER_ITEM.get());
+                output.accept(EXPERIENCE_BUCKET.get());
                 output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(FLUX_SPAWNER_ITEM.get());
@@ -70,6 +73,7 @@ public class ApothicFlux {
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(this::registerCapabilities);
         CREATIVE_MODE_TABS.register(modEventBus);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
 
         modEventBus.addListener(this::onClientSetup);
 
@@ -118,5 +122,32 @@ public class ApothicFlux {
                 ModRegistry.FLUX_SPAWNER_BE.get(),
                 (be, side) -> be.outputItemHandler
         );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModRegistry.FLUX_EXP_CONVERTER_BE.get(),
+                (be, side) -> be.inventory
+        );
+
+        event.registerBlockEntity(
+                Capabilities.FluidHandler.BLOCK,
+                ModRegistry.FLUX_EXP_CONVERTER_BE.get(),
+                (be, side) -> be.getFluidHandler()
+        );
+    }
+
+    private void onPlayerTick(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
+        if (player.level().isClientSide || player.isSpectator()) {
+            return;
+        }
+
+        if (player.tickCount % 40 != 0) {
+            return;
+        }
+
+        if (player.isInFluidType((fluidType, height) -> fluidType == ModRegistry.EXPERIENCE_FLUID_TYPE.get())) {
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(dev.shadowsoffire.apothic_attributes.api.ALObjects.MobEffects.KNOWLEDGE, 60, 0));
+        }
     }
 }

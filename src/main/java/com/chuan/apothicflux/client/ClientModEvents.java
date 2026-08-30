@@ -1,41 +1,72 @@
 package com.chuan.apothicflux.client;
 
-import com.chuan.apothicflux.client.renderer.RitualBlockEntityRenderer;
-import com.chuan.apothicflux.client.screen.FluxExpConverterScreen;
-import com.chuan.apothicflux.client.screen.FluxStatsBookshelfScreen;
 import com.chuan.apothicflux.registry.ModRegistry;
-import com.chuan.apothicflux.client.screen.FluxEnchantingScreen;
-import com.chuan.apothicflux.client.screen.FluxAnvilScreen;
-import net.minecraft.world.inventory.AnvilMenu;
-import net.minecraft.world.inventory.MenuType;
+import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.material.FluidState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.neoforged.neoforge.client.model.DynamicFluidContainerModel;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import com.chuan.apothicflux.client.screen.FluxSpawnerScreen;
 
-// 隐形 Bug 修复：必须加上 bus = EventBusSubscriber.Bus.MOD，否则界面注册事件根本不会触发！
 @EventBusSubscriber(modid = ModRegistry.MOD_ID, value = Dist.CLIENT)
-public class ClientModEvents {
+public final class ClientModEvents {
+    private static final ResourceLocation WATER_STILL = ResourceLocation.withDefaultNamespace("block/water_still");
+    private static final ResourceLocation WATER_FLOW = ResourceLocation.withDefaultNamespace("block/water_flow");
+    private static final ResourceLocation WATER_OVERLAY = ResourceLocation.withDefaultNamespace("block/water_overlay");
+    private static final ResourceLocation UNDERWATER_OVERLAY = ResourceLocation.withDefaultNamespace("textures/misc/underwater.png");
+    private static final int EXPERIENCE_TINT = 0xFF7DE3A8;
 
-    @SuppressWarnings("unchecked")
-    @SubscribeEvent
-    public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), FluxStatsBookshelfScreen::new);
-        event.register(ModRegistry.FLUX_ENCHANTING_MENU.get(), FluxEnchantingScreen::new);
-        event.register(ModRegistry.FLUX_EXP_CONVERTER_MENU.get(), FluxExpConverterScreen::new);
-        // 注册通量刷怪笼的 GUI
-        event.register(ModRegistry.FLUX_SPAWNER_MENU.get(), FluxSpawnerScreen::new);
-
-        // 泛型报错修复：先将我们的 MenuType 强转为原版的 MenuType<AnvilMenu> 骗过编译器！
-        MenuType<AnvilMenu> fluxAnvilType = (MenuType<AnvilMenu>) (Object) ModRegistry.FLUX_ANVIL_MENU.get();
-        event.register(fluxAnvilType, FluxAnvilScreen::new);
+    private ClientModEvents() {
     }
 
     @SubscribeEvent
-    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(ModRegistry.RITUAL_BE.get(), RitualBlockEntityRenderer::new);
+    public static void registerFluidTypeExtensions(RegisterClientExtensionsEvent event) {
+        event.registerFluidType(new IClientFluidTypeExtensions() {
+            @Override
+            public ResourceLocation getStillTexture() {
+                return WATER_STILL;
+            }
+
+            @Override
+            public ResourceLocation getFlowingTexture() {
+                return WATER_FLOW;
+            }
+
+            @Override
+            public ResourceLocation getOverlayTexture() {
+                return WATER_OVERLAY;
+            }
+
+            @Override
+            public ResourceLocation getRenderOverlayTexture(net.minecraft.client.Minecraft minecraft) {
+                return UNDERWATER_OVERLAY;
+            }
+
+            @Override
+            public int getTintColor() {
+                return EXPERIENCE_TINT;
+            }
+
+            @Override
+            public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
+                return EXPERIENCE_TINT;
+            }
+
+            @Override
+            public int getTintColor(net.neoforged.neoforge.fluids.FluidStack stack) {
+                return EXPERIENCE_TINT;
+            }
+        }, ModRegistry.EXPERIENCE_FLUID_TYPE.get());
     }
 
+    @SubscribeEvent
+    public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
+        event.register(new DynamicFluidContainerModel.Colors(), ModRegistry.EXPERIENCE_BUCKET.get());
+    }
 }

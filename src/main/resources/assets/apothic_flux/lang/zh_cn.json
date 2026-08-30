@@ -1,6 +1,8 @@
 {
   "item.apothic_flux.solidified_flux_experience": "固化通量经验",
   "item.apothic_flux.compressed_solidified_flux_experience": "压缩固化通量经验",
+  "fluid.apothic_flux.experience": "经验流体",
+  "item.apothic_flux.experience_bucket": "经验流体桶",
   "block.apothic_flux.flux_stats_bookshelf_tier_1": "通量调整书架 (一阶)",
   "block.apothic_flux.flux_stats_bookshelf_tier_2": "通量调整书架 (二阶)",
   "block.apothic_flux.flux_stats_bookshelf_tier_3": "通量调整书架 (三阶)",

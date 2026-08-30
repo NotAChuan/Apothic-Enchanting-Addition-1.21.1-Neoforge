@@ -20,17 +20,25 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.PushReaction;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.fluids.BaseFlowingFluid;
+import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -39,6 +47,8 @@ public class ModRegistry {
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MOD_ID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(Registries.ITEM, MOD_ID);
+    public static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.FLUID_TYPES, MOD_ID);
+    public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(Registries.FLUID, MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(Registries.MENU, MOD_ID);
 
@@ -63,13 +73,55 @@ public class ModRegistry {
             () -> new FluxSpawnerBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops().noOcclusion()));
 
     public static final DeferredHolder<Block, FluxExpConverterBlock> FLUX_EXP_CONVERTER = BLOCKS.register("exp_converter",
-            () -> new FluxExpConverterBlock(BlockBehaviour.Properties.of().strength(3.5f).requiresCorrectToolForDrops()));
+            () -> new FluxExpConverterBlock(BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+
+    private static BaseFlowingFluid.Properties EXPERIENCE_FLUID_PROPERTIES;
+
+    public static final DeferredHolder<FluidType, FluidType> EXPERIENCE_FLUID_TYPE = FLUID_TYPES.register("experience",
+            () -> new FluidType(FluidType.Properties.create()
+                    .descriptionId("fluid.apothic_flux.experience")
+                    .canDrown(false)
+                    .canExtinguish(false)
+                    .canConvertToSource(false)
+                    .sound(net.neoforged.neoforge.common.SoundActions.BUCKET_FILL, SoundEvents.EXPERIENCE_ORB_PICKUP)
+                    .sound(net.neoforged.neoforge.common.SoundActions.BUCKET_EMPTY, SoundEvents.EXPERIENCE_ORB_PICKUP)) {
+            });
+
+    public static final DeferredHolder<Block, LiquidBlock> EXPERIENCE_LIQUID_BLOCK = BLOCKS.register("experience",
+            () -> new LiquidBlock(experienceFluid(),
+                    BlockBehaviour.Properties.of()
+                            .replaceable()
+                            .noCollission()
+                            .strength(100.0F)
+                            .pushReaction(PushReaction.DESTROY)));
+
+    public static final DeferredHolder<Fluid, BaseFlowingFluid.Source> EXPERIENCE_FLUID = FLUIDS.register("experience",
+            () -> new BaseFlowingFluid.Source(EXPERIENCE_FLUID_PROPERTIES));
+
+    public static final DeferredHolder<Fluid, BaseFlowingFluid.Flowing> FLOWING_EXPERIENCE_FLUID = FLUIDS.register("flowing_experience",
+            () -> new BaseFlowingFluid.Flowing(EXPERIENCE_FLUID_PROPERTIES));
 
     public static final DeferredHolder<Item, BlockItem> FLUX_ANVIL_ITEM = ITEMS.register("flux_anvil",
             () -> new BlockItem(FLUX_ANVIL.get(), new Item.Properties()));
 
     public static final DeferredHolder<Item, BlockItem> FLUX_EXP_CONVERTER_ITEM = ITEMS.register("exp_converter",
             () -> new BlockItem(FLUX_EXP_CONVERTER.get(), new Item.Properties()));
+
+    public static final DeferredHolder<Item, BucketItem> EXPERIENCE_BUCKET = ITEMS.register("experience_bucket",
+            () -> new BucketItem(experienceFluid(), new Item.Properties().craftRemainder(net.minecraft.world.item.Items.BUCKET).stacksTo(1)));
+
+    static {
+        EXPERIENCE_FLUID_PROPERTIES = new BaseFlowingFluid.Properties(
+                EXPERIENCE_FLUID_TYPE::value,
+                EXPERIENCE_FLUID::value,
+                FLOWING_EXPERIENCE_FLUID::value
+        ).bucket(() -> EXPERIENCE_BUCKET.get())
+                .block(() -> EXPERIENCE_LIQUID_BLOCK.get())
+                .slopeFindDistance(1)
+                .levelDecreasePerBlock(1)
+                .tickRate(10)
+                .explosionResistance(100.0F);
+    }
 
     public static final DeferredHolder<Item, Item> SOLIDIFIED_FLUX_EXPERIENCE = ITEMS.register("solidified_flux_experience",
             () -> new SolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
@@ -187,9 +239,15 @@ public class ModRegistry {
     public static void register(IEventBus eventBus) {
         BLOCKS.register(eventBus);
         ITEMS.register(eventBus);
+        FLUID_TYPES.register(eventBus);
+        FLUIDS.register(eventBus);
         BLOCK_ENTITIES.register(eventBus);
         MENU_TYPES.register(eventBus);
         RECIPE_TYPES.register(eventBus);
         RECIPE_SERIALIZERS.register(eventBus);
+    }
+
+    private static BaseFlowingFluid.Source experienceFluid() {
+        return EXPERIENCE_FLUID.get();
     }
 }

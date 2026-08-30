@@ -1,6 +1,8 @@
 {
   "item.apothic_flux.solidified_flux_experience": "Solidified Flux Experience",
   "item.apothic_flux.compressed_solidified_flux_experience": "Compressed Solidified Flux Experience",
+  "fluid.apothic_flux.experience": "Experience Fluid",
+  "item.apothic_flux.experience_bucket": "Experience Bucket",
   "block.apothic_flux.flux_stats_bookshelf_tier_1": "Flux Adjustment Bookshelf (Tier 1)",
   "block.apothic_flux.flux_stats_bookshelf_tier_2": "Flux Adjustment Bookshelf (Tier 2)",
   "block.apothic_flux.flux_stats_bookshelf_tier_3": "Flux Adjustment Bookshelf (Tier 3)",
