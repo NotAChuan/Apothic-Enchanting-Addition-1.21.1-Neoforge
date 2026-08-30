@@ -3,12 +3,6 @@
   "inputs": [
     { "item": "apothic_enchanting:apothic_enchanting_table" },
     { "item": "apothic_enchanting:library" },
-    { "item": "apothic_enchanting:filtering_shelf" },
-    { "item": "apothic_enchanting:library" },
-    { "item": "apothic_enchanting:filtering_shelf" },
-    { "item": "apothic_enchanting:library" },
-    { "item": "apothic_enchanting:filtering_shelf" },
-    { "item": "apothic_enchanting:library" },
     { "item": "apothic_enchanting:filtering_shelf" }
   ],
   "output_item": {
