@@ -21,24 +21,8 @@ public class CompressedSolidifiedFluxExperienceItem extends Item {
 
         // 逻辑必须只在服务端运行
         if (!level.isClientSide) {
-            int consumeCount;
-            int minExp;
-            int maxExp;
-
-            if (player.isShiftKeyDown()) {
-                // Shift + 右键：消耗全组
-                consumeCount = itemstack.getCount();
-                minExp = consumeCount * 18;
-                maxExp = consumeCount * 36;
-            } else {
-                // 普通右键：单次消耗 1 个
-                consumeCount = 1;
-                minExp = 18;
-                maxExp = 36;
-            }
-
-            // 计算随机经验：nextInt(最大值 - 最小值 + 1) + 最小值
-            int expToGive = level.random.nextInt(maxExp - minExp + 1) + minExp;
+            int consumeCount = player.isShiftKeyDown() ? itemstack.getCount() : 1;
+            int expToGive = consumeCount * 45;
 
             // 1. 发放经验
             player.giveExperiencePoints(expToGive);

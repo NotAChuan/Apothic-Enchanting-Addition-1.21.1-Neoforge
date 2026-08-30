@@ -8,6 +8,7 @@
     "apothic_flux:flux_stats_bookshelf_tier_3",
     "apothic_flux:flux_stats_bookshelf_tier_4",
     "apothic_flux:flux_enchanting_table",
+    "apothic_flux:exp_converter",
     "apothic_flux:flux_spawner"
   ]
 }

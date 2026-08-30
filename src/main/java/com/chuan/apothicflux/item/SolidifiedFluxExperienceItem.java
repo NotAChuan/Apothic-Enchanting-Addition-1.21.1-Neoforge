@@ -22,21 +22,8 @@ public class SolidifiedFluxExperienceItem extends Item {
 
         // 逻辑必须只在服务端运行，防止经验值虚假同步
         if (!level.isClientSide) {
-            int expToGive = 0;
-            int consumeCount = 0;
-
-            if (player.isShiftKeyDown()) {
-                //  Shift + 右键：梭哈！消耗玩家手里这一格的所有数量
-                consumeCount = itemstack.getCount();
-                int minExp = consumeCount * 2;
-                int maxExp = consumeCount * 4;
-                // 计算随机经验：nextInt(区间差 + 1) + 最小值
-                expToGive = level.random.nextInt(maxExp - minExp + 1) + minExp;
-            } else {
-                //普通右键：稳扎稳打，只消耗 1 个
-                consumeCount = 1;
-                expToGive = level.random.nextInt(3) + 2; // 产生 2 到 4 之间的随机数
-            }
+            int consumeCount = player.isShiftKeyDown() ? itemstack.getCount() : 1;
+            int expToGive = consumeCount * 5;
 
             // 1. 给玩家增加经验
             player.giveExperiencePoints(expToGive);

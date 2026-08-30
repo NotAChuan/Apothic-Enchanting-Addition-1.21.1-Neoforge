@@ -2,6 +2,7 @@ package com.chuan.apothicflux.util;
 
 import com.chuan.apothicflux.block.entity.FluxAnvilBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxEnchantingTableBlockEntity;
+import com.chuan.apothicflux.block.entity.FluxExpConverterBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxSpawnerBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicflux.registry.ModRegistry;
@@ -76,6 +77,20 @@ public final class MachineStateDropHelper {
         tag.putInt("Echoing", blockEntity.getEchoing());
 
         BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_SPAWNER_BE.get(), tag);
+        return stack;
+    }
+
+    public static ItemStack createFluxExpConverterDrop(HolderLookup.Provider registries, FluxExpConverterBlockEntity blockEntity) {
+        ItemStack stack = new ItemStack(ModRegistry.FLUX_EXP_CONVERTER.get());
+        long xp = blockEntity.getStoredXp();
+        if (xp <= 0L) {
+            return stack;
+        }
+
+        CompoundTag tag = new CompoundTag();
+        tag.putLong("StoredXp", xp);
+        tag.put("Inventory", blockEntity.inventory.serializeNBT(registries));
+        BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_EXP_CONVERTER_BE.get(), tag);
         return stack;
     }
 }

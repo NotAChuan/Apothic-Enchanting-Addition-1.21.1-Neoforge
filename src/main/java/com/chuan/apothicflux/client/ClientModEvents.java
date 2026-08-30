@@ -1,6 +1,7 @@
 package com.chuan.apothicflux.client;
 
 import com.chuan.apothicflux.client.renderer.RitualBlockEntityRenderer;
+import com.chuan.apothicflux.client.screen.FluxExpConverterScreen;
 import com.chuan.apothicflux.client.screen.FluxStatsBookshelfScreen;
 import com.chuan.apothicflux.registry.ModRegistry;
 import com.chuan.apothicflux.client.screen.FluxEnchantingScreen;
@@ -23,6 +24,7 @@ public class ClientModEvents {
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), FluxStatsBookshelfScreen::new);
         event.register(ModRegistry.FLUX_ENCHANTING_MENU.get(), FluxEnchantingScreen::new);
+        event.register(ModRegistry.FLUX_EXP_CONVERTER_MENU.get(), FluxExpConverterScreen::new);
         // 注册通量刷怪笼的 GUI
         event.register(ModRegistry.FLUX_SPAWNER_MENU.get(), FluxSpawnerScreen::new);
 

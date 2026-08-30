@@ -27,6 +27,12 @@ public class NetworkHandler {
                 NetworkHandler::handleFluxAction
         );
 
+        registrar.playToServer(
+                FluxExpConverterActionPayload.TYPE,
+                FluxExpConverterActionPayload.CODEC,
+                NetworkHandler::handleFluxExpConverterAction
+        );
+
         // ================= 【新增】 =================
         // 注册服务端到客户端 (S ➔ C) 的线索盲盒包
         registrar.playToClient(
@@ -74,6 +80,18 @@ public class NetworkHandler {
                         if (player.distanceToSqr(payload.pos().getX() + 0.5, payload.pos().getY() + 0.5, payload.pos().getZ() + 0.5) <= 256.0) {
                             be.setStats(payload.eterna(), payload.quanta(), payload.arcana(), payload.clues(), payload.treasure(), payload.stable());
                         }
+                    }
+                }
+            }
+        });
+    }
+
+    public static void handleFluxExpConverterAction(final FluxExpConverterActionPayload payload, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player) {
+                if (player.distanceToSqr(payload.pos().getX() + 0.5, payload.pos().getY() + 0.5, payload.pos().getZ() + 0.5) <= 256.0) {
+                    if (player.containerMenu instanceof com.chuan.apothicflux.menu.FluxExpConverterMenu menu) {
+                        menu.handleAction(player, payload.actionId());
                     }
                 }
             }

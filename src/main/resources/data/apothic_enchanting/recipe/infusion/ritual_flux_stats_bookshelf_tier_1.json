@@ -1,0 +1,15 @@
+{
+  "type": "apothic_enchanting:infusion",
+  "input": {
+    "item": "minecraft:bookshelf"
+  },
+  "requirements": {
+    "eterna": 35,
+    "quanta": 35,
+    "arcana": 35
+  },
+  "result": {
+    "id": "apothic_flux:flux_stats_bookshelf_tier_1",
+    "count": 1
+  }
+}

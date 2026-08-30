@@ -8,6 +8,7 @@ import com.chuan.apothicflux.item.FluxSpawnerBlockItem;
 import com.chuan.apothicflux.item.SolidifiedFluxExperienceItem;
 import com.chuan.apothicflux.menu.FluxEnchantingMenu;
 import com.chuan.apothicflux.menu.FluxAnvilMenu;
+import com.chuan.apothicflux.menu.FluxExpConverterMenu;
 import com.chuan.apothicflux.menu.FluxSpawnerMenu;
 import com.chuan.apothicflux.menu.FluxStatsBookshelfMenu;
 import com.chuan.apothicflux.recipe.RitualCraftingRecipe;
@@ -61,8 +62,14 @@ public class ModRegistry {
     public static final DeferredHolder<Block, FluxSpawnerBlock> FLUX_SPAWNER = BLOCKS.register("flux_spawner",
             () -> new FluxSpawnerBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops().noOcclusion()));
 
+    public static final DeferredHolder<Block, FluxExpConverterBlock> FLUX_EXP_CONVERTER = BLOCKS.register("exp_converter",
+            () -> new FluxExpConverterBlock(BlockBehaviour.Properties.of().strength(3.5f).requiresCorrectToolForDrops()));
+
     public static final DeferredHolder<Item, BlockItem> FLUX_ANVIL_ITEM = ITEMS.register("flux_anvil",
             () -> new BlockItem(FLUX_ANVIL.get(), new Item.Properties()));
+
+    public static final DeferredHolder<Item, BlockItem> FLUX_EXP_CONVERTER_ITEM = ITEMS.register("exp_converter",
+            () -> new BlockItem(FLUX_EXP_CONVERTER.get(), new Item.Properties()));
 
     public static final DeferredHolder<Item, Item> SOLIDIFIED_FLUX_EXPERIENCE = ITEMS.register("solidified_flux_experience",
             () -> new SolidifiedFluxExperienceItem(new Item.Properties().stacksTo(64)));
@@ -87,6 +94,9 @@ public class ModRegistry {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxAnvilBlockEntity>> FLUX_ANVIL_BE = BLOCK_ENTITIES.register("flux_anvil",
             () -> BlockEntityType.Builder.of(FluxAnvilBlockEntity::new, FLUX_ANVIL.get()).build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxExpConverterBlockEntity>> FLUX_EXP_CONVERTER_BE = BLOCK_ENTITIES.register("exp_converter",
+            () -> BlockEntityType.Builder.of(FluxExpConverterBlockEntity::new, FLUX_EXP_CONVERTER.get()).build(null));
+
     public static final DeferredHolder<Block, FluxEnchantingTableBlock> FLUX_ENCHANTING_TABLE = BLOCKS.register("flux_enchanting_table",
             () -> new FluxEnchantingTableBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops()));
 
@@ -107,6 +117,9 @@ public class ModRegistry {
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxAnvilMenu>> FLUX_ANVIL_MENU = MENU_TYPES.register("flux_anvil_menu",
             () -> IMenuTypeExtension.create(FluxAnvilMenu::new));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<FluxExpConverterMenu>> FLUX_EXP_CONVERTER_MENU = MENU_TYPES.register("exp_converter_menu",
+            () -> IMenuTypeExtension.create(FluxExpConverterMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxSpawnerMenu>> FLUX_SPAWNER_MENU = MENU_TYPES.register("flux_spawner_menu",
             () -> IMenuTypeExtension.create(FluxSpawnerMenu::new));

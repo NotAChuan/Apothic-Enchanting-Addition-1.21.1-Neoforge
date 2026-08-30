@@ -56,6 +56,7 @@ public class ApothicFlux {
                 output.accept(FLUX_STATS_BOOKSHELF_TIER_4.get());
                 output.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
                 output.accept(FLUX_ANVIL_ITEM.get());
+                output.accept(FLUX_EXP_CONVERTER_ITEM.get());
                 output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(FLUX_SPAWNER_ITEM.get());
