@@ -49,7 +49,7 @@
     "id": "apothic_flux:flux_spawner",
     "count": 1
   },
-  "output_fluid": "minecraft:water",
+  "output_fluid": "apothic_flux:experience",
   "output_entity": "minecraft:cow",
   "craft_time": 120
 }
