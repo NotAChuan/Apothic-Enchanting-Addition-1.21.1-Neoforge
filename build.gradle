@@ -66,6 +66,9 @@ neoForge {
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            programArguments.set(['--width', '1920', '--height', '1080'])
+//            println "Client programArguments: ${programArguments}"
         }
 
         server {

@@ -30,7 +30,7 @@ public class FluxExpConverterMenu extends AbstractContainerMenu {
         this.data = data;
         this.addDataSlots(data);
 
-        this.addSlot(new SlotItemHandler(this.blockEntity.inventory, 0, 80, 9) {
+        this.addSlot(new SlotItemHandler(this.blockEntity.inventory, 0, 80, 27) {
             @Override
             public boolean mayPlace(@NotNull ItemStack stack) {
                 return FluxExpConverterBlockEntity.isSupportedXpItem(stack);

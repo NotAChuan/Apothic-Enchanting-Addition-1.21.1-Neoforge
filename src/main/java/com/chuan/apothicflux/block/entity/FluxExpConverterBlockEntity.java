@@ -175,30 +175,64 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
             return false;
         }
 
-        int before = Math.max(0, player.totalExperience);
-        if (before <= 0) {
+        // 1. 获取玩家真实经验
+        long realXp = ExperienceMath.getRealExperience(player);
+        if (realXp <= 0) {
             return false;
         }
 
-        long requestedXp = levels == Integer.MAX_VALUE ? before : ExperienceMath.xpNeededToGainLevels(player, levels);
-        long actual = Math.min(requestedXp, before);
-        if (actual <= 0L) {
+        // 2. 计算请求存入的经验量（存入 N 级 = 把玩家降到 N 级前，进度归零，对齐 EnderIO removeLevelsFromPlayer）
+        long requestedXp;
+        if (levels == Integer.MAX_VALUE) {
+            requestedXp = realXp; // 存入全部
+        } else {
+            requestedXp = ExperienceMath.xpNeededToLoseLevels(player, levels);
+            if (requestedXp <= 0) {
+                return false;
+            }
+        }
+
+        // 3. 实际扣除量 = min(请求, 玩家当前经验)
+        long actual = Math.min(requestedXp, realXp);
+        if (actual <= 0) {
             return false;
         }
 
-        ExperienceMath.setPlayerXp(player, (int) Math.max(0L, (long) before - actual));
+        // 4. 从玩家扣除（long 全链路，支持超过 int 上限的经验）
+        long newXp = realXp - actual;
+        ExperienceMath.setPlayerXp(player, newXp);
+
+        // 5. 给机器增加经验
         this.giveXp(actual);
         return true;
     }
 
     private boolean takeToPlayer(Player player, int levels) {
-        long requestedXp = levels == Integer.MAX_VALUE ? this.storedXp : ExperienceMath.xpNeededToGainLevels(player, levels);
+        // 1. 获取玩家真实经验
+        long realXp = ExperienceMath.getRealExperience(player);
+
+        // 2. 计算请求取出的经验量
+        long requestedXp;
+        if (levels == Integer.MAX_VALUE) {
+            requestedXp = this.storedXp;
+        } else {
+            requestedXp = ExperienceMath.xpNeededToGainLevels(player, levels);
+            if (requestedXp <= 0) {
+                return false;
+            }
+        }
+
+        // 3. 实际取出量 = min(请求, 机器存量)
         long actual = Math.min(requestedXp, this.storedXp);
-        if (actual <= 0L) {
+        if (actual <= 0) {
             return false;
         }
 
-        ExperienceMath.setPlayerXp(player, (int) Math.min(Integer.MAX_VALUE, (long) player.totalExperience + actual));
+        // 4. 给玩家增加经验（long 全链路，支持超过 int 上限的经验）
+        long newXp = (actual > Long.MAX_VALUE - realXp) ? Long.MAX_VALUE : realXp + actual;
+        ExperienceMath.setPlayerXp(player, newXp);
+
+        // 5. 从机器扣除
         this.storedXp -= actual;
         setChanged();
         return true;
