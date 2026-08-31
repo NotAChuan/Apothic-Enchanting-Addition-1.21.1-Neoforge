@@ -18,11 +18,11 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
     private static final int TEXTURE_WIDTH = 256;
     private static final int TEXTURE_HEIGHT = 256;
     private static final int GUI_WIDTH = 176;
-    private static final int GUI_HEIGHT = 175;
+    private static final int GUI_HEIGHT = 166;
 
     // 经验数字展示区域（纹理坐标 x:42-134 y:49-62），数字居中
     private static final int XP_TEXT_CENTER_X = 88;
-    private static final int XP_TEXT_CENTER_Y = 51;
+    private static final int XP_TEXT_CENTER_Y = 52;
 
     // 经验条（纹理坐标）：暗色(空) x:7-168 y:64-69，亮色(满) x:7-168 y:169-174，显示在面板下方 y=169
     private static final int XP_BAR_SRC_X = 7;
@@ -30,7 +30,8 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
     private static final int XP_BAR_SRC_BRIGHT_Y = 169;
     private static final int XP_BAR_W = 161;
     private static final int XP_BAR_H = 5;
-    private static final int XP_BAR_SCREEN_Y = 169;
+    // 经验条显示在暗色条（分隔条）处，亮色填充在暗色轨道内
+    private static final int XP_BAR_SCREEN_Y = 64;
 
     // 按钮（纹理坐标 14x14）：存储=右列(dark x195 / bright x227)，取出=左列(dark x179 / bright x211)，行=1/10/全部
     private static final int BTN_SIZE = 14;
@@ -44,9 +45,9 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
     private static final int BTN_ROW_ALL_Y = 38;
     // 按钮中心点（屏幕坐标，相对 leftPos/topPos）：存储 全部/10/1 在左，取出 1/10/全部 在右，同一行 y=35
     private static final int STORE_ALL_CX = 19, STORE_ALL_CY = 35;
-    private static final int STORE_10_CX = 43, STORE_10_CY = 35;
+    private static final int STORE_10_CX = 42, STORE_10_CY = 35;
     private static final int STORE_1_CX = 64, STORE_1_CY = 35;
-    private static final int TAKE_1_CX = 109, TAKE_1_CY = 35;
+    private static final int TAKE_1_CX = 110, TAKE_1_CY = 35;
     private static final int TAKE_10_CX = 133, TAKE_10_CY = 35;
     private static final int TAKE_ALL_CX = 157, TAKE_ALL_CY = 35;
     // EnderIO 经验文字样式：绿色主体 (0x80FF20 = 8453920) + 四向 1px 黑色描边
@@ -76,7 +77,7 @@ public class FluxExpConverterScreen extends AbstractContainerScreen<FluxExpConve
         if (!this.menu.getSlot(0).hasItem()) {
             ItemStack ghostStack = ModRegistry.SOLIDIFIED_FLUX_EXPERIENCE.get().getDefaultInstance();
             RenderSystem.setShaderColor(0.6f, 0.8f, 0.8f, 0.8f);
-            guiGraphics.renderFakeItem(ghostStack, this.leftPos + 80, this.topPos + 26);
+            guiGraphics.renderFakeItem(ghostStack, this.leftPos + 80, this.topPos + 27);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
 
