@@ -1,15 +1,15 @@
 {
   "type": "apothic_enchanting:infusion",
   "input": {
-    "item": "minecraft:nether_star"
+    "item": "minecraft:echo_shard"
   },
   "requirements": {
     "eterna": 100,
-    "quanta": 30,
+    "quanta": 15,
     "arcana": 80
   },
   "result": {
-    "id": "minecraft:wither_spawn_egg",
+    "id": "minecraft:warden_spawn_egg",
     "count": 1
   }
 }
