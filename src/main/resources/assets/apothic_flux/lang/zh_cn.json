@@ -107,5 +107,6 @@
   "jei.apothic_flux.category.flux_spawner": "通量刷怪",
   "jei.apothic_flux.category.flux_spawner_remove": "通量刷怪移除",
   "jei.apothic_flux.flux_spawner.probability": "概率: %s",
-  "jei.apothic_flux.flux_spawner_remove.blocked": "该物品无法放置在通量刷怪笼中。"
+  "jei.apothic_flux.flux_spawner_remove.blocked": "该物品无法放置在通量刷怪笼中。",
+  "resourcepack.apothic_flux.ae": "通量神化GUI的AE材质版本"
 }

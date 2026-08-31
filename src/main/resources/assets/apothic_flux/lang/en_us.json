@@ -106,5 +106,6 @@
   "jei.apothic_flux.category.flux_spawner": "Flux Spawning",
   "jei.apothic_flux.category.flux_spawner_remove": "Flux Spawning Removal",
   "jei.apothic_flux.flux_spawner.probability": "Chance: %s",
-  "jei.apothic_flux.flux_spawner_remove.blocked": "This item cannot be placed in a Flux Spawner."
+  "jei.apothic_flux.flux_spawner_remove.blocked": "This item cannot be placed in a Flux Spawner.",
+  "resourcepack.apothic_flux.ae": "AE texture version of the Flux Apotheosis GUI"
 }

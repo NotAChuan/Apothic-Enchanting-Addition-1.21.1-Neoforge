@@ -20,15 +20,27 @@ import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackSource;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.event.AddPackFindersEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforgespi.locating.IModFile;
+
+import java.nio.file.Path;
+import java.util.Optional;
 
 import static com.chuan.apothicflux.registry.ModRegistry.*;
 
@@ -72,11 +84,34 @@ public class ApothicFlux {
         ModRegistry.register(modEventBus);
         modEventBus.addListener(NetworkHandler::register);
         modEventBus.addListener(this::registerCapabilities);
+        modEventBus.addListener(this::registerPackFinders);
         CREATIVE_MODE_TABS.register(modEventBus);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
 
         modEventBus.addListener(this::onClientSetup);
 
+    }
+
+    // 注册模组内置资源包 resourcepacks/apothic flux ae。
+    // 目录名含空格，无法作为 ResourceLocation 的 path，故用 addRepositorySource 手动构建 Pack。
+    private void registerPackFinders(AddPackFindersEvent event) {
+        if (event.getPackType() != PackType.CLIENT_RESOURCES) {
+            return;
+        }
+        IModFile modFile = ModList.get().getModFileById(MOD_ID).getFile();
+        Path packRoot = modFile.findResource("resourcepacks/apothic flux ae");
+        event.addRepositorySource(packConsumer -> {
+            Pack pack = Pack.readMetaAndCreate(
+                    new PackLocationInfo("mod/apothic_flux_ae", Component.literal("Apothic Flux AE"),
+                            PackSource.DEFAULT, Optional.empty()),
+                    new PathPackResources.PathResourcesSupplier(packRoot),
+                    PackType.CLIENT_RESOURCES,
+                    new PackSelectionConfig(false, Pack.Position.TOP, false)
+            );
+            if (pack != null) {
+                packConsumer.accept(pack);
+            }
+        });
     }
 
     // 客户端初始化事件
