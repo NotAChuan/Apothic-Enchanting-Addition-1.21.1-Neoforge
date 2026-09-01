@@ -5,8 +5,8 @@
 	"textures": {
 		"particle": "minecraft:block/crying_obsidian",
 		"bottom": "minecraft:block/crying_obsidian",
-		"top": "apothic_flux:block/flux_enchanting_table_top",
-		"side": "apothic_flux:block/flux_enchanting_table_side"
+		"top": "apothic_flux:block/flux_enchanting_table/flux_enchanting_table_top",
+		"side": "apothic_flux:block/flux_enchanting_table/flux_enchanting_table_side_2"
 	},
 	"elements": [
 		{

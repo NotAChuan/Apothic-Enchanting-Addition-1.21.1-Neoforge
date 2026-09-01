@@ -1,5 +1,9 @@
 {
   "variants": {
-    "": { "model": "apothic_flux:block/flux_enchanting_table" }
+    "energy_level=0": { "model": "apothic_flux:block/flux_enchanting_table_0" },
+    "energy_level=1": { "model": "apothic_flux:block/flux_enchanting_table_1" },
+    "energy_level=2": { "model": "apothic_flux:block/flux_enchanting_table_2" },
+    "energy_level=3": { "model": "apothic_flux:block/flux_enchanting_table_3" },
+    "energy_level=4": { "model": "apothic_flux:block/flux_enchanting_table_4" }
   }
 }

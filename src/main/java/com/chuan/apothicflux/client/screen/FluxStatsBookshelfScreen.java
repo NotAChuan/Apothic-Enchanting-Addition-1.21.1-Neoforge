@@ -239,7 +239,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         if (treasureEnabled) {
             guiGraphics.blit(
                     TEXTURE,
-                    guiLeft + CHECKBOX_1_X, guiTop + CHECKBOX_Y,
+                    guiLeft + CHECKBOX_1_X, guiTop + CHECKBOX_Y - 2,
                     CHECKBOX_SELECTED_TEXTURE_X, CHECKBOX_SELECTED_TEXTURE_Y,
                     CHECKBOX_SIZE, CHECKBOX_SIZE,
                     256, 256
@@ -249,7 +249,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         if (stableEnabled) {
             guiGraphics.blit(
                     TEXTURE,
-                    guiLeft + CHECKBOX_2_X, guiTop + CHECKBOX_Y,
+                    guiLeft + CHECKBOX_2_X, guiTop + CHECKBOX_Y - 2,
                     CHECKBOX_SELECTED_TEXTURE_X, CHECKBOX_SELECTED_TEXTURE_Y,
                     CHECKBOX_SIZE, CHECKBOX_SIZE,
                     256, 256

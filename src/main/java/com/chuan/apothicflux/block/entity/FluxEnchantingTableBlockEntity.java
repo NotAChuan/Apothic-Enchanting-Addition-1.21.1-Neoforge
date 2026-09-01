@@ -2,6 +2,7 @@ package com.chuan.apothicflux.block.entity;
 
 import com.chuan.apothicflux.config.ApothicAdditionConfig;
 import com.chuan.apothicflux.registry.ModRegistry;
+import com.chuan.apothicflux.block.FluxEnchantingTableBlock;
 import com.chuan.apothicflux.util.BookAnimationHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -76,8 +77,25 @@ public class FluxEnchantingTableBlockEntity extends BlockEntity {
                 setChanged();
                 lastEnergy = currentEnergy;
             }
+
+            // 同步方块的电量等级纹理 (0 -> 没电, 1 -> 25%, 2 -> 50%, 3 -> 75%, 4 -> 100%)
+            int newLevel = calculateEnergyLevel(currentEnergy, energyStorage.getMaxEnergyStored());
+            BlockState currentState = level.getBlockState(pos);
+            if (currentState.hasProperty(FluxEnchantingTableBlock.ENERGY_LEVEL)
+                    && currentState.getValue(FluxEnchantingTableBlock.ENERGY_LEVEL) != newLevel) {
+                level.setBlock(pos, currentState.setValue(FluxEnchantingTableBlock.ENERGY_LEVEL, newLevel), 3);
+            }
         }
 
+    }
+
+    private static int calculateEnergyLevel(int energy, int maxEnergy) {
+        if (maxEnergy <= 0 || energy <= 0) {
+            return 0;
+        }
+        // 按四分之一电量取整：0 -> 0, 25% -> 1, 50% -> 2, 75% -> 3, 100% -> 4
+        long level = ((long) energy * 4 + maxEnergy - 1) / maxEnergy;
+        return (int) Math.min(4, Math.max(0, level));
     }
 
     private void bookAnimationTick(Level level, BlockPos pos) {
