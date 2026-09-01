@@ -97,32 +97,40 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         int startX = guiLeft + SLIDER_START_X;
 
         // 创建 4 个滑块
+        double eternaMin = 0.0;
+        double eternaMax = Math.round(tier.getMaxEterna());
         this.eternaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[0], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.eterna", ""),
-                (double) currentEterna / tier.getMaxEterna(),
-                Math.round(tier.getMaxEterna())
+                toSliderValue(currentEterna, eternaMin, eternaMax),
+                eternaMin, eternaMax
         ));
 
+        double quantaMin = Tier.MIN_QUANTA;
+        double quantaMax = Math.round(tier.getMaxQuanta());
         this.quantaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[1], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.quanta", ""),
-                (double) currentQuanta / tier.getMaxQuanta(),
-                Math.round(tier.getMaxQuanta())
+                toSliderValue(currentQuanta, quantaMin, quantaMax),
+                quantaMin, quantaMax
         ));
 
+        double arcanaMin = 0.0;
+        double arcanaMax = Math.round(tier.getMaxArcana());
         this.arcanaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[2], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.arcana", ""),
-                (double) currentArcana / tier.getMaxArcana(),
-                Math.round(tier.getMaxArcana())
+                toSliderValue(currentArcana, arcanaMin, arcanaMax),
+                arcanaMin, arcanaMax
         ));
 
+        double cluesMin = 0.0;
+        double cluesMax = tier.getMaxClues();
         this.cluesSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[3], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.clues", ""),
-                (double) currentClues / tier.getMaxClues(),
-                tier.getMaxClues()
+                toSliderValue(currentClues, cluesMin, cluesMax),
+                cluesMin, cluesMax
         ));
 
         // 初始化勾选框状态
@@ -196,10 +204,10 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
     private void sendUpdatePacket() {
         if (menu.getBlockEntity() != null && eternaSlider != null) {
-            int e = (int) Math.round(eternaSlider.getValue() * tier.getMaxEterna());
-            int q = (int) Math.round(quantaSlider.getValue() * tier.getMaxQuanta());
-            int a = (int) Math.round(arcanaSlider.getValue() * tier.getMaxArcana());
-            int c = (int) Math.round(cluesSlider.getValue() * tier.getMaxClues());
+            int e = (int) Math.round(eternaSlider.getStatValue());
+            int q = (int) Math.round(quantaSlider.getStatValue());
+            int a = (int) Math.round(arcanaSlider.getStatValue());
+            int c = (int) Math.round(cluesSlider.getStatValue());
             boolean t = treasureEnabled;
             boolean s = stableEnabled;
 
@@ -264,22 +272,22 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
         // 【优化11】：使用常量绘制数字
         if (eternaSlider != null) {
-            String eternaTxt = String.valueOf((int) Math.round(eternaSlider.getValue() * tier.getMaxEterna()));
+            String eternaTxt = String.valueOf((int) Math.round(eternaSlider.getStatValue()));
             guiGraphics.drawString(this.font, eternaTxt,
                     guiLeft + NUMBER_BOX_X - this.font.width(eternaTxt) / 2,
                     guiTop + NUMBER_BOX_Y_POSITIONS[0], 0x404040, false);
 
-            String quantaTxt = String.valueOf((int) Math.round(quantaSlider.getValue() * tier.getMaxQuanta()));
+            String quantaTxt = String.valueOf((int) Math.round(quantaSlider.getStatValue()));
             guiGraphics.drawString(this.font, quantaTxt,
                     guiLeft + NUMBER_BOX_X - this.font.width(quantaTxt) / 2,
                     guiTop + NUMBER_BOX_Y_POSITIONS[1], 0x404040, false);
 
-            String arcanaTxt = String.valueOf((int) Math.round(arcanaSlider.getValue() * tier.getMaxArcana()));
+            String arcanaTxt = String.valueOf((int) Math.round(arcanaSlider.getStatValue()));
             guiGraphics.drawString(this.font, arcanaTxt,
                     guiLeft + NUMBER_BOX_X - this.font.width(arcanaTxt) / 2,
                     guiTop + NUMBER_BOX_Y_POSITIONS[2], 0x404040, false);
 
-            String cluesTxt = String.valueOf((int) Math.round(cluesSlider.getValue() * tier.getMaxClues()));
+            String cluesTxt = String.valueOf((int) Math.round(cluesSlider.getStatValue()));
             guiGraphics.drawString(this.font, cluesTxt,
                     guiLeft + NUMBER_BOX_X - this.font.width(cluesTxt) / 2,
                     guiTop + NUMBER_BOX_Y_POSITIONS[3], 0x404040, false);
@@ -353,11 +361,13 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
     // 【修改1】：自定义滑块类，使用贴图渲染
     private class StatsSlider extends AbstractSliderButton {
-        private final int maxValue;
+        private final double minValue;
+        private final double maxValue;
 
-        public StatsSlider(int x, int y, int width, int height, Component message, double value, int maxValue) {
+        public StatsSlider(int x, int y, int width, int height, Component message, double value, double minValue, double maxValue) {
             super(x, y, width, height, message, value);
-            this.maxValue = Math.max(1, maxValue);
+            this.minValue = minValue;
+            this.maxValue = Math.max(minValue + 1.0, maxValue);
             this.applyValue();
         }
 
@@ -368,7 +378,13 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
         @Override
         protected void applyValue() {
-            this.value = Math.round(this.value * this.maxValue) / (double) this.maxValue;
+            // 构造期间 super() 可能会先调用一次 applyValue()，此时区间字段尚未赋值，直接跳过
+            if (this.maxValue <= this.minValue) {
+                return;
+            }
+            double stat = this.minValue + this.value * (this.maxValue - this.minValue);
+            stat = Math.round(stat);
+            this.value = (stat - this.minValue) / (this.maxValue - this.minValue);
         }
 
         @Override
@@ -396,5 +412,14 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         public double getValue() {
             return this.value;
         }
+
+        public double getStatValue() {
+            return this.minValue + this.value * (this.maxValue - this.minValue);
+        }
+    }
+
+    // 把真实数值换算成滑块的归一化值 [0,1]，并夹取到合法范围
+    private static double toSliderValue(double stat, double min, double max) {
+        return Math.max(0.0, Math.min(1.0, (stat - min) / (max - min)));
     }
 }

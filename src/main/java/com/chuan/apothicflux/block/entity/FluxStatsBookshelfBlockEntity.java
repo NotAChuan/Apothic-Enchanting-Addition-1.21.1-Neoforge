@@ -213,7 +213,7 @@ public class FluxStatsBookshelfBlockEntity extends BlockEntity {
     public void setStats(int eterna, int quanta, int arcana, int clues, boolean allowsTreasure, boolean stable) {
         Tier currentTier = getTier();
         this.eterna = Math.min(Math.max(eterna, 0), Math.round(currentTier.getMaxEterna()));
-        this.quanta = Math.min(Math.max(quanta, 0), Math.round(currentTier.getMaxQuanta()));
+        this.quanta = Math.min(Math.max(quanta, Tier.MIN_QUANTA), Math.round(currentTier.getMaxQuanta()));
         this.arcana = Math.min(Math.max(arcana, 0), Math.round(currentTier.getMaxArcana()));
         this.clues = Math.min(Math.max(clues, 0), currentTier.getMaxClues());
         this.allowsTreasure = allowsTreasure;
