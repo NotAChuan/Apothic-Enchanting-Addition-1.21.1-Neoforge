@@ -2,20 +2,10 @@
   "type": "apothic_flux:ritual",
   "inputs": [
     {
-      "item": "minecraft:spawner"
+      "item": "minecraft:lodestone"
     },
     {
-      "item": "apothic_enchanting:occult_ender_lead"
-    },
-    {
-      "type": "neoforge:components",
-      "items": "minecraft:potion",
-      "components": {
-        "minecraft:potion_contents": "apothic_attributes:strong_knowledge"
-      }
-    },
-    {
-      "item": "apothic_enchanting:occult_ender_lead"
+      "item": "minecraft:experience_bottle"
     },
     {
       "type": "neoforge:components",
@@ -25,7 +15,17 @@
       }
     },
     {
-      "item": "apothic_enchanting:occult_ender_lead"
+      "item": "minecraft:experience_bottle"
+    },
+    {
+      "type": "neoforge:components",
+      "items": "minecraft:potion",
+      "components": {
+        "minecraft:potion_contents": "apothic_attributes:strong_knowledge"
+      }
+    },
+    {
+      "item": "minecraft:experience_bottle"
     },
     {
       "type": "neoforge:components",
@@ -36,10 +36,8 @@
     }
   ],
   "output_item": {
-    "id": "apothic_flux:flux_spawner",
+    "id": "apothic_flux:exp_converter",
     "count": 1
   },
-  "output_fluid": "apothic_flux:experience",
-  "output_entity": "minecraft:cow",
-  "craft_time": 120
+  "craft_time": 100
 }
