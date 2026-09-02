@@ -16,11 +16,9 @@ import net.neoforged.fml.common.EventBusSubscriber;
 
 @EventBusSubscriber(modid = ModRegistry.MOD_ID, value = Dist.CLIENT)
 public final class ClientModEvents {
-    private static final ResourceLocation WATER_STILL = ResourceLocation.withDefaultNamespace("block/water_still");
-    private static final ResourceLocation WATER_FLOW = ResourceLocation.withDefaultNamespace("block/water_flow");
     private static final ResourceLocation WATER_OVERLAY = ResourceLocation.withDefaultNamespace("block/water_overlay");
     private static final ResourceLocation UNDERWATER_OVERLAY = ResourceLocation.withDefaultNamespace("textures/misc/underwater.png");
-    private static final int EXPERIENCE_TINT = 0xFF7DE3A8;
+    private static final int EXPERIENCE_TINT = 0xFFFFFFFF;
 
     private ClientModEvents() {
     }
@@ -30,12 +28,12 @@ public final class ClientModEvents {
         event.registerFluidType(new IClientFluidTypeExtensions() {
             @Override
             public ResourceLocation getStillTexture() {
-                return WATER_STILL;
+                return ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "block/experience_still");
             }
 
             @Override
             public ResourceLocation getFlowingTexture() {
-                return WATER_FLOW;
+                return ResourceLocation.fromNamespaceAndPath(ModRegistry.MOD_ID, "block/experience_flow");
             }
 
             @Override

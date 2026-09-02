@@ -5,7 +5,7 @@
 	"render_type": "cutout",
 	"textures": {
 		"0": "apothic_flux:block/flux_stats_bookshelf_tier_2/flux_stats_bookshelf_tier_2_1",
-		"1": "apothic_flux:block/flux_stats_bookshelf_tier_top",
+		"1": "apothic_enchanting:blocks/base_shelf",
 		"particle": "apothic_flux:block/flux_stats_bookshelf_tier_2/flux_stats_bookshelf_tier_2_1"
 	},
 	"elements": [

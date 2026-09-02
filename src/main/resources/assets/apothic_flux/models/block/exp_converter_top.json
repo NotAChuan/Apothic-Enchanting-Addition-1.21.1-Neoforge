@@ -1,0 +1,38 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"render_type": "cutout",
+	"textures": {
+		"0": "apothic_flux:block/exp_converter/exp_converter"
+	},
+	"elements": [
+		{
+			"from": [5, 5, 5],
+			"to": [11, 11, 11],
+			"rotation": {"angle": 0, "axis": "y", "origin": [5, 5, 5]},
+			"faces": {
+				"north": {"uv": [10, 12, 16, 6], "texture": "#0"},
+				"east": {"uv": [16, 6, 10, 12], "texture": "#0"},
+				"south": {"uv": [10, 6, 16, 12], "texture": "#0"},
+				"west": {"uv": [16, 12, 10, 6], "texture": "#0"},
+				"up": {"uv": [10, 6, 16, 12], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [10, 6, 16, 12], "rotation": 270, "texture": "#0"}
+			}
+		},
+		{
+			"name": "cube_outline",
+			"from": [11.4, 11.4, 11.4],
+			"to": [4.6, 4.6, 4.6],
+			"rotation": {"angle": 0, "axis": "y", "origin": [5, 5, 5]},
+			"faces": {
+				"north": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"},
+				"east": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"},
+				"south": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"},
+				"west": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"},
+				"up": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [4, 6, 10, 12], "rotation": 180, "texture": "#0"}
+			}
+		}
+	]
+}

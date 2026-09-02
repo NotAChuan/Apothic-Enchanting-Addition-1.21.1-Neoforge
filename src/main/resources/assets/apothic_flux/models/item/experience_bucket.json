@@ -1,11 +1,6 @@
 {
-  "model": {
-    "type": "neoforge:fluid_container",
-    "textures": {
-      "particle": "minecraft:item/bucket",
-      "base": "minecraft:item/bucket",
-      "fluid": "neoforge:item/mask/bucket_fluid",
-      "cover": "neoforge:item/mask/bucket_fluid_cover"
-    }
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "apothic_flux:item/experience_bucket"
   }
 }

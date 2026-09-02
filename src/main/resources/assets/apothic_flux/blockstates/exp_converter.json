@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "apothic_flux:block/exp_converter"
+    }
+  }
+}
