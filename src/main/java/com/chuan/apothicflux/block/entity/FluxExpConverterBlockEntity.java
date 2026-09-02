@@ -2,6 +2,7 @@ package com.chuan.apothicflux.block.entity;
 
 import com.chuan.apothicflux.item.CompressedSolidifiedFluxExperienceItem;
 import com.chuan.apothicflux.item.SolidifiedFluxExperienceItem;
+import com.chuan.apothicflux.util.ExpConverterAnimationState;
 import com.chuan.apothicflux.menu.FluxExpConverterMenu;
 import com.chuan.apothicflux.network.FluxExpConverterActionPayload;
 import com.chuan.apothicflux.registry.ModRegistry;
@@ -35,6 +36,7 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     public static final int INPUT_SLOT = 0;
 
     private long storedXp = 0L;
+    private final ExpConverterAnimationState animationState = new ExpConverterAnimationState();
 
     public final ItemStackHandler inventory = new ItemStackHandler(1) {
         @Override
@@ -78,10 +80,32 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, FluxExpConverterBlockEntity entity) {
+        entity.animationTick(level, pos, state);
         if (level.isClientSide) {
             return;
         }
         entity.absorbInputItems();
+    }
+
+    private void animationTick(Level level, BlockPos pos, BlockState state) {
+        boolean wasComplete = animationState.isComplete();
+        animationState.tick();
+        if (!wasComplete && animationState.isComplete() && !level.isClientSide) {
+            setChanged();
+            level.sendBlockUpdated(pos, state, state, 3);
+        }
+    }
+
+    public int getAnimationTime() {
+        return animationState.time();
+    }
+
+    public boolean isIntroAnimation() {
+        return animationState.isIntro();
+    }
+
+    public float getIntroProgress(float partialTick) {
+        return animationState.progress(partialTick);
     }
 
     private void absorbInputItems() {
@@ -104,7 +128,7 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
         if (totalGain > 0L) {
             this.storedXp = Math.min(MAX_STORED_XP, this.storedXp + totalGain);
             this.inventory.setStackInSlot(INPUT_SLOT, remainder);
-            setChanged();
+            markStorageChanged();
         }
     }
 
@@ -129,15 +153,18 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     }
 
     public void setStoredXp(long storedXp) {
-        this.storedXp = Math.max(0L, Math.min(MAX_STORED_XP, storedXp));
-        setChanged();
+        long clamped = Math.max(0L, Math.min(MAX_STORED_XP, storedXp));
+        if (this.storedXp != clamped) {
+            this.storedXp = clamped;
+            markStorageChanged();
+        }
     }
 
     public long takeXp(long amount) {
         long taken = Math.min(Math.max(0L, amount), this.storedXp);
         this.storedXp -= taken;
         if (taken > 0L) {
-            setChanged();
+            markStorageChanged();
         }
         return taken;
     }
@@ -147,7 +174,15 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
             return;
         }
         this.storedXp = Math.min(MAX_STORED_XP, this.storedXp + amount);
+        markStorageChanged();
+    }
+
+    private void markStorageChanged() {
         setChanged();
+        if (this.level != null && !this.level.isClientSide) {
+            BlockState state = this.level.getBlockState(this.worldPosition);
+            this.level.sendBlockUpdated(this.worldPosition, state, state, 3);
+        }
     }
 
     public void handleAction(Player player, FluxExpConverterActionPayload.Action action) {
@@ -234,7 +269,7 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
 
         // 5. 从机器扣除
         this.storedXp -= actual;
-        setChanged();
+        markStorageChanged();
         return true;
     }
 
@@ -324,6 +359,7 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putLong("StoredXp", this.storedXp);
+        tag.putBoolean("IntroComplete", this.animationState.isComplete());
         tag.put("Inventory", this.inventory.serializeNBT(registries));
     }
 
@@ -331,6 +367,7 @@ public class FluxExpConverterBlockEntity extends BlockEntity implements MenuProv
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         this.storedXp = Math.max(0L, tag.contains("StoredXp") ? tag.getLong("StoredXp") : 0L);
+        this.animationState.setComplete(tag.getBoolean("IntroComplete"));
         if (tag.contains("Inventory")) {
             this.inventory.deserializeNBT(registries, tag.getCompound("Inventory"));
         }

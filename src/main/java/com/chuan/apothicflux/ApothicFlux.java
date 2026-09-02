@@ -5,6 +5,7 @@ import com.chuan.apothicflux.network.NetworkHandler;
 import com.chuan.apothicflux.registry.ModRegistry;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import com.chuan.apothicflux.client.renderer.FluxEnchantingTableRenderer;
+import com.chuan.apothicflux.client.renderer.FluxExpConverterBlockEntityRenderer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -113,7 +114,6 @@ public class ApothicFlux {
             }
         });
     }
-
     // 客户端初始化事件
     @SubscribeEvent
     public void onClientSetup(FMLClientSetupEvent event) {
@@ -121,6 +121,10 @@ public class ApothicFlux {
             BlockEntityRenderers.register(
                     ModRegistry.FLUX_ENCHANTING_TABLE_BE.get(),
                     FluxEnchantingTableRenderer::new
+            );
+            BlockEntityRenderers.register(
+                    ModRegistry.FLUX_EXP_CONVERTER_BE.get(),
+                    FluxExpConverterBlockEntityRenderer::new
             );
         });
     }

@@ -81,7 +81,7 @@ public class FluxExpConverterBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : (lvl, pos, st, be) -> {
+        return (lvl, pos, st, be) -> {
             if (be instanceof FluxExpConverterBlockEntity converter) {
                 FluxExpConverterBlockEntity.tick(lvl, pos, st, converter);
             }

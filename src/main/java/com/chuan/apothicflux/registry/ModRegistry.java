@@ -107,6 +107,10 @@ public class ModRegistry {
     public static final DeferredHolder<Item, BlockItem> FLUX_EXP_CONVERTER_ITEM = ITEMS.register("exp_converter",
             () -> new BlockItem(FLUX_EXP_CONVERTER.get(), new Item.Properties()));
 
+    // 经验转化器顶部的球状物：只作为模型来源，不注册物品、不加入创造模式。
+    public static final DeferredHolder<Block, Block> EXP_CONVERTER_TOP_BLOCK = BLOCKS.register("exp_converter_top",
+            () -> new Block(BlockBehaviour.Properties.of().noCollission().noOcclusion().instabreak()));
+
     public static final DeferredHolder<Item, BucketItem> EXPERIENCE_BUCKET = ITEMS.register("experience_bucket",
             () -> new BucketItem(experienceFluid(), new Item.Properties().craftRemainder(net.minecraft.world.item.Items.BUCKET).stacksTo(1)));
 
