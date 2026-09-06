@@ -73,7 +73,7 @@ public class ModRegistry {
             () -> new FluxSpawnerBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops().noOcclusion()));
 
     public static final DeferredHolder<Block, FluxExpConverterBlock> FLUX_EXP_CONVERTER = BLOCKS.register("exp_converter",
-            () -> new FluxExpConverterBlock(BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.STONE).requiresCorrectToolForDrops()));
+            () -> new FluxExpConverterBlock(BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
     private static BaseFlowingFluid.Properties EXPERIENCE_FLUID_PROPERTIES;
 
