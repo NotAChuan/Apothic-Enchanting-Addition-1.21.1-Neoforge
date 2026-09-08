@@ -4,6 +4,7 @@ import com.chuan.apothicflux.registry.ModRegistry;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -21,30 +22,81 @@ public record RitualCraftingRecipe(
         ItemStack outputItem,
         Optional<String> outputFluid,
         Optional<String> outputEntity,
-        int craftTime
-) implements Recipe<RecipeInput> {
+        int craftTime,
+        RitualStatRequirement requirements,
+        Optional<RitualStatRequirement> maxRequirements
+) implements Recipe<RitualRecipeInput> {
+
+    private static final Codec<RitualStatRequirement> MIN_REQUIREMENT_CODEC = RecordCodecBuilder.create(inst -> inst.group(
+            Codec.FLOAT.optionalFieldOf("eterna", RitualStatRequirement.NO_MIN).forGetter(RitualStatRequirement::eterna),
+            Codec.FLOAT.optionalFieldOf("quanta", RitualStatRequirement.NO_MIN).forGetter(RitualStatRequirement::quanta),
+            Codec.FLOAT.optionalFieldOf("arcana", RitualStatRequirement.NO_MIN).forGetter(RitualStatRequirement::arcana)
+    ).apply(inst, RitualStatRequirement::new));
+
+    private static final Codec<RitualStatRequirement> MAX_REQUIREMENT_CODEC = RecordCodecBuilder.create(inst -> inst.group(
+            Codec.FLOAT.optionalFieldOf("eterna", RitualStatRequirement.NO_MAX).forGetter(RitualStatRequirement::eterna),
+            Codec.FLOAT.optionalFieldOf("quanta", RitualStatRequirement.NO_MAX).forGetter(RitualStatRequirement::quanta),
+            Codec.FLOAT.optionalFieldOf("arcana", RitualStatRequirement.NO_MAX).forGetter(RitualStatRequirement::arcana)
+    ).apply(inst, RitualStatRequirement::new));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, RitualStatRequirement> REQUIREMENT_STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.FLOAT, RitualStatRequirement::eterna,
+            ByteBufCodecs.FLOAT, RitualStatRequirement::quanta,
+            ByteBufCodecs.FLOAT, RitualStatRequirement::arcana,
+            RitualStatRequirement::new
+    );
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, List<Ingredient>> INPUTS_STREAM_CODEC =
+            Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list());
+
+    private static final StreamCodec<ByteBuf, Optional<String>> OPTIONAL_STRING_STREAM_CODEC =
+            ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs::optional);
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, Optional<RitualStatRequirement>> OPTIONAL_REQUIREMENT_STREAM_CODEC =
+            ByteBufCodecs.optional(REQUIREMENT_STREAM_CODEC);
 
     public static final MapCodec<RitualCraftingRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             Ingredient.CODEC.listOf().fieldOf("inputs").forGetter(RitualCraftingRecipe::inputs),
             ItemStack.CODEC.optionalFieldOf("output_item", ItemStack.EMPTY).forGetter(RitualCraftingRecipe::outputItem),
             Codec.STRING.optionalFieldOf("output_fluid").forGetter(RitualCraftingRecipe::outputFluid),
             Codec.STRING.optionalFieldOf("output_entity").forGetter(RitualCraftingRecipe::outputEntity),
-            Codec.INT.fieldOf("craft_time").forGetter(RitualCraftingRecipe::craftTime)
+            Codec.INT.fieldOf("craft_time").forGetter(RitualCraftingRecipe::craftTime),
+            MIN_REQUIREMENT_CODEC.optionalFieldOf("requirements", RitualStatRequirement.NONE).forGetter(RitualCraftingRecipe::requirements),
+            MAX_REQUIREMENT_CODEC.optionalFieldOf("max_requirements").forGetter(RitualCraftingRecipe::maxRequirements)
     ).apply(inst, RitualCraftingRecipe::new));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, RitualCraftingRecipe> STREAM_CODEC = StreamCodec.composite(
-            Ingredient.CONTENTS_STREAM_CODEC.apply(ByteBufCodecs.list()), RitualCraftingRecipe::inputs,
-            ItemStack.OPTIONAL_STREAM_CODEC, RitualCraftingRecipe::outputItem,
-            ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs::optional), RitualCraftingRecipe::outputFluid,
-            ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs::optional), RitualCraftingRecipe::outputEntity,
-            ByteBufCodecs.VAR_INT, RitualCraftingRecipe::craftTime,
-            RitualCraftingRecipe::new
-    );
+    public static final StreamCodec<RegistryFriendlyByteBuf, RitualCraftingRecipe> STREAM_CODEC =
+            StreamCodec.of(RitualCraftingRecipe::write, RitualCraftingRecipe::read);
+
+    private static void write(RegistryFriendlyByteBuf buffer, RitualCraftingRecipe recipe) {
+        INPUTS_STREAM_CODEC.encode(buffer, recipe.inputs);
+        ItemStack.OPTIONAL_STREAM_CODEC.encode(buffer, recipe.outputItem);
+        OPTIONAL_STRING_STREAM_CODEC.encode(buffer, recipe.outputFluid);
+        OPTIONAL_STRING_STREAM_CODEC.encode(buffer, recipe.outputEntity);
+        ByteBufCodecs.VAR_INT.encode(buffer, recipe.craftTime);
+        REQUIREMENT_STREAM_CODEC.encode(buffer, recipe.requirements);
+        OPTIONAL_REQUIREMENT_STREAM_CODEC.encode(buffer, recipe.maxRequirements);
+    }
+
+    private static RitualCraftingRecipe read(RegistryFriendlyByteBuf buffer) {
+        List<Ingredient> inputs = INPUTS_STREAM_CODEC.decode(buffer);
+        ItemStack outputItem = ItemStack.OPTIONAL_STREAM_CODEC.decode(buffer);
+        Optional<String> outputFluid = OPTIONAL_STRING_STREAM_CODEC.decode(buffer);
+        Optional<String> outputEntity = OPTIONAL_STRING_STREAM_CODEC.decode(buffer);
+        int craftTime = ByteBufCodecs.VAR_INT.decode(buffer);
+        RitualStatRequirement requirements = REQUIREMENT_STREAM_CODEC.decode(buffer);
+        Optional<RitualStatRequirement> maxRequirements = OPTIONAL_REQUIREMENT_STREAM_CODEC.decode(buffer);
+        return new RitualCraftingRecipe(inputs, outputItem, outputFluid, outputEntity, craftTime, requirements, maxRequirements);
+    }
 
     @Override
-    public boolean matches(RecipeInput input, Level level) {
+    public boolean matches(RitualRecipeInput input, Level level) {
         // 如果配方本身没有任何输入要求，直接拒绝
         if (inputs.isEmpty() || input.size() == 0) {
+            return false;
+        }
+
+        if (!RitualStatRequirement.matches(input.stats(), requirements, maxRequirements)) {
             return false;
         }
 
@@ -82,7 +134,7 @@ public record RitualCraftingRecipe(
         return remainingIngredients.isEmpty();
     }
 
-    @Override public ItemStack assemble(RecipeInput input, HolderLookup.Provider registries) { return outputItem.copy(); }
+    @Override public ItemStack assemble(RitualRecipeInput input, HolderLookup.Provider registries) { return outputItem.copy(); }
     @Override public boolean canCraftInDimensions(int width, int height) { return true; }
     @Override public ItemStack getResultItem(HolderLookup.Provider registries) { return outputItem; }
     @Override public RecipeSerializer<?> getSerializer() { return ModRegistry.RITUAL_SERIALIZER.get(); }

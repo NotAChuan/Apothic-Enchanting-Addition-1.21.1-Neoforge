@@ -35,6 +35,14 @@
       }
     }
   ],
+  "requirements": {
+    "eterna": 80,
+    "quanta": 50,
+    "arcana": 25
+  },
+  "max_requirements": {
+    "quanta": 55
+  },
   "output_item": {
     "id": "apothic_flux:exp_converter",
     "count": 1

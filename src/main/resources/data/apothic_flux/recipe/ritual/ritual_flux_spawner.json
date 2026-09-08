@@ -35,6 +35,15 @@
       }
     }
   ],
+  "requirements": {
+    "eterna": 80,
+    "quanta": 85,
+    "arcana": 60
+  },
+  "max_requirements": {
+    "quanta": 100,
+    "arcana": 85
+  },
   "output_item": {
     "id": "apothic_flux:flux_spawner",
     "count": 1

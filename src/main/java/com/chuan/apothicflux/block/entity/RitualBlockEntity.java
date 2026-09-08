@@ -1,7 +1,10 @@
 package com.chuan.apothicflux.block.entity;
 
 import com.chuan.apothicflux.recipe.RitualCraftingRecipe;
+import com.chuan.apothicflux.recipe.RitualRecipeInput;
+import com.chuan.apothicflux.recipe.RitualStats;
 import com.chuan.apothicflux.registry.ModRegistry;
+import dev.shadowsoffire.apothic_enchanting.table.EnchantmentTableStats;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -21,7 +24,6 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -70,19 +72,21 @@ public class RitualBlockEntity extends BlockEntity {
         super(ModRegistry.RITUAL_BE.get(), pos, state);
     }
 
-    // [新增] 辅助方法：构建标准的 RecipeInput，将法阵的物品栏包装成配方系统能识别的输入源
-    private RecipeInput createRecipeInput() {
-        return new RecipeInput() {
-            @Override
-            public ItemStack getItem(int index) {
-                return inventory.getStackInSlot(index);
-            }
+    // 构建配方输入：物品栏 + 当前法阵采集到的附魔属性。
+    private RitualRecipeInput createRecipeInput() {
+        return new RitualRecipeInput(inventory, computeStats());
+    }
 
-            @Override
-            public int size() {
-                return inventory.getSlots();
-            }
-        };
+    /**
+     * 计算法阵当前的位阶、量子化、阿卡那。
+     * 直接复用神化附魔台相同的书架扫描逻辑，保证识别规则一致。
+     */
+    public RitualStats computeStats() {
+        if (level == null) {
+            return RitualStats.BASE;
+        }
+        EnchantmentTableStats stats = EnchantmentTableStats.gatherStats(level, worldPosition);
+        return new RitualStats(stats.tableEterna(), stats.quanta(), stats.arcana());
     }
 
     private void tryStartRitual() {
@@ -161,6 +165,15 @@ public class RitualBlockEntity extends BlockEntity {
             return;
         }
 
+        // IDLE 状态只在“物品栏非空且上方未受阻”时尝试启动，用于支持先放材料、
+        // 后调整周围书架属性后再自动开始仪式。
+        if (ritualState == RitualState.IDLE && !isFinishing && hasItems() && !isObstructed()) {
+            tryStartRitual();
+            if (ritualState != RitualState.IDLE) {
+                return;
+            }
+        }
+
         // 读档恢复逻辑：退出重进后，内存中的 currentRecipe 会变成 null
         if (currentRecipe == null && (ritualState == RitualState.CRAFTING || ritualState == RitualState.ACTIVATING)) {
             currentRecipe = findMatchingRecipe(level);
@@ -189,10 +202,7 @@ public class RitualBlockEntity extends BlockEntity {
             if (ritualState == RitualState.ACTIVATING) return;
         }
 
-        // 1. IDLE 状态不再周期性扫描配方；
-        //    改为在放入物品时立即检测并启动，减少空闲时的重复遍历。
-
-        // 2. CRAFTING 状态运行仪式
+        // CRAFTING 状态运行仪式
         if (currentRecipe != null && ritualState == RitualState.CRAFTING) {
             // [新增] 过程中检测：如果中途被放置了方块，中断仪式
             if (isObstructed()) {
@@ -235,9 +245,18 @@ public class RitualBlockEntity extends BlockEntity {
         }
     }
 
+    private boolean hasItems() {
+        for (int i = 0; i < inventory.getSlots(); i++) {
+            if (!inventory.getStackInSlot(i).isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // [修改] 调用配方自身的 matches 方法进行严格校验
     private RitualCraftingRecipe findMatchingRecipe(Level level) {
-        RecipeInput input = createRecipeInput();
+        RitualRecipeInput input = createRecipeInput();
         return level.getRecipeManager().getAllRecipesFor(ModRegistry.RITUAL_TYPE.get()).stream()
                 .map(RecipeHolder::value)
                 .filter(recipe -> recipe.matches(input, level))

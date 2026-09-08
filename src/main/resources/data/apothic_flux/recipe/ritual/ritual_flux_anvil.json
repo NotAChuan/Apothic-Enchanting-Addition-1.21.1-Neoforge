@@ -11,6 +11,11 @@
     { "item": "apothic_enchanting:inert_trident" },
     { "item": "apothic_enchanting:extraction_tome" }
   ],
+  "requirements": {
+    "eterna": 50,
+    "quanta": 20,
+    "arcana": 25
+  },
   "output_item": {
     "id": "apothic_flux:flux_anvil",
     "count": 1
