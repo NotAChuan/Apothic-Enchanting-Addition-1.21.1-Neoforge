@@ -1,0 +1,34 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "minecraft:bee",
+  "drops": [
+    {
+      "stack": {
+        "id": "minecraft:honeycomb",
+        "count": 4
+      },
+      "chance": 0.90
+    },{
+      "stack": {
+        "id": "minecraft:honey_bottle",
+        "count": 2
+      },
+      "chance": 0.90
+    }, {
+      "neoforge:conditions": [
+        { "type": "neoforge:mod_loaded", "modid": "productivebees" }
+      ],
+      "stack": {
+        "id": "productivebees:wax",
+        "count": 3
+      },
+      "chance": 0.85
+    },{
+      "stack": {
+        "id": "apothic_flux:solidified_flux_experience",
+        "count": 3
+      },
+      "chance": 0.75
+    }
+  ]
+}
