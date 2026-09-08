@@ -15,6 +15,7 @@ import net.minecraft.world.item.crafting.RecipeInput;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.conditions.ConditionalOps;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,9 @@ public record SpawnerRecipe(ResourceLocation entity, List<SpawnerDrop> drops) im
 
     public static final MapCodec<SpawnerRecipe> CODEC = RecordCodecBuilder.mapCodec(inst -> inst.group(
             ResourceLocation.CODEC.fieldOf("entity").forGetter(SpawnerRecipe::entity),
-            SpawnerDrop.CODEC.codec().listOf().optionalFieldOf("drops", List.of()).forGetter(SpawnerRecipe::drops)
+            ConditionalOps.decodeListWithElementConditions(SpawnerDrop.CODEC.codec())
+                    .optionalFieldOf("drops", List.of())
+                    .forGetter(SpawnerRecipe::drops)
     ).apply(inst, SpawnerRecipe::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SpawnerRecipe> STREAM_CODEC = new StreamCodec<>() {

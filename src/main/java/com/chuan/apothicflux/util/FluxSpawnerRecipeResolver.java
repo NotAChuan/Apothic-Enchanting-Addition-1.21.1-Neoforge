@@ -1,6 +1,8 @@
 package com.chuan.apothicflux.util;
 
 import com.chuan.apothicflux.config.ApothicAdditionConfig;
+import com.chuan.apothicflux.integration.productivebees.ProductiveBeesIntegration;
+import com.chuan.apothicflux.integration.productivebees.ProductiveBeesRecipeBridge;
 import com.chuan.apothicflux.recipe.SpawnerRecipe;
 import com.chuan.apothicflux.recipe.SpawnerRemoveRecipe;
 import com.chuan.apothicflux.registry.ModRegistry;
@@ -11,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +39,21 @@ public final class FluxSpawnerRecipeResolver {
         }
     }
 
-    public static SpawnPlan buildPlan(ServerLevel level, Map<EntityType<?>, Integer> eggTypeCounts, int rollsPerEgg, int echoing, int spawnCount) {
+    /**
+     * Identifies one processed spawner input. The optional bee type is only set
+     * for Productive Bees spawn eggs so that different configurable bees sharing
+     * the {@code productivebees:configurable_bee} entity can use different recipes.
+     */
+    public record SpawnerInputKey(EntityType<?> entityType, @Nullable ResourceLocation productiveBeeType) {
+    }
+
+    public static SpawnPlan buildPlan(
+            ServerLevel level,
+            Map<SpawnerInputKey, Integer> eggTypeCounts,
+            int rollsPerEgg,
+            int echoing,
+            int spawnCount
+    ) {
         if (eggTypeCounts.isEmpty()) {
             return new SpawnPlan(List.of(), 0, false);
         }
@@ -44,9 +61,11 @@ public final class FluxSpawnerRecipeResolver {
         RecipeLookup lookup = RecipeLookup.from(level);
         List<EntityDropProfile> profiles = new ArrayList<>();
         int expEligibleEggs = 0;
+        boolean productiveBeesLoaded = ProductiveBeesIntegration.isLoaded();
 
-        for (Map.Entry<EntityType<?>, Integer> entry : eggTypeCounts.entrySet()) {
-            EntityType<?> entityType = entry.getKey();
+        for (Map.Entry<SpawnerInputKey, Integer> entry : eggTypeCounts.entrySet()) {
+            SpawnerInputKey inputKey = entry.getKey();
+            EntityType<?> entityType = inputKey.entityType();
             int eggCount = entry.getValue();
             if (eggCount <= 0) {
                 continue;
@@ -61,10 +80,22 @@ public final class FluxSpawnerRecipeResolver {
                 continue;
             }
 
-            SpawnerRecipe customRecipe = lookup.spawnerRecipes.get(entityId);
             int totalRolls = Math.max(0, rollsPerEgg * eggCount);
             if (totalRolls <= 0) {
                 continue;
+            }
+
+            SpawnerRecipe customRecipe = null;
+            if (inputKey.productiveBeeType() != null && productiveBeesLoaded) {
+                customRecipe = ProductiveBeesRecipeBridge.createSpawnerRecipe(
+                        level,
+                        inputKey.productiveBeeType(),
+                        entityType
+                ).orElse(null);
+            }
+
+            if (customRecipe == null) {
+                customRecipe = lookup.spawnerRecipes.get(entityId);
             }
 
             if (customRecipe != null) {

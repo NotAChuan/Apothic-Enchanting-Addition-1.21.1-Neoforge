@@ -1,5 +1,6 @@
 package com.chuan.apothicflux.util;
 
+import com.chuan.apothicflux.integration.productivebees.ProductiveBeesIntegration;
 import dev.shadowsoffire.apothic_enchanting.Ench;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -30,6 +31,15 @@ public final class FluxSpawnerInputResolver {
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * Returns the Productive Bees bee type carried by a spawn egg.
+     * This is only populated for Productive Bees spawn eggs and is intentionally
+     * isolated from Productive Bees classes so the mod still loads without it.
+     */
+    public static Optional<ResourceLocation> getProductiveBeeType(ItemStack stack) {
+        return ProductiveBeesIntegration.getBeeType(stack);
     }
 
     private static boolean isOccultEnderLead(ItemStack stack) {

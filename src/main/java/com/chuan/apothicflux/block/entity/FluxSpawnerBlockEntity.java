@@ -204,7 +204,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     private FluxSpawnerRecipeResolver.SpawnPlan buildSpawnPlan(ServerLevel serverLevel) {
-        Map<EntityType<?>, Integer> eggTypeCounts = collectProcessableInputTypeCounts();
+        Map<FluxSpawnerRecipeResolver.SpawnerInputKey, Integer> eggTypeCounts = collectProcessableInputTypeCounts();
         int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
         return FluxSpawnerRecipeResolver.buildPlan(serverLevel, eggTypeCounts, totalRollsPerEgg, this.echoing, this.spawnCount);
     }
@@ -319,13 +319,18 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
-    private Map<EntityType<?>, Integer> collectProcessableInputTypeCounts() {
-        Map<EntityType<?>, Integer> eggTypeCounts = new LinkedHashMap<>();
+    private Map<FluxSpawnerRecipeResolver.SpawnerInputKey, Integer> collectProcessableInputTypeCounts() {
+        Map<FluxSpawnerRecipeResolver.SpawnerInputKey, Integer> eggTypeCounts = new LinkedHashMap<>();
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
             FluxSpawnerInputResolver.getEntityType(stack)
                     .filter(FluxSpawnerBlockEntity::canUseSpawnerEntity)
-                    .ifPresent(entityType -> eggTypeCounts.merge(entityType, 1, Integer::sum));
+                    .ifPresent(entityType -> {
+                        ResourceLocation productiveBeeType = FluxSpawnerInputResolver.getProductiveBeeType(stack).orElse(null);
+                        FluxSpawnerRecipeResolver.SpawnerInputKey key =
+                                new FluxSpawnerRecipeResolver.SpawnerInputKey(entityType, productiveBeeType);
+                        eggTypeCounts.merge(key, 1, Integer::sum);
+                    });
         }
         return eggTypeCounts;
     }

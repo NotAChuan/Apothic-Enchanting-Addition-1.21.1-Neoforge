@@ -147,6 +147,7 @@ dependencies {
     api "curse.maven:jade-324717:7545219"
 
     compileOnly api("dev.latvian.mods:kubejs-neoforge:2101.7.2-build.348")
+    compileOnly "curse.maven:productivebees-377897:6746400"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
