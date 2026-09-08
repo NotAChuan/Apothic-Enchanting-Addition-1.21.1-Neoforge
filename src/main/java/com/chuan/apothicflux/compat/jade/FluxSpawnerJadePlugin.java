@@ -24,6 +24,9 @@ public class FluxSpawnerJadePlugin implements IWailaPlugin, IBlockComponentProvi
     private static final String KEY_SPAWN_COUNT = "SpawnCount";
     private static final String KEY_REDSTONE = "RedstoneControl";
     private static final String KEY_ECHOING = "Echoing";
+    private static final String KEY_BEEHIVE_INSTALLED = "BeehiveSimulationInstalled";
+    private static final String KEY_COMB_BLOCK = "HoneycombBlockMode";
+    private static final String KEY_PRODUCTIVITY = "HoneycombProductivityBonus";
 
     @Override
     public void register(IWailaCommonRegistration registration) {
@@ -43,6 +46,12 @@ public class FluxSpawnerJadePlugin implements IWailaPlugin, IBlockComponentProvi
             tag.putInt(KEY_SPAWN_COUNT, be.getSpawnCount());
             tag.putBoolean(KEY_REDSTONE, be.isRedstoneControl());
             tag.putInt(KEY_ECHOING, be.getEchoing());
+            boolean installed = be.hasBeehiveSimulationUpgrade();
+            tag.putBoolean(KEY_BEEHIVE_INSTALLED, installed);
+            if (installed) {
+                tag.putBoolean(KEY_COMB_BLOCK, be.isHoneycombBlockMode());
+                tag.putInt(KEY_PRODUCTIVITY, be.getHoneycombProductivityBonusPercent());
+            }
         }
     }
 
@@ -65,6 +74,20 @@ public class FluxSpawnerJadePlugin implements IWailaPlugin, IBlockComponentProvi
                     tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.echoing"));
                 } else {
                     tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.echoing_level", echoing));
+                }
+            }
+
+            if (data.getBoolean(KEY_BEEHIVE_INSTALLED)) {
+                tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.beehive_simulation"));
+
+                if (data.getBoolean(KEY_COMB_BLOCK)) {
+                    tooltip.add(Component.translatable("jade.apothic_flux.flux_spawner.comb_block"));
+                }
+
+                int productivity = data.getInt(KEY_PRODUCTIVITY);
+                if (productivity > 0) {
+                    tooltip.add(Component.translatable(
+                            "jade.apothic_flux.flux_spawner.productivity", productivity));
                 }
             }
         } else {

@@ -38,7 +38,8 @@ public final class ProductiveBeesRecipeBridge {
     public static Optional<SpawnerRecipe> createSpawnerRecipe(
             ServerLevel level,
             ResourceLocation beeType,
-            EntityType<?> entityType
+            EntityType<?> entityType,
+            boolean combBlockMode
     ) {
         if (level == null || beeType == null || entityType == null || !ProductiveBeesIntegration.isLoaded()) {
             return Optional.empty();
@@ -58,7 +59,40 @@ public final class ProductiveBeesRecipeBridge {
             return Optional.empty();
         }
 
+        if (combBlockMode) {
+            drops = convertDropsToCombBlocks(drops);
+            if (drops.isEmpty()) {
+                return Optional.empty();
+            }
+        }
+
         return Optional.of(new SpawnerRecipe(entityId, drops));
+    }
+
+    private static List<SpawnerRecipe.SpawnerDrop> convertDropsToCombBlocks(List<SpawnerRecipe.SpawnerDrop> drops) {
+        List<SpawnerRecipe.SpawnerDrop> converted = new ArrayList<>(drops.size());
+        for (SpawnerRecipe.SpawnerDrop drop : drops) {
+            ItemStack combBlock = toCombBlock(drop.stack());
+            if (!combBlock.isEmpty()) {
+                converted.add(new SpawnerRecipe.SpawnerDrop(combBlock, drop.chance()));
+            }
+        }
+        return List.copyOf(converted);
+    }
+
+    private static ItemStack toCombBlock(ItemStack honeycomb) {
+        if (honeycomb.isEmpty()) {
+            return honeycomb;
+        }
+
+        try {
+            Class<?> beeHelper = Class.forName("cy.jdkdigital.productivebees.util.BeeHelper");
+            Object result = beeHelper.getMethod("getCombBlockFromHoneyComb", ItemStack.class)
+                    .invoke(null, honeycomb.copy());
+            return result instanceof ItemStack stack ? stack.copy() : honeycomb.copy();
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            return honeycomb.copy();
+        }
     }
 
     private static Map<ResourceLocation, List<SpawnerRecipe.SpawnerDrop>> buildDropIndex(RecipeManager recipeManager) {

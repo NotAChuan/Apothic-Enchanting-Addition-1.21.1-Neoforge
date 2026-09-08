@@ -2,6 +2,7 @@ package com.chuan.apothicflux.block.entity;
 
 import com.chuan.apothicflux.block.FluxSpawnerBlock;
 import com.chuan.apothicflux.config.ApothicAdditionConfig;
+import com.chuan.apothicflux.integration.productivebees.ProductiveBeesIntegration;
 import com.chuan.apothicflux.menu.FluxSpawnerMenu;
 import com.chuan.apothicflux.registry.ModRegistry;
 import com.chuan.apothicflux.util.FluxSpawnerInputResolver;
@@ -56,6 +57,9 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private int spawnCount = 4;
     private boolean redstoneControl = false;
     private int echoing = 0;
+    private boolean beehiveSimulationUpgrade = false;
+    private boolean honeycombBlockMode = false;
+    private int honeycombProductivityBonusPercent = 0;
     private int delay = 200;
     private int lastEnergy = 0;
     private int cachedSpawnerInputCount = 0;
@@ -206,7 +210,15 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     private FluxSpawnerRecipeResolver.SpawnPlan buildSpawnPlan(ServerLevel serverLevel) {
         Map<FluxSpawnerRecipeResolver.SpawnerInputKey, Integer> eggTypeCounts = collectProcessableInputTypeCounts();
         int totalRollsPerEgg = this.spawnCount * (1 + this.echoing);
-        return FluxSpawnerRecipeResolver.buildPlan(serverLevel, eggTypeCounts, totalRollsPerEgg, this.echoing, this.spawnCount);
+        return FluxSpawnerRecipeResolver.buildPlan(
+                serverLevel,
+                eggTypeCounts,
+                totalRollsPerEgg,
+                this.echoing,
+                this.spawnCount,
+                this.honeycombBlockMode,
+                this.honeycombProductivityBonusPercent
+        );
     }
 
     private void enqueueLootGeneration(ServerLevel serverLevel, FluxSpawnerRecipeResolver.SpawnPlan plan) {
@@ -284,6 +296,9 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (!(stack.getItem() instanceof SpawnEggItem egg)) {
             return false;
         }
+        if (!isAllowedInputMode(stack)) {
+            return false;
+        }
         if (!canUseSpawnEgg(egg)) {
             return false;
         }
@@ -291,10 +306,20 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     public boolean canInsertSpawnerInput(ItemStack stack) {
+        if (!isAllowedInputMode(stack)) {
+            return false;
+        }
         return FluxSpawnerInputResolver.getEntityType(stack)
                 .filter(FluxSpawnerBlockEntity::canUseSpawnerEntity)
                 .filter(entityType -> this.level == null || !FluxSpawnerRecipeResolver.isRemoved(this.level, entityType))
                 .isPresent();
+    }
+
+    private boolean isAllowedInputMode(ItemStack stack) {
+        if (!ProductiveBeesIntegration.isLoaded()) {
+            return true;
+        }
+        return this.beehiveSimulationUpgrade == ProductiveBeesIntegration.isProductiveBeeSpawnEgg(stack);
     }
 
     private void autoOutputToBelow() {
@@ -324,6 +349,7 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         for (int i = 0; i < 8; i++) {
             ItemStack stack = this.inventory.getStackInSlot(i);
             FluxSpawnerInputResolver.getEntityType(stack)
+                    .filter(entityType -> isAllowedInputMode(stack))
                     .filter(FluxSpawnerBlockEntity::canUseSpawnerEntity)
                     .ifPresent(entityType -> {
                         ResourceLocation productiveBeeType = FluxSpawnerInputResolver.getProductiveBeeType(stack).orElse(null);
@@ -430,6 +456,41 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         setChanged();
     }
 
+    public boolean hasBeehiveSimulationUpgrade() {
+        return this.beehiveSimulationUpgrade;
+    }
+
+    public void setBeehiveSimulationUpgrade(boolean installed) {
+        if (this.beehiveSimulationUpgrade != installed) {
+            this.beehiveSimulationUpgrade = installed;
+            recountSpawnerInputs();
+            setChanged();
+        }
+    }
+
+    public boolean isHoneycombBlockMode() {
+        return this.honeycombBlockMode;
+    }
+
+    public void setHoneycombBlockMode(boolean enabled) {
+        if (this.honeycombBlockMode != enabled) {
+            this.honeycombBlockMode = enabled;
+            setChanged();
+        }
+    }
+
+    public int getHoneycombProductivityBonusPercent() {
+        return this.honeycombProductivityBonusPercent;
+    }
+
+    public void setHoneycombProductivityBonusPercent(int bonusPercent) {
+        int clamped = Math.max(0, Math.min(320, bonusPercent));
+        if (this.honeycombProductivityBonusPercent != clamped) {
+            this.honeycombProductivityBonusPercent = clamped;
+            setChanged();
+        }
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
@@ -440,6 +501,9 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         tag.putInt("SpawnCount", spawnCount);
         tag.putBoolean("RedstoneControl", redstoneControl);
         tag.putInt("Echoing", echoing);
+        tag.putBoolean("BeehiveSimulationUpgrade", beehiveSimulationUpgrade);
+        tag.putBoolean("HoneycombBlockMode", honeycombBlockMode);
+        tag.putInt("HoneycombProductivityBonusPercent", honeycombProductivityBonusPercent);
         tag.putInt("CurrentDelay", delay);
     }
 
@@ -453,6 +517,11 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         if (tag.contains("SpawnCount")) spawnCount = tag.getInt("SpawnCount");
         if (tag.contains("RedstoneControl")) redstoneControl = tag.getBoolean("RedstoneControl");
         if (tag.contains("Echoing")) echoing = tag.getInt("Echoing");
+        if (tag.contains("BeehiveSimulationUpgrade")) beehiveSimulationUpgrade = tag.getBoolean("BeehiveSimulationUpgrade");
+        if (tag.contains("HoneycombBlockMode")) honeycombBlockMode = tag.getBoolean("HoneycombBlockMode");
+        if (tag.contains("HoneycombProductivityBonusPercent")) {
+            honeycombProductivityBonusPercent = Math.max(0, Math.min(320, tag.getInt("HoneycombProductivityBonusPercent")));
+        }
         if (tag.contains("CurrentDelay")) delay = tag.getInt("CurrentDelay");
         recountSpawnerInputs();
         outputCacheDirty = true;

@@ -3,9 +3,11 @@ package com.chuan.apothicflux.registry;
 import com.chuan.apothicflux.block.*;
 import com.chuan.apothicflux.block.entity.*;
 import com.chuan.apothicflux.block.entity.FluxStatsBookshelfBlockEntity;
+import com.chuan.apothicflux.integration.productivebees.ProductiveBeesIntegration;
 import com.chuan.apothicflux.item.CompressedSolidifiedFluxExperienceItem;
 import com.chuan.apothicflux.item.FluxSpawnerBlockItem;
 import com.chuan.apothicflux.item.SolidifiedFluxExperienceItem;
+import com.chuan.apothicflux.item.BeehiveSimulationUpgradeItem;
 import com.chuan.apothicflux.menu.FluxEnchantingMenu;
 import com.chuan.apothicflux.menu.FluxAnvilMenu;
 import com.chuan.apothicflux.menu.FluxExpConverterMenu;
@@ -41,6 +43,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jetbrains.annotations.Nullable;
 
 public class ModRegistry {
     public static final String MOD_ID = "apothic_flux";
@@ -135,6 +138,12 @@ public class ModRegistry {
 
     public static final DeferredHolder<Item, BlockItem> FLUX_SPAWNER_ITEM = ITEMS.register("flux_spawner",
             () -> new FluxSpawnerBlockItem(FLUX_SPAWNER.get(), new Item.Properties()));
+
+    @Nullable
+    public static final DeferredHolder<Item, Item> BEEHIVE_SIMULATION_UPGRADE = ProductiveBeesIntegration.isLoaded()
+            ? ITEMS.register("beehive_simulation_upgrade",
+                    () -> new BeehiveSimulationUpgradeItem(new Item.Properties().stacksTo(1)))
+            : null;
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxStatsBookshelfBlockEntity>> STATS_BOOKSHELF_BE = BLOCK_ENTITIES.register("stats_bookshelf",
             () -> BlockEntityType.Builder.of(FluxStatsBookshelfBlockEntity::new,

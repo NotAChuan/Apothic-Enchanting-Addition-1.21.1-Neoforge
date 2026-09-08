@@ -77,6 +77,9 @@ public class ApothicFlux {
                 output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(FLUX_SPAWNER_ITEM.get());
+                if (BEEHIVE_SIMULATION_UPGRADE != null) {
+                    output.accept(BEEHIVE_SIMULATION_UPGRADE.get());
+                }
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.

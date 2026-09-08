@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -52,7 +53,9 @@ public final class FluxSpawnerRecipeResolver {
             Map<SpawnerInputKey, Integer> eggTypeCounts,
             int rollsPerEgg,
             int echoing,
-            int spawnCount
+            int spawnCount,
+            boolean honeycombBlockMode,
+            int honeycombProductivityBonusPercent
     ) {
         if (eggTypeCounts.isEmpty()) {
             return new SpawnPlan(List.of(), 0, false);
@@ -86,12 +89,15 @@ public final class FluxSpawnerRecipeResolver {
             }
 
             SpawnerRecipe customRecipe = null;
+            boolean productiveBeeRecipe = false;
             if (inputKey.productiveBeeType() != null && productiveBeesLoaded) {
                 customRecipe = ProductiveBeesRecipeBridge.createSpawnerRecipe(
                         level,
                         inputKey.productiveBeeType(),
-                        entityType
+                        entityType,
+                        honeycombBlockMode
                 ).orElse(null);
+                productiveBeeRecipe = customRecipe != null;
             }
 
             if (customRecipe == null) {
@@ -100,7 +106,12 @@ public final class FluxSpawnerRecipeResolver {
 
             if (customRecipe != null) {
                 if (customRecipe.hasDrops()) {
-                    profiles.add(new EntityDropProfile(entityType, totalRolls, customRecipe));
+                    int effectiveRolls = productiveBeeRecipe
+                            ? applyProductivity(totalRolls, honeycombProductivityBonusPercent, level.random)
+                            : totalRolls;
+                    if (effectiveRolls > 0) {
+                        profiles.add(new EntityDropProfile(entityType, effectiveRolls, customRecipe));
+                    }
                 }
             } else {
                 profiles.add(new EntityDropProfile(entityType, totalRolls, null));
@@ -111,6 +122,20 @@ public final class FluxSpawnerRecipeResolver {
         int expBase = ApothicAdditionConfig.FLUX_SPAWNER_EXP_BASE_COUNT.get();
         int expCount = expBase * expEligibleEggs * (1 + echoing) * Math.max(1, spawnCount);
         return new SpawnPlan(List.copyOf(profiles), expCount, true);
+    }
+
+    private static int applyProductivity(int baseRolls, int bonusPercent, RandomSource random) {
+        if (baseRolls <= 0 || bonusPercent <= 0) {
+            return baseRolls;
+        }
+
+        double multiplier = 1.0D + (bonusPercent / 100.0D);
+        double effectiveRolls = baseRolls * multiplier;
+        int wholeRolls = (int) Math.floor(effectiveRolls);
+        if (random.nextDouble() < effectiveRolls - wholeRolls) {
+            wholeRolls++;
+        }
+        return wholeRolls;
     }
 
     public static boolean canInsertEgg(Level level, SpawnEggItem egg) {

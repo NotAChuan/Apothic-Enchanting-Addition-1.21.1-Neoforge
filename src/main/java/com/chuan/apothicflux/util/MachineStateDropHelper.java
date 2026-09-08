@@ -62,7 +62,10 @@ public final class MachineStateDropHelper {
                 || blockEntity.getMaxDelay() != 800
                 || blockEntity.getSpawnCount() != 4
                 || blockEntity.isRedstoneControl()
-                || blockEntity.getEchoing() != 0;
+                || blockEntity.getEchoing() != 0
+                || blockEntity.hasBeehiveSimulationUpgrade()
+                || blockEntity.isHoneycombBlockMode()
+                || blockEntity.getHoneycombProductivityBonusPercent() != 0;
 
         if (energy <= 0 && !hasUpgradeState) return stack;
 
@@ -75,6 +78,9 @@ public final class MachineStateDropHelper {
         tag.putInt("SpawnCount", blockEntity.getSpawnCount());
         tag.putBoolean("RedstoneControl", blockEntity.isRedstoneControl());
         tag.putInt("Echoing", blockEntity.getEchoing());
+        tag.putBoolean("BeehiveSimulationUpgrade", blockEntity.hasBeehiveSimulationUpgrade());
+        tag.putBoolean("HoneycombBlockMode", blockEntity.isHoneycombBlockMode());
+        tag.putInt("HoneycombProductivityBonusPercent", blockEntity.getHoneycombProductivityBonusPercent());
 
         BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_SPAWNER_BE.get(), tag);
         return stack;
