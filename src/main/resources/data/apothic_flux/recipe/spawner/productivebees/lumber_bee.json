@@ -1,0 +1,61 @@
+{
+  "type": "apothic_flux:spawner",
+  "entity": "productivebees:lumber_bee",
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "productivebees"
+    }
+  ],
+  "drops": [
+    {
+      "stack": {
+        "id": "minecraft:oak_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:spruce_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:birch_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:jungle_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:acacia_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:dark_oak_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:mangrove_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }, {
+      "stack": {
+        "id": "minecraft:cherry_log",
+        "count": 4
+      },
+      "chance": 1.0
+    }
+  ]
+}

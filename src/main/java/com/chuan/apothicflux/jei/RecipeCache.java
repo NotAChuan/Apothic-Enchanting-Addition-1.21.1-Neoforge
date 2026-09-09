@@ -18,6 +18,7 @@ public class RecipeCache {
     public static List<RitualCraftingRecipe> ritualRecipes = new ArrayList<>();
     public static List<JeiSpawnerRecipeView> spawnerRecipes = new ArrayList<>();
     public static List<JeiSpawnerRemoveRecipeView> spawnerRemoveRecipes = new ArrayList<>();
+    public static List<FluxSpawnerModifierView> fluxSpawnerModifierViews = new ArrayList<>();
 
     @SubscribeEvent
     public static void onRecipesUpdated(RecipesUpdatedEvent event) {
@@ -34,5 +35,6 @@ public class RecipeCache {
         spawnerRemoveRecipes = SpawnerJeiRecipeUtil.createSpawnerRemoveViews(recipeManager
                 .getAllRecipesFor(ModRegistry.SPAWNER_REMOVE_TYPE.get())
                 .stream().map(holder -> holder.value()).toList());
+        fluxSpawnerModifierViews = FluxSpawnerModifierJeiUtil.createViews(recipeManager);
     }
 }

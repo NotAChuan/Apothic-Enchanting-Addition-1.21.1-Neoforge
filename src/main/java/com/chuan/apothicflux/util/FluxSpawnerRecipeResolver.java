@@ -91,13 +91,16 @@ public final class FluxSpawnerRecipeResolver {
             SpawnerRecipe customRecipe = null;
             boolean productiveBeeRecipe = false;
             if (inputKey.productiveBeeType() != null && productiveBeesLoaded) {
-                customRecipe = ProductiveBeesRecipeBridge.createSpawnerRecipe(
-                        level,
-                        inputKey.productiveBeeType(),
-                        entityType,
-                        honeycombBlockMode
-                ).orElse(null);
-                productiveBeeRecipe = customRecipe != null;
+                customRecipe = lookup.spawnerRecipes.get(entityId);
+                if (customRecipe == null) {
+                    customRecipe = ProductiveBeesRecipeBridge.createSpawnerRecipe(
+                            level,
+                            inputKey.productiveBeeType(),
+                            entityType,
+                            honeycombBlockMode
+                    ).orElse(null);
+                    productiveBeeRecipe = customRecipe != null;
+                }
             }
 
             if (customRecipe == null) {
@@ -156,7 +159,10 @@ public final class FluxSpawnerRecipeResolver {
         return RecipeLookup.from(level).removedEntities.contains(entityId);
     }
 
-    private record RecipeLookup(Map<ResourceLocation, SpawnerRecipe> spawnerRecipes, Set<ResourceLocation> removedEntities) {
+    private record RecipeLookup(
+            Map<ResourceLocation, SpawnerRecipe> spawnerRecipes,
+            Set<ResourceLocation> removedEntities
+    ) {
         private static RecipeLookup from(Level level) {
             Map<ResourceLocation, SpawnerRecipe> spawnerRecipes = new HashMap<>();
             for (var holder : level.getRecipeManager().getAllRecipesFor(ModRegistry.SPAWNER_TYPE.get())) {

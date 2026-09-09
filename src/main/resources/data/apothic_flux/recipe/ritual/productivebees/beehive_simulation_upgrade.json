@@ -1,0 +1,65 @@
+{
+  "type": "apothic_flux:ritual",
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "productivebees"
+    }
+  ],
+  "inputs": [
+    { "item": "productivelib:upgrade_simulator" },
+    { "item": "productivelib:upgrade_productivity_4" },
+    { "item": "apotheosis:ignore_conditions_spawner_rune" },
+    {
+      "type": "neoforge:components",
+      "items": "apotheosis:gem",
+      "components": {
+        "apotheosis:gem": "apotheosis:core/splendor",
+        "apotheosis:purity": "perfect"
+      }
+    },
+    { "item": "productivelib:upgrade_productivity_4" },
+    { "item": "apotheosis:ignore_conditions_spawner_rune" },
+    {
+      "type": "neoforge:components",
+      "items": "apotheosis:gem",
+      "components": {
+        "apotheosis:gem": "apotheosis:core/splendor",
+        "apotheosis:purity": "perfect"
+      }
+    },
+    { "item": "productivelib:upgrade_productivity_4" },
+    { "item": "apotheosis:ignore_conditions_spawner_rune" },
+    {
+      "type": "neoforge:components",
+      "items": "apotheosis:gem",
+      "components": {
+        "apotheosis:gem": "apotheosis:core/splendor",
+        "apotheosis:purity": "perfect"
+      }
+    },
+    { "item": "productivelib:upgrade_productivity_4" },
+    { "item": "apotheosis:ignore_conditions_spawner_rune" },
+    {
+      "type": "neoforge:components",
+      "items": "apotheosis:gem",
+      "components": {
+        "apotheosis:gem": "apotheosis:core/splendor",
+        "apotheosis:purity": "perfect"
+      }
+    }
+  ],
+  "requirements": {
+    "eterna": 100,
+    "quanta": 50,
+    "arcana": 95
+  },
+  "max_requirements": {
+    "quanta": 55
+  },
+  "output_item": {
+    "id": "apothic_flux:beehive_simulation_upgrade",
+    "count": 1
+  },
+  "craft_time": 120
+}

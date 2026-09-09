@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:block/beehive"
+    "layer0": "apothic_flux:item/beehive_simulation_upgrade"
   }
 }

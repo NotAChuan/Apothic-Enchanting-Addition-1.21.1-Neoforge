@@ -38,6 +38,9 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
     public static final RecipeType<JeiSpawnerRemoveRecipeView> SPAWNER_REMOVE_JEI_TYPE =
             RecipeType.create(ModRegistry.MOD_ID, "flux_spawner_remove", JeiSpawnerRemoveRecipeView.class);
 
+    public static final RecipeType<FluxSpawnerModifierView> FLUX_SPAWNER_MODIFIER_TYPE =
+            RecipeType.create(ModRegistry.MOD_ID, "flux_spawner_modifier", FluxSpawnerModifierView.class);
+
     @Override
     public ResourceLocation getPluginUid() {
         return PLUGIN_ID;
@@ -51,7 +54,8 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
                     new DrawingRecipeCategory(guiHelper),
                     new RitualRecipeCategory(guiHelper),
                     new SpawnerRecipeCategory(guiHelper),
-                    new SpawnerRemoveRecipeCategory(guiHelper)
+                    new SpawnerRemoveRecipeCategory(guiHelper),
+                    new FluxSpawnerModifierCategory(guiHelper)
             );
         } catch (Throwable e) {
             e.printStackTrace();
@@ -66,6 +70,7 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
             registration.addRecipes(RITUAL_TYPE, RecipeCache.ritualRecipes);
             registration.addRecipes(SPAWNER_JEI_TYPE, RecipeCache.spawnerRecipes);
             registration.addRecipes(SPAWNER_REMOVE_JEI_TYPE, RecipeCache.spawnerRemoveRecipes);
+            registration.addRecipes(FLUX_SPAWNER_MODIFIER_TYPE, RecipeCache.fluxSpawnerModifierViews);
             return;
         }
 
@@ -100,6 +105,7 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
             registration.addRecipes(RITUAL_TYPE, ritualRecipes);
             registration.addRecipes(SPAWNER_JEI_TYPE, SpawnerJeiRecipeUtil.createSpawnerViews(spawnerRecipes));
             registration.addRecipes(SPAWNER_REMOVE_JEI_TYPE, SpawnerJeiRecipeUtil.createSpawnerRemoveViews(spawnerRemoveRecipes));
+            registration.addRecipes(FLUX_SPAWNER_MODIFIER_TYPE, FluxSpawnerModifierJeiUtil.createViews(recipeManager));
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -113,6 +119,7 @@ public class ApothicAdditionJeiPlugin implements IModPlugin {
             ItemStack catalyst = new ItemStack(ModRegistry.FLUX_SPAWNER_ITEM.get());
             registration.addRecipeCatalyst(catalyst, SPAWNER_JEI_TYPE);
             registration.addRecipeCatalyst(catalyst, SPAWNER_REMOVE_JEI_TYPE);
+            registration.addRecipeCatalyst(catalyst.copy(), FLUX_SPAWNER_MODIFIER_TYPE);
         } catch (Throwable e) {
             e.printStackTrace();
         }
