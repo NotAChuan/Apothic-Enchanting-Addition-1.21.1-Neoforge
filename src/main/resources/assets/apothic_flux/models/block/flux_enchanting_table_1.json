@@ -3,7 +3,7 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/block",
 	"textures": {
-		"particle": "minecraft:block/crying_obsidian",
+		"particle": "apothic_flux:block/flux_enchanting_table/flux_enchanting_table_side_1",
 		"bottom": "minecraft:block/crying_obsidian",
 		"top": "apothic_flux:block/flux_enchanting_table/flux_enchanting_table_top",
 		"side": "apothic_flux:block/flux_enchanting_table/flux_enchanting_table_side_1"
