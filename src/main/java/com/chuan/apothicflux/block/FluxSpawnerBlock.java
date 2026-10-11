@@ -8,6 +8,7 @@ import com.chuan.apothicflux.util.MachineStateDropHelper;
 import com.chuan.apothicflux.util.SpawnerStatApplicator;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -18,14 +19,19 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
@@ -43,7 +49,10 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
     public static final MapCodec<FluxSpawnerBlock> CODEC = simpleCodec(FluxSpawnerBlock::new);
 
-    public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 1, 4);
+    public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 1, 5);
+
+    /** 水平朝向：正面（模型北面，即屏幕那一面）在放置时朝向玩家。 */
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     private static final ResourceLocation UPGRADE_BLOCK_ID =
             ResourceLocation.fromNamespaceAndPath("productivelib", "upgrade_block");
@@ -69,7 +78,31 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
     public FluxSpawnerBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(ENERGY_LEVEL, 1));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(ENERGY_LEVEL, 1)
+                .setValue(FACING, Direction.NORTH));
+    }
+
+    /**
+     * 放置时让正面朝向玩家。
+     * <p>
+     * {@code getHorizontalDirection()} 是玩家面朝的方向，取反得到「从方块指向玩家」的方向；
+     * 而模型的正面（屏幕那一面）位于模型北侧，所以 facing=north 时正面正对玩家。
+     */
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+    }
+
+    /** 结构方块/世界生成旋转时同步朝向。 */
+    @Override
+    protected BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override
+    protected BlockState mirror(BlockState state, Mirror mirror) {
+        return state.rotate(mirror.getRotation(state.getValue(FACING)));
     }
 
     @Override
@@ -414,6 +447,6 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(ENERGY_LEVEL);
+        builder.add(ENERGY_LEVEL, FACING);
     }
 }

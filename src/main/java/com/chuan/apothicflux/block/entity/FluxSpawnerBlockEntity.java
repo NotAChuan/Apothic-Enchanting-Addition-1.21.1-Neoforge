@@ -530,10 +530,19 @@ public class FluxSpawnerBlockEntity extends BlockEntity implements MenuProvider 
         cachedBelowHandler = null;
     }
 
+    /**
+     * 电量 → 1..5 五档：0 / 25% / 50% / 75% / 100%。
+     * 与 FluxSpawnerBlock.ENERGY_LEVEL 的取值范围（1~5）
+     * 以及 blockstates/flux_spawner.json 里的 5 个 variant 一一对应：
+     * <pre>
+     * 1 → flux_spawner_0（空）   2 → _1   3 → _2   4 → _3   5 → _4（满）
+     * </pre>
+     */
     private static int calculateEnergyLevel(int energy, int maxEnergy) {
-        if (energy == 0) return 1;
-        if (energy >= maxEnergy * 0.66) return 4;
-        if (energy >= maxEnergy * 0.33) return 3;
+        if (maxEnergy <= 0 || energy <= 0) return 1;
+        if (energy >= maxEnergy * 0.75F) return 5;
+        if (energy >= maxEnergy * 0.50F) return 4;
+        if (energy >= maxEnergy * 0.25F) return 3;
         return 2;
     }
 }

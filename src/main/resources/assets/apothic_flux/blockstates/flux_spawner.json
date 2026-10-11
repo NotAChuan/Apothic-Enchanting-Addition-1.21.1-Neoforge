@@ -1,16 +1,28 @@
 {
   "variants": {
-    "energy_level=1": {
-      "model": "apothic_flux:block/flux_spawner_0"
-    },
-    "energy_level=2": {
-      "model": "apothic_flux:block/flux_spawner_1"
-    },
-    "energy_level=3": {
-      "model": "apothic_flux:block/flux_spawner_2"
-    },
-    "energy_level=4": {
-      "model": "apothic_flux:block/flux_spawner_3"
-    }
+    "energy_level=1,facing=north": { "model": "apothic_flux:block/flux_spawner_0" },
+    "energy_level=1,facing=east": { "model": "apothic_flux:block/flux_spawner_0", "y": 90 },
+    "energy_level=1,facing=south": { "model": "apothic_flux:block/flux_spawner_0", "y": 180 },
+    "energy_level=1,facing=west": { "model": "apothic_flux:block/flux_spawner_0", "y": 270 },
+
+    "energy_level=2,facing=north": { "model": "apothic_flux:block/flux_spawner_1" },
+    "energy_level=2,facing=east": { "model": "apothic_flux:block/flux_spawner_1", "y": 90 },
+    "energy_level=2,facing=south": { "model": "apothic_flux:block/flux_spawner_1", "y": 180 },
+    "energy_level=2,facing=west": { "model": "apothic_flux:block/flux_spawner_1", "y": 270 },
+
+    "energy_level=3,facing=north": { "model": "apothic_flux:block/flux_spawner_2" },
+    "energy_level=3,facing=east": { "model": "apothic_flux:block/flux_spawner_2", "y": 90 },
+    "energy_level=3,facing=south": { "model": "apothic_flux:block/flux_spawner_2", "y": 180 },
+    "energy_level=3,facing=west": { "model": "apothic_flux:block/flux_spawner_2", "y": 270 },
+
+    "energy_level=4,facing=north": { "model": "apothic_flux:block/flux_spawner_3" },
+    "energy_level=4,facing=east": { "model": "apothic_flux:block/flux_spawner_3", "y": 90 },
+    "energy_level=4,facing=south": { "model": "apothic_flux:block/flux_spawner_3", "y": 180 },
+    "energy_level=4,facing=west": { "model": "apothic_flux:block/flux_spawner_3", "y": 270 },
+
+    "energy_level=5,facing=north": { "model": "apothic_flux:block/flux_spawner_4" },
+    "energy_level=5,facing=east": { "model": "apothic_flux:block/flux_spawner_4", "y": 90 },
+    "energy_level=5,facing=south": { "model": "apothic_flux:block/flux_spawner_4", "y": 180 },
+    "energy_level=5,facing=west": { "model": "apothic_flux:block/flux_spawner_4", "y": 270 }
   }
 }
