@@ -156,5 +156,18 @@
   "jei.apothic_flux.flux_spawner_modifier.productivity_install_tip_2": "This upgrade's maximum is %s%%",
   "jei.apothic_flux.flux_spawner_modifier.productivity_uninstall_tip_1": "Honeycomb production is decreased by %s%%",
   "jei.apothic_flux.flux_spawner_modifier.productivity_uninstall_tip_2": "Minimum is 0%%",
-  "resourcepack.apothic_flux.ae": "AE texture version of the Flux Apotheosis GUI"
+  "resourcepack.apothic_flux.ae": "AE texture version of the Flux Apotheosis GUI",
+  "block.apothic_flux.flux_infuser": "Automatic Flux Infuser",
+  "gui.apothic_flux.flux_infuser.record": "Recipes: %s / %s",
+  "gui.apothic_flux.flux_infuser.page": "Page %s / %s",
+  "message.apothic_flux.flux_infuser.record_limit": "Machine record limit reached",
+  "jade.apothic_flux.flux_infuser.progress": "Progress: %s%%",
+  "config.jade.plugin_apothic_flux.flux_infuser": "Automatic Flux Infuser",
+  "config.jade.plugin_apothic_flux.flux_infuser.desc": "Show the Automatic Flux Infuser's enchanting stats and progress in the Jade tooltip",
+  "config.apothic_flux.category.flux_infuser": "Automatic Flux Infuser",
+  "config.apothic_flux.flux_infuser.capacity": "Energy Capacity",
+  "config.apothic_flux.flux_infuser.energy_per_tick": "Energy Per Tick",
+  "config.apothic_flux.flux_infuser.energy_enabled": "Consumes Energy",
+  "config.apothic_flux.flux_infuser.craft_time": "Infusion Time",
+  "config.apothic_flux.flux_infuser.auto_output": "Auto Output Below"
 }

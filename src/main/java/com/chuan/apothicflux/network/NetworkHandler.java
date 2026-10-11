@@ -33,6 +33,13 @@ public class NetworkHandler {
                 NetworkHandler::handleFluxExpConverterAction
         );
 
+        // 自动通量灌注器：玩家点选某个候选灌注结果
+        registrar.playToServer(
+                FluxInfuserSelectPayload.TYPE,
+                FluxInfuserSelectPayload.CODEC,
+                NetworkHandler::handleFluxInfuserSelect
+        );
+
         // ================= 【新增】 =================
         // 注册服务端到客户端 (S ➔ C) 的线索盲盒包
         registrar.playToClient(
@@ -92,6 +99,20 @@ public class NetworkHandler {
                 if (player.distanceToSqr(payload.pos().getX() + 0.5, payload.pos().getY() + 0.5, payload.pos().getZ() + 0.5) <= 256.0) {
                     if (player.containerMenu instanceof com.chuan.apothicflux.menu.FluxExpConverterMenu menu) {
                         menu.handleAction(player, payload.actionId());
+                    }
+                }
+            }
+        });
+    }
+
+    public static void handleFluxInfuserSelect(final FluxInfuserSelectPayload payload, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player) {
+                // 安全校验：玩家距离方块不能太远 (16格内)
+                if (player.distanceToSqr(payload.pos().getX() + 0.5, payload.pos().getY() + 0.5, payload.pos().getZ() + 0.5) <= 256.0) {
+                    if (player.containerMenu instanceof com.chuan.apothicflux.menu.FluxInfuserMenu menu) {
+                        // 服务端会完整重算候选做校验，不信任客户端传来的配方 ID
+                        menu.handleSelect(player, payload.recipeId());
                     }
                 }
             }

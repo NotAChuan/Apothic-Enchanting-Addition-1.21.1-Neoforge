@@ -73,6 +73,7 @@ public class ApothicFlux {
                 output.accept(FLUX_ENCHANTING_TABLE_ITEM.get());
                 output.accept(FLUX_ANVIL_ITEM.get());
                 output.accept(FLUX_EXP_CONVERTER_ITEM.get());
+                output.accept(FLUX_INFUSER_ITEM.get());
                 output.accept(EXPERIENCE_BUCKET.get());
                 output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
@@ -180,6 +181,20 @@ public class ApothicFlux {
                 Capabilities.FluidHandler.BLOCK,
                 ModRegistry.FLUX_EXP_CONVERTER_BE.get(),
                 (be, side) -> be.getFluidHandler()
+        );
+
+        // 自动通量灌注器：能量接收能力
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModRegistry.FLUX_INFUSER_BE.get(),
+                (be, side) -> be.getEnergyStorage()
+        );
+
+        // 自动通量灌注器：只暴露输出槽（只允许抽取），输入槽不接受外部自动化插入
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModRegistry.FLUX_INFUSER_BE.get(),
+                (be, side) -> be.outputItemHandler
         );
     }
 

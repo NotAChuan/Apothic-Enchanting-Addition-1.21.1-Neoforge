@@ -27,6 +27,12 @@ public class ApothicAdditionConfig {
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_SPAWN_COUNT_LIMIT;
     public static final ModConfigSpec.IntValue FLUX_SPAWNER_ECHOING_LIMIT;
 
+    public static final ModConfigSpec.IntValue FLUX_INFUSER_CAPACITY;
+    public static final ModConfigSpec.IntValue FLUX_INFUSER_ENERGY_PER_TICK;
+    public static final ModConfigSpec.BooleanValue FLUX_INFUSER_ENERGY_ENABLED;
+    public static final ModConfigSpec.IntValue FLUX_INFUSER_CRAFT_TIME;
+    public static final ModConfigSpec.BooleanValue FLUX_INFUSER_AUTO_OUTPUT;
+
     static {
         BUILDER.comment("Flux Bookshelf settings / 通量书架设置")
                 .translation(CONFIG_PREFIX + "category.bookshelf")
@@ -152,6 +158,47 @@ public class ApothicAdditionConfig {
                         "通量刷怪笼 ECHOING 升级可到达的上限，仅影响本模组自己的升级逻辑。")
                 .translation(CONFIG_PREFIX + "spawner.echoing_limit")
                 .defineInRange("fluxSpawnerEchoingLimit", 5, 0, 16);
+
+        BUILDER.pop();
+
+        BUILDER.comment("Automatic Flux Infuser settings / 自动通量灌注器设置")
+                .translation(CONFIG_PREFIX + "category.flux_infuser")
+                .push("Flux Infuser");
+
+        FLUX_INFUSER_CAPACITY = BUILDER
+                .comment("Internal energy buffer of the Automatic Flux Infuser.",
+                        "自动通量灌注器的内部储电上限。")
+                .translation(CONFIG_PREFIX + "flux_infuser.capacity")
+                .defineInRange("fluxInfuserCapacity", 10000000, 0, Integer.MAX_VALUE);
+
+        FLUX_INFUSER_ENERGY_PER_TICK = BUILDER
+                .comment("Energy consumed per tick while the Automatic Flux Infuser is running.",
+                        "自动通量灌注器运行中每 tick 消耗的电量。",
+                        "注意：待机（无输入 / 未选择配方 / 输出已满 / 属性不足）不耗电。")
+                .translation(CONFIG_PREFIX + "flux_infuser.energy_per_tick")
+                .defineInRange("fluxInfuserEnergyPerTick", 1000, 0, Integer.MAX_VALUE);
+
+        FLUX_INFUSER_ENERGY_ENABLED = BUILDER
+                .comment("Whether the Automatic Flux Infuser consumes energy at all.",
+                        "Default: true. When disabled the machine runs without consuming any energy.",
+                        "自动通量灌注器是否耗电。",
+                        "默认：true（耗电）。设为 false 后机器完全不耗电。")
+                .translation(CONFIG_PREFIX + "flux_infuser.energy_enabled")
+                .define("fluxInfuserEnergyEnabled", true);
+
+        FLUX_INFUSER_CRAFT_TIME = BUILDER
+                .comment("Ticks required for a single infusion.",
+                        "Default: 60 (3 seconds). Minimum: 1 tick.",
+                        "单次灌注所需的时间（tick）。",
+                        "默认：60（3 秒）。最小：1 tick。")
+                .translation(CONFIG_PREFIX + "flux_infuser.craft_time")
+                .defineInRange("fluxInfuserCraftTime", 60, 1, 72000);
+
+        FLUX_INFUSER_AUTO_OUTPUT = BUILDER
+                .comment("Whether the infuser automatically pushes its output into the container below.",
+                        "自动通量灌注器是否自动把产物输出到下方容器。")
+                .translation(CONFIG_PREFIX + "flux_infuser.auto_output")
+                .define("fluxInfuserAutoOutput", true);
 
         BUILDER.pop();
 

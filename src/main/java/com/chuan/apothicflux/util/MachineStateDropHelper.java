@@ -3,6 +3,7 @@ package com.chuan.apothicflux.util;
 import com.chuan.apothicflux.block.entity.FluxAnvilBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxEnchantingTableBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxExpConverterBlockEntity;
+import com.chuan.apothicflux.block.entity.FluxInfuserBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxSpawnerBlockEntity;
 import com.chuan.apothicflux.block.entity.FluxStatsBookshelfBlockEntity;
 import com.chuan.apothicflux.registry.ModRegistry;
@@ -97,6 +98,30 @@ public final class MachineStateDropHelper {
         tag.putLong("StoredXp", xp);
         tag.put("Inventory", blockEntity.inventory.serializeNBT(registries));
         BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_EXP_CONVERTER_BE.get(), tag);
+        return stack;
+    }
+
+    /**
+     * 自动通量灌注器：掉落物只保留「配方记录表 + 电量」。
+     * 机器内的输入物/输出物由方块自己的 onRemove 直接掉出，进度不保留。
+     */
+    public static ItemStack createFluxInfuserDrop(HolderLookup.Provider registries, FluxInfuserBlockEntity blockEntity) {
+        ItemStack stack = new ItemStack(ModRegistry.FLUX_INFUSER.get());
+
+        CompoundTag tag = new CompoundTag();
+        int energy = blockEntity.getEnergyStorage().getEnergyStored();
+        if (energy > 0) {
+            tag.put("Energy", blockEntity.getEnergyStorage().serializeNBT(registries));
+        }
+        if (!blockEntity.records().isEmpty()) {
+            tag.put(FluxInfuserRecords.listKey(), FluxInfuserRecords.save(blockEntity.records(), registries));
+        }
+
+        if (tag.isEmpty()) {
+            return stack;
+        }
+
+        BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_INFUSER_BE.get(), tag);
         return stack;
     }
 }
