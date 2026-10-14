@@ -190,11 +190,12 @@ public class ApothicFlux {
                 (be, side) -> be.getEnergyStorage()
         );
 
-        // 自动通量灌注器：只暴露输出槽（只允许抽取），输入槽不接受外部自动化插入
+        // 自动通量灌注器：输入槽可从任意面插入（只接受有灌注配方的物品），输出槽可从任意面抽取，
+        // 输入槽不允许被抽出。六个面行为一致，所以这里不区分 side。
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,
                 ModRegistry.FLUX_INFUSER_BE.get(),
-                (be, side) -> be.outputItemHandler
+                (be, side) -> be.automationItemHandler
         );
     }
 

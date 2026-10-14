@@ -117,9 +117,10 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
             if (slot == INPUT_SLOT) {
                 return isInfusableInput(stack);
             }
-            // 输出槽不限制自身写入（机器需要往里放产物）；
-            // 外部自动化只能通过 outputItemHandler（只允许抽取）接触输出槽。
-            return super.isItemValid(slot, stack);
+            // 输出槽只出不进：
+            // GUI 的 SlotItemHandler.mayPlace、以及任何走 insertItem 的路径都会被这里挡掉。
+            // 机器自己放产物走 insertIntoOutputs（用 setStackInSlot，绕过这个检查）。
+            return false;
         }
 
         @Override
@@ -128,11 +129,35 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         }
     };
 
-    /** 暴露给外部自动化的物品能力：只允许抽取输出槽。 */
-    public final IItemHandler outputItemHandler = new RangedWrapper(inventory, OUTPUT_START, OUTPUT_END) {
+    /** {@link #automationItemHandler} 里的相对下标：视图从输入槽开始，所以输入槽是 0。 */
+    private static final int VIEW_INPUT_SLOT = 0;
+
+    /**
+     * 暴露给外部自动化（漏斗/管道）的物品能力。
+     * <p>
+     * 注册时不分面，所以**六个面行为完全一致**：
+     * <ul>
+     *   <li>输入槽（视图下标 0）：<b>只进不出</b>；能放入的条件由 {@code inventory.isItemValid} 决定，
+     *       也就是「该物品至少能匹配一条灌注配方」。</li>
+     *   <li>输出槽（视图下标 1..12）：<b>只出不进</b>。</li>
+     * </ul>
+     * 视图覆盖输入槽只是为了允许插入；抽取输入槽被下面重写的 {@code extractItem} 挡掉。
+     */
+    public final IItemHandler automationItemHandler = new RangedWrapper(inventory, INPUT_SLOT, OUTPUT_END) {
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            return stack;
+            if (slot != VIEW_INPUT_SLOT) {
+                return stack; // 输出槽不收
+            }
+            return super.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot == VIEW_INPUT_SLOT) {
+                return ItemStack.EMPTY; // 输入槽不给抽
+            }
+            return super.extractItem(slot, amount, simulate);
         }
     };
 
@@ -389,10 +414,35 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         return insertIntoOutputs(stack, false);
     }
 
+    /**
+     * 往输出槽放产物。
+     * <p>
+     * 这里**不能**用 {@code inventory.insertItem}：输出槽的 {@code isItemValid} 是 {@code false}
+     * （用来禁止玩家和管道放东西进去），而产物是机器自己放的，所以这里自己合并堆叠。
+     */
     private ItemStack insertIntoOutputs(ItemStack stack, boolean simulate) {
         ItemStack remainder = stack;
         for (int slot = OUTPUT_START; slot < OUTPUT_END && !remainder.isEmpty(); slot++) {
-            remainder = inventory.insertItem(slot, remainder, simulate);
+            ItemStack existing = inventory.getStackInSlot(slot);
+            int limit = Math.min(inventory.getSlotLimit(slot), remainder.getMaxStackSize());
+
+            if (existing.isEmpty()) {
+                int move = Math.min(remainder.getCount(), limit);
+                if (!simulate) {
+                    inventory.setStackInSlot(slot, remainder.copyWithCount(move));
+                }
+                remainder = remainder.copyWithCount(remainder.getCount() - move);
+            } else if (ItemStack.isSameItemSameComponents(existing, remainder)) {
+                int room = limit - existing.getCount();
+                if (room <= 0) {
+                    continue;
+                }
+                int move = Math.min(room, remainder.getCount());
+                if (!simulate) {
+                    inventory.setStackInSlot(slot, existing.copyWithCount(existing.getCount() + move));
+                }
+                remainder = remainder.copyWithCount(remainder.getCount() - move);
+            }
         }
         return remainder;
     }

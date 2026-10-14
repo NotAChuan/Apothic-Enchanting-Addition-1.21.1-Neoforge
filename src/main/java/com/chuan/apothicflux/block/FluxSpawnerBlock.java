@@ -102,7 +102,8 @@ public class FluxSpawnerBlock extends BaseEntityBlock {
 
     @Override
     protected BlockState mirror(BlockState state, Mirror mirror) {
-        return state.rotate(mirror.getRotation(state.getValue(FACING)));
+        // Mirror 先换算出对应的 Rotation，再用 Rotation.rotate(Direction) 直接算新朝向。
+        return state.setValue(FACING, mirror.getRotation(state.getValue(FACING)).rotate(state.getValue(FACING)));
     }
 
     @Override

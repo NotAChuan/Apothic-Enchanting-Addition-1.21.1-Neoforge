@@ -1,9 +1,9 @@
 {
   "variants": {
-    "energy_level=0": { "model": "apothic_flux:block/flux_infuser" },
-    "energy_level=1": { "model": "apothic_flux:block/flux_infuser" },
-    "energy_level=2": { "model": "apothic_flux:block/flux_infuser" },
-    "energy_level=3": { "model": "apothic_flux:block/flux_infuser" },
-    "energy_level=4": { "model": "apothic_flux:block/flux_infuser" }
+    "energy_level=0": { "model": "apothic_flux:block/flux_infuser_0" },
+    "energy_level=1": { "model": "apothic_flux:block/flux_infuser_1" },
+    "energy_level=2": { "model": "apothic_flux:block/flux_infuser_2" },
+    "energy_level=3": { "model": "apothic_flux:block/flux_infuser_3" },
+    "energy_level=4": { "model": "apothic_flux:block/flux_infuser_4" }
   }
 }

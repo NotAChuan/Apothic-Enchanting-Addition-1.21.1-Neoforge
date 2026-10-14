@@ -9,6 +9,7 @@ import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -22,6 +23,8 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -37,6 +40,12 @@ public class FluxInfuserBlock extends Block implements EntityBlock {
 
     /** 0 = 无电，1..4 = 四分之一充能档位（与通量附魔台一致）。 */
     public static final IntegerProperty ENERGY_LEVEL = IntegerProperty.create("energy_level", 0, 4);
+
+    /**
+     * 模型最高点是 y=12（0.75 格，和附魔台同高），所以形状必须覆写掉默认的整格立方体，
+     * 否则指向机器时黑色的选择框会是一个完整的方块。五个档位几何一致，共用一个形状。
+     */
+    protected static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 12.0D, 16.0D);
 
     public FluxInfuserBlock(Properties properties) {
         super(properties);
@@ -56,6 +65,16 @@ public class FluxInfuserBlock extends Block implements EntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(ENERGY_LEVEL);
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     @Nullable

@@ -1,9 +1,0 @@
-{
-  "parent": "minecraft:block/cube_bottom_top",
-  "textures": {
-    "top": "minecraft:block/furnace_top",
-    "bottom": "minecraft:block/furnace_top",
-    "side": "minecraft:block/furnace_side",
-    "particle": "minecraft:block/furnace_side"
-  }
-}
