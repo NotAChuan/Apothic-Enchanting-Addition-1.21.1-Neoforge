@@ -25,31 +25,53 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
     private static final int ENERGY_BAR_Y = 12;
     private static final int ENERGY_BAR_WIDTH = 7;
     private static final int ENERGY_BAR_HEIGHT = 113;
-    private static final int ENERGY_BAR_TEXTURE_X = 187;
+    private static final int ENERGY_BAR_TEXTURE_X = 195;
     private static final int ENERGY_BAR_TEXTURE_Y = 12;
 
     // 【优化2】：勾选框常量
-    private static final int CHECKBOX_SIZE = 21;
-    private static final int CHECKBOX_1_X = 16;
-    private static final int CHECKBOX_2_X = 79;
-    private static final int CHECKBOX_Y = 104;
-    private static final int CHECKBOX_SELECTED_TEXTURE_X = 195;
-    private static final int CHECKBOX_SELECTED_TEXTURE_Y = 22;
+    private static final int CHECKBOX_SIZE = 17;
+    private static final int CHECKBOX_1_X = 19;
+    private static final int CHECKBOX_2_X = 75;
+    private static final int CHECKBOX_Y = 105;
+    private static final int CHECKBOX_SELECTED_TEXTURE_X = 208;
+    private static final int CHECKBOX_SELECTED_TEXTURE_Y = 0;
+
+    private static final int CHECK_FONT_1_X = 39;
+    private static final int CHECK_FONT_2_X = 95;
+    private static final float CHECK_FONT_SCALE = 0.75F;
 
     // 【优化3】：滑块常量
-    private static final int SLIDER_START_X = 16;
-    private static final int SLIDER_WIDTH = 121;
-    private static final int SLIDER_HEIGHT = 21;
-    private static final int SLIDER_KNOB_WIDTH = 9;
-    private static final int SLIDER_KNOB_HEIGHT = 21;
-    private static final int SLIDER_KNOB_TEXTURE_X_NORMAL = 195;
-    private static final int SLIDER_KNOB_TEXTURE_X_PRESSED = 205;
-    private static final int SLIDER_KNOB_TEXTURE_Y = 0;
-    private static final int[] SLIDER_Y_POSITIONS = {12, 35, 58, 81};
+    private static final int SLIDER_START_X = 50;
+    private static final int SLIDER_WIDTH = 110;
+    private static final int SLIDER_HEIGHT = 5;
+    private static final int SLIDER_KNOB_WIDTH = 4;
+    private static final int SLIDER_KNOB_HEIGHT = 7;
+    private static final int SLIDER_KNOB_TEXTURE_X_NORMAL = 122;
+    private static final int SLIDER_KNOB_TEXTURE_Y_ETERNA = 136;
+    private static final int SLIDER_KNOB_TEXTURE_Y_QUANTA = 143;
+    private static final int SLIDER_KNOB_TEXTURE_Y_ARCANA = 150;
+    private static final int SLIDER_KNOB_TEXTURE_Y_CLUES = 157;
+
+    // 四条滑块的填充纹理：X=0~110，高度=5
+    private static final int SLIDER_PROGRESS_TEXTURE_X = 0;
+    private static final int SLIDER_PROGRESS_TEXTURE_Y_ETERNA = 136;
+    private static final int SLIDER_PROGRESS_TEXTURE_Y_QUANTA = 141;
+    private static final int SLIDER_PROGRESS_TEXTURE_Y_ARCANA = 146;
+    private static final int SLIDER_PROGRESS_TEXTURE_Y_CLUES = 151;
+
+    // 位阶视觉标尺固定为 0~100；真实可用上限仍由 Tier 决定。
+    private static final double ETERNA_VISUAL_MAX = 100.0;
+
+    // 位阶超出当前 Tier 上限后的白色锁定区域纹理。
+    // 纹理范围：X=0~110，Y=156~161（宽 110，高 5）。
+    private static final int ETERNA_LOCKED_TEXTURE_X = 0;
+    private static final int ETERNA_LOCKED_TEXTURE_Y = 156;
+
+    private static final int[] SLIDER_Y_POSITIONS = {19, 41, 63, 85};
 
     // 【优化4】：数字框常量
-    private static final int NUMBER_BOX_X = 160;
-    private static final int[] NUMBER_BOX_Y_POSITIONS = {18, 41, 64, 87};
+    private static final int NUMBER_BOX_X = 174;
+    private static final int[] NUMBER_BOX_Y_POSITIONS = {19, 41, 63, 85};
 
     private StatsSlider eternaSlider;
     private StatsSlider quantaSlider;
@@ -68,8 +90,8 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
     public FluxStatsBookshelfScreen(FluxStatsBookshelfMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = 186;
-        this.imageHeight = 137;
+        this.imageWidth = 193;
+        this.imageHeight = 136;
         this.inventoryLabelY = 1000;
         this.titleLabelY = 1000;
 
@@ -102,8 +124,9 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         this.eternaSlider = addRenderableWidget(new StatsSlider(
                 startX, guiTop + SLIDER_Y_POSITIONS[0], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.eterna", ""),
-                toSliderValue(currentEterna, eternaMin, eternaMax),
-                eternaMin, eternaMax
+                toSliderValue(currentEterna, eternaMin, ETERNA_VISUAL_MAX),
+                eternaMin, eternaMax, ETERNA_VISUAL_MAX,
+                SLIDER_KNOB_TEXTURE_Y_ETERNA
         ));
 
         double quantaMin = Tier.MIN_QUANTA;
@@ -112,7 +135,8 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
                 startX, guiTop + SLIDER_Y_POSITIONS[1], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.quanta", ""),
                 toSliderValue(currentQuanta, quantaMin, quantaMax),
-                quantaMin, quantaMax
+                quantaMin, quantaMax, quantaMax,
+                SLIDER_KNOB_TEXTURE_Y_QUANTA
         ));
 
         double arcanaMin = 0.0;
@@ -121,7 +145,8 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
                 startX, guiTop + SLIDER_Y_POSITIONS[2], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.arcana", ""),
                 toSliderValue(currentArcana, arcanaMin, arcanaMax),
-                arcanaMin, arcanaMax
+                arcanaMin, arcanaMax, arcanaMax,
+                SLIDER_KNOB_TEXTURE_Y_ARCANA
         ));
 
         double cluesMin = 0.0;
@@ -130,7 +155,8 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
                 startX, guiTop + SLIDER_Y_POSITIONS[3], SLIDER_WIDTH, SLIDER_HEIGHT,
                 Component.translatable("gui.apothic_flux.stat.clues", ""),
                 toSliderValue(currentClues, cluesMin, cluesMax),
-                cluesMin, cluesMax
+                cluesMin, cluesMax, cluesMax,
+                SLIDER_KNOB_TEXTURE_Y_CLUES
         ));
 
         // 初始化勾选框状态
@@ -139,9 +165,9 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
         // 保存按钮
         addRenderableWidget(Button.builder(
-                Component.translatable("gui.apothic_flux.save", "保存"),
+                Component.translatable("gui.apothic_flux.save"),
                 button -> sendUpdatePacket()
-        ).pos(guiLeft + 144, guiTop + CHECKBOX_Y).size(33, 20).build());
+        ).pos(guiLeft + 144, guiTop + CHECKBOX_Y).size(33, 20).build(builder -> new ScaledButton(builder, 0.75F)));
     }
 
     @Override
@@ -158,17 +184,16 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
             }
         }
 
-        // 滑块处理逻辑
-        for (net.minecraft.client.gui.components.events.GuiEventListener listener : this.children()) {
-            if (listener.mouseClicked(mouseX, mouseY, button)) {
-                this.setFocused(listener);
-                if (button == 0) {
-                    this.setDragging(true);
-                }
-                return true;
-            }
+        // 让 Minecraft 自己处理滑块、按钮、焦点和 dragging
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+
+        // 保存按钮点击后清除焦点，避免白框一直存在
+        if (handled && this.getFocused() instanceof Button) {
+            this.setFocused(null);
+            this.setDragging(false);
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+
+        return handled;
     }
 
     // 【优化8】：提取勾选框检测为独立方法
@@ -220,7 +245,15 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         // 绘制 GUI 主背景
-        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, 186, 137, 256, 256);
+        guiGraphics.blit(TEXTURE, guiLeft, guiTop, 0, 0, 193, 136, 256, 256);
+
+        // 根据四个滑块当前 value 实时绘制对应颜色的进度填充。
+        // renderBg 会先于控件本身绘制，所以滑块按钮会自然盖在进度条上方。
+        renderSliderProgress(guiGraphics, eternaSlider, 0, SLIDER_PROGRESS_TEXTURE_Y_ETERNA);
+        renderEternaLockedArea(guiGraphics);
+        renderSliderProgress(guiGraphics, quantaSlider, 1, SLIDER_PROGRESS_TEXTURE_Y_QUANTA);
+        renderSliderProgress(guiGraphics, arcanaSlider, 2, SLIDER_PROGRESS_TEXTURE_Y_ARCANA);
+        renderSliderProgress(guiGraphics, cluesSlider, 3, SLIDER_PROGRESS_TEXTURE_Y_CLUES);
 
         // 【优化9】：使用常量绘制能量条
         int currentEnergy = menu.getEnergy();
@@ -247,7 +280,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         if (treasureEnabled) {
             guiGraphics.blit(
                     TEXTURE,
-                    guiLeft + CHECKBOX_1_X, guiTop + CHECKBOX_Y - 2,
+                    guiLeft + CHECKBOX_1_X, guiTop + CHECKBOX_Y,
                     CHECKBOX_SELECTED_TEXTURE_X, CHECKBOX_SELECTED_TEXTURE_Y,
                     CHECKBOX_SIZE, CHECKBOX_SIZE,
                     256, 256
@@ -257,7 +290,7 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         if (stableEnabled) {
             guiGraphics.blit(
                     TEXTURE,
-                    guiLeft + CHECKBOX_2_X, guiTop + CHECKBOX_Y - 2,
+                    guiLeft + CHECKBOX_2_X, guiTop + CHECKBOX_Y,
                     CHECKBOX_SELECTED_TEXTURE_X, CHECKBOX_SELECTED_TEXTURE_Y,
                     CHECKBOX_SIZE, CHECKBOX_SIZE,
                     256, 256
@@ -297,40 +330,51 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 //        int sliderLabelX = guiLeft + 8;  // 滑块左侧，距离 GUI 左边缘 8 像素
 
         // 第一条滑块（位阶）
-        Component eternaLabel = Component.translatable("gui.apothic_flux.stat.eterna", "");
-        int eternaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(eternaLabel)) / 2;
+        Component eternaLabel = Component.translatable("gui.apothic_flux.label.eterna");
+        int eternaLabelX = guiLeft + 16;
         int eternaLabelY = guiTop + SLIDER_Y_POSITIONS[0] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
-        guiGraphics.drawString(this.font, eternaLabel, eternaLabelX, eternaLabelY, 0xFFFFFF, false);
+        drawScaledString(guiGraphics, eternaLabel, eternaLabelX, eternaLabelY + 3, CHECK_FONT_SCALE, 0x42c542);
 
         // 第二条滑块（量子化）
-        Component quantaLabel = Component.translatable("gui.apothic_flux.stat.quanta", "");
-        int quantaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(quantaLabel)) / 2;
+        Component quantaLabel = Component.translatable("gui.apothic_flux.label.quanta");
+        int quantaLabelX = guiLeft + 16;
         int quantaLabelY = guiTop + SLIDER_Y_POSITIONS[1] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
-        guiGraphics.drawString(this.font, quantaLabel, quantaLabelX, quantaLabelY, 0xFFFFFF, false);
+        drawScaledString(guiGraphics, quantaLabel, quantaLabelX, quantaLabelY + 3, CHECK_FONT_SCALE,0xdf4a4a);
 
         // 第三条滑块（阿卡那）
-        Component arcanaLabel = Component.translatable("gui.apothic_flux.stat.arcana", "");
-        int arcanaLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(arcanaLabel)) / 2;
+        Component arcanaLabel = Component.translatable("gui.apothic_flux.label.arcana");
+        int arcanaLabelX = guiLeft + 16;
         int arcanaLabelY = guiTop + SLIDER_Y_POSITIONS[2] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
-        guiGraphics.drawString(this.font, arcanaLabel, arcanaLabelX, arcanaLabelY, 0xFFFFFF, false);
+        drawScaledString(guiGraphics, arcanaLabel, arcanaLabelX, arcanaLabelY + 3, CHECK_FONT_SCALE,0x950095);
 
         // 第四条滑块（魔咒线索）
-        Component cluesLabel = Component.translatable("gui.apothic_flux.stat.clues", "");
-        int cluesLabelX = guiLeft + SLIDER_START_X + (SLIDER_WIDTH - this.font.width(cluesLabel)) / 2;
+        Component cluesLabel = Component.translatable("gui.apothic_flux.label.clues");
+        int cluesLabelX = guiLeft + 16;
         int cluesLabelY = guiTop + SLIDER_Y_POSITIONS[3] + (SLIDER_HEIGHT - this.font.lineHeight) / 2;
-        guiGraphics.drawString(this.font, cluesLabel, cluesLabelX, cluesLabelY, 0xFFFFFF, false);
+        drawScaledString(guiGraphics, cluesLabel, cluesLabelX, cluesLabelY + 3, CHECK_FONT_SCALE,0xe9ec00);
 
 
         // 绘制勾选框文字标签
-        int checkboxTextY = guiTop + CHECKBOX_Y + (CHECKBOX_SIZE - this.font.lineHeight) / 2;
+        int checkboxTextY = guiTop + CHECKBOX_Y
+                + Math.round((CHECKBOX_SIZE - this.font.lineHeight * CHECK_FONT_SCALE) / 2.0F);
 
         Component treasureText = Component.translatable("gui.apothic_flux.stat.treasure", "");
-        guiGraphics.drawString(this.font, treasureText,
-                guiLeft + CHECKBOX_1_X + CHECKBOX_SIZE + 3, checkboxTextY, 0x404040, false);
+        float treasureWidth = this.font.width(treasureText) * CHECK_FONT_SCALE;
 
-        Component stableText = Component.translatable("gui.apothic_flux.stat.rectification", "");
-        guiGraphics.drawString(this.font, stableText,
-                guiLeft + CHECKBOX_2_X + CHECKBOX_SIZE + 3, checkboxTextY, 0x404040, false);
+        int treasureX = Math.round(
+                guiLeft + CHECK_FONT_1_X + (32 - treasureWidth) / 2.0F
+        );
+        drawScaledString(guiGraphics, treasureText,
+                treasureX, checkboxTextY, CHECK_FONT_SCALE, 0xFFAA00);
+
+        Component stableText = Component.translatable("gui.apothic_flux.stat.provides_stability", "");
+        float stableWidth = this.font.width(stableText) * CHECK_FONT_SCALE;
+
+        int stableX = Math.round(
+                guiLeft + CHECK_FONT_2_X + (32 - stableWidth) / 2.0F
+        );
+        drawScaledString(guiGraphics, stableText,
+                stableX, checkboxTextY, CHECK_FONT_SCALE, 0xFFAA00);
 
         // 能量条悬停提示
         int barX = guiLeft + ENERGY_BAR_X;
@@ -359,15 +403,116 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
+    /**
+     * 绘制单条滑块的实时填充。
+     * value 范围为 0~1，映射到 0~SLIDER_WIDTH 像素。
+     */
+    private void renderSliderProgress(
+            GuiGraphics guiGraphics,
+            StatsSlider slider,
+            int sliderIndex,
+            int textureY
+    ) {
+        if (slider == null || sliderIndex < 0 || sliderIndex >= SLIDER_Y_POSITIONS.length) {
+            return;
+        }
+
+        double progress = Math.max(0.0, Math.min(1.0, slider.getValue()));
+        int fillWidth = (int) Math.round(SLIDER_WIDTH * progress);
+
+        if (fillWidth <= 0) {
+            return;
+        }
+
+        int drawX = guiLeft + SLIDER_START_X;
+        int drawY = guiTop + SLIDER_Y_POSITIONS[sliderIndex] + 1;
+
+        guiGraphics.blit(
+                TEXTURE,
+                drawX, drawY,
+                SLIDER_PROGRESS_TEXTURE_X, textureY,
+                fillWidth, SLIDER_HEIGHT,
+                256, 256
+        );
+    }
+
+    /**
+     * 绘制位阶滑块中当前 Tier 无法使用的白色锁定区域。
+     * 例如 TIER_1 上限为 25，则从整条轨道的 25% 位置覆盖到 100%。
+     */
+    private void renderEternaLockedArea(GuiGraphics guiGraphics) {
+        double maxProgress = Math.max(
+                0.0,
+                Math.min(1.0, tier.getMaxEterna() / ETERNA_VISUAL_MAX)
+        );
+
+        int unlockedWidth = (int) Math.round(SLIDER_WIDTH * maxProgress);
+        int lockedWidth = SLIDER_WIDTH - unlockedWidth;
+
+        if (lockedWidth <= 0) {
+            return;
+        }
+
+        int drawX = guiLeft + SLIDER_START_X + unlockedWidth;
+        int drawY = guiTop + SLIDER_Y_POSITIONS[0] + 1;
+
+        // 从白色整条纹理的对应 X 位置开始裁切，避免左右端纹理错位。
+        int textureX = ETERNA_LOCKED_TEXTURE_X + unlockedWidth;
+
+        guiGraphics.blit(
+                TEXTURE,
+                drawX, drawY,
+                textureX, ETERNA_LOCKED_TEXTURE_Y,
+                lockedWidth, SLIDER_HEIGHT,
+                256, 256
+        );
+    }
+
+    /**
+     * 按指定比例绘制文字。先平移到目标坐标，再缩放，避免手动反算 x/y 坐标。
+     */
+    private void drawScaledString(
+            GuiGraphics guiGraphics,
+            Component text,
+            int x,
+            int y,
+            float scale,
+            int color
+    ) {
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(x, y, 0.0F);
+        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.drawString(this.font, text, 0, 0, color, false);
+        guiGraphics.pose().popPose();
+    }
+
     // 【修改1】：自定义滑块类，使用贴图渲染
     private class StatsSlider extends AbstractSliderButton {
         private final double minValue;
         private final double maxValue;
+        private final double visualMaxValue;
 
-        public StatsSlider(int x, int y, int width, int height, Component message, double value, double minValue, double maxValue) {
+        private final int textureY;
+
+        public StatsSlider(
+                int x,
+                int y,
+                int width,
+                int height,
+                Component message,
+                double value,
+                double minValue,
+                double maxValue,
+                double visualMaxValue,
+                int textureY
+        ) {
             super(x, y, width, height, message, value);
             this.minValue = minValue;
             this.maxValue = Math.max(minValue + 1.0, maxValue);
+            this.visualMaxValue = Math.max(this.maxValue, visualMaxValue);
+
+            this.textureY = textureY;
+
             this.applyValue();
         }
 
@@ -378,13 +523,25 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
 
         @Override
         protected void applyValue() {
-            // 构造期间 super() 可能会先调用一次 applyValue()，此时区间字段尚未赋值，直接跳过
-            if (this.maxValue <= this.minValue) {
+            // 构造期间 super() 可能会先调用一次 applyValue()，此时字段尚未赋值，直接跳过。
+            if (this.maxValue <= this.minValue || this.visualMaxValue <= this.minValue) {
                 return;
             }
-            double stat = this.minValue + this.value * (this.maxValue - this.minValue);
+
+            // 鼠标位置先映射到“视觉标尺”。
+            // Eterna 的视觉标尺固定是 0~100；其他滑块的视觉标尺与原真实范围相同。
+            double stat = this.minValue
+                    + this.value * (this.visualMaxValue - this.minValue);
+
             stat = Math.round(stat);
-            this.value = (stat - this.minValue) / (this.maxValue - this.minValue);
+
+            // 再夹取到当前 Tier 真正允许的最大值。
+            // 因此点击/拖入 Eterna 的白色区域时，会自动停在 Tier 上限。
+            stat = Math.max(this.minValue, Math.min(this.maxValue, stat));
+
+            // 用视觉标尺反算 value，保证 Eterna=25 显示在整条轨道的 25%。
+            this.value = (stat - this.minValue)
+                    / (this.visualMaxValue - this.minValue);
         }
 
         @Override
@@ -395,15 +552,15 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
             int knobX = this.getX() + (int) ((this.width - SLIDER_KNOB_WIDTH) * this.value);
             int knobY = this.getY();
 
-            // 【修改3】：根据是否按下选择贴图（使用 isHovered 和鼠标按下状态判断）
-            boolean isPressed = this.isHovered() && FluxStatsBookshelfScreen.this.isDragging();
-            int textureX = isPressed ? SLIDER_KNOB_TEXTURE_X_PRESSED : SLIDER_KNOB_TEXTURE_X_NORMAL;
+//            // 【修改3】：根据是否按下选择贴图（使用 isHovered 和鼠标按下状态判断）
+//            boolean isPressed = this.isHovered() && FluxStatsBookshelfScreen.this.isDragging();
+//            int textureX = isPressed ? SLIDER_KNOB_TEXTURE_X_PRESSED : SLIDER_KNOB_TEXTURE_X_NORMAL;
 
             // 绘制滑块按钮
             guiGraphics.blit(
                     TEXTURE,
                     knobX, knobY,
-                    textureX, SLIDER_KNOB_TEXTURE_Y,
+                    SLIDER_KNOB_TEXTURE_X_NORMAL, this.textureY,
                     SLIDER_KNOB_WIDTH, SLIDER_KNOB_HEIGHT,
                     256, 256
             );
@@ -414,12 +571,63 @@ public class FluxStatsBookshelfScreen extends AbstractContainerScreen<FluxStatsB
         }
 
         public double getStatValue() {
-            return this.minValue + this.value * (this.maxValue - this.minValue);
+            double stat = this.minValue
+                    + this.value * (this.visualMaxValue - this.minValue);
+
+            return Math.max(this.minValue, Math.min(this.maxValue, stat));
         }
     }
 
     // 把真实数值换算成滑块的归一化值 [0,1]，并夹取到合法范围
     private static double toSliderValue(double stat, double min, double max) {
         return Math.max(0.0, Math.min(1.0, (stat - min) / (max - min)));
+    }
+
+    private class ScaledButton extends Button {
+
+        private final float scale;
+
+        protected ScaledButton(Button.Builder builder, float scale) {
+            super(builder);
+            this.scale = scale;
+        }
+
+        @Override
+        protected void renderWidget(
+                GuiGraphics guiGraphics,
+                int mouseX,
+                int mouseY,
+                float partialTick
+        ) {
+            int x = this.getX();
+            int y = this.getY();
+
+            guiGraphics.pose().pushPose();
+
+            // 以按钮左上角为缩放原点
+            guiGraphics.pose().translate(x, y, 0.0F);
+            guiGraphics.pose().scale(this.scale, this.scale, 1.0F);
+            guiGraphics.pose().translate(-x, -y, 0.0F);
+
+            super.renderWidget(
+                    guiGraphics,
+                    mouseX,
+                    mouseY,
+                    partialTick
+            );
+
+            guiGraphics.pose().popPose();
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            int visualWidth = Math.round(this.width * this.scale);
+            int visualHeight = Math.round(this.height * this.scale);
+
+            return mouseX >= this.getX()
+                    && mouseX < this.getX() + visualWidth
+                    && mouseY >= this.getY()
+                    && mouseY < this.getY() + visualHeight;
+        }
     }
 }

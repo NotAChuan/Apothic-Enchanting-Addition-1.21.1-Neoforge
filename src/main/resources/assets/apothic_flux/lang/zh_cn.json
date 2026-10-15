@@ -46,9 +46,9 @@
   "gui.apothic_flux.stat.treasure": "宝藏附魔",
   "gui.apothic_flux.stat.treasure.true": "允许",
   "gui.apothic_flux.stat.treasure.false": "禁止",
-  "gui.apothic_flux.stat.rectification": "校准",
-  "gui.apothic_flux.stat.rectification.true": "开启",
-  "gui.apothic_flux.stat.rectification.false": "关闭",
+  "gui.apothic_flux.stat.provides_stability": "校准",
+  "gui.apothic_flux.stat.provides_stability.true": "开启",
+  "gui.apothic_flux.stat.provides_stability.false": "关闭",
   "gui.apothic_flux.energy.fe": "能量: %s / %s FE",
   "gui.apothic_flux.energy.cost": "耗电: %s FE/t",
   "gui.apothic_flux.save": "保存",
@@ -182,5 +182,6 @@
   "config.apothic_flux.advanced_flux_infuser.energy_enabled": "是否耗电",
   "config.apothic_flux.advanced_flux_infuser.craft_time": "单次灌注耗时 (tick)",
   "config.apothic_flux.advanced_flux_infuser.experience_fluid": "经验流体ID",
-  "config.apothic_flux.advanced_flux_infuser.fluid_capacity": "经验流体容量"
+  "config.apothic_flux.advanced_flux_infuser.fluid_capacity": "经验流体容量",
+  "gui.apothic_flux.label.clues": "线索"
 }
