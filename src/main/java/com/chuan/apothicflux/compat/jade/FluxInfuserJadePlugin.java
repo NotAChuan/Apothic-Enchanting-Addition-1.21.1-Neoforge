@@ -6,7 +6,6 @@ import com.chuan.apothicflux.registry.ModRegistry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.IServerDataProvider;
@@ -29,8 +28,8 @@ public class FluxInfuserJadePlugin implements IWailaPlugin, IBlockComponentProvi
     private static final String KEY_ETERNA = "Eterna";
     private static final String KEY_QUANTA = "Quanta";
     private static final String KEY_ARCANA = "Arcana";
-    private static final String KEY_PROGRESS = "Progress";
-    private static final String KEY_CRAFT_TIME = "CraftTime";
+    private static final String KEY_ENERGY = "Energy";
+    private static final String KEY_CAPACITY = "Capacity";
 
     @Override
     public void register(IWailaCommonRegistration registration) {
@@ -48,8 +47,8 @@ public class FluxInfuserJadePlugin implements IWailaPlugin, IBlockComponentProvi
             tag.putInt(KEY_ETERNA, Math.round(infuser.getEterna()));
             tag.putInt(KEY_QUANTA, Math.round(infuser.getQuanta()));
             tag.putInt(KEY_ARCANA, Math.round(infuser.getArcana()));
-            tag.putInt(KEY_PROGRESS, infuser.getProgress());
-            tag.putInt(KEY_CRAFT_TIME, infuser.getCraftTime());
+            tag.putInt(KEY_ENERGY, infuser.getEnergyStorage().getEnergyStored());
+            tag.putInt(KEY_CAPACITY, infuser.getEnergyStorage().getMaxEnergyStored());
         }
     }
 
@@ -60,9 +59,8 @@ public class FluxInfuserJadePlugin implements IWailaPlugin, IBlockComponentProvi
         tooltip.add(Component.translatable("jade.apothic_flux.ritual_core.quanta", data.getInt(KEY_QUANTA)));
         tooltip.add(Component.translatable("jade.apothic_flux.ritual_core.arcana", data.getInt(KEY_ARCANA)));
 
-        int craftTime = Math.max(1, data.getInt(KEY_CRAFT_TIME));
-        int percent = Mth.clamp((int) Math.round(data.getInt(KEY_PROGRESS) * 100.0D / craftTime), 0, 100);
-        tooltip.add(Component.translatable("jade.apothic_flux.flux_infuser.progress", percent));
+        tooltip.add(Component.translatable("jade.apothic_flux.flux_infuser.energy",
+                data.getInt(KEY_ENERGY), data.getInt(KEY_CAPACITY)));
     }
 
     @Override

@@ -32,6 +32,15 @@ public class ApothicAdditionConfig {
     public static final ModConfigSpec.BooleanValue FLUX_INFUSER_ENERGY_ENABLED;
     public static final ModConfigSpec.IntValue FLUX_INFUSER_CRAFT_TIME;
     public static final ModConfigSpec.BooleanValue FLUX_INFUSER_AUTO_OUTPUT;
+    public static final ModConfigSpec.IntValue FLUX_INFUSER_RECORD_LIMIT;
+    public static final ModConfigSpec.ConfigValue<String> FLUX_INFUSER_EXPERIENCE_FLUID;
+    public static final ModConfigSpec.IntValue FLUX_INFUSER_FLUID_CAPACITY;
+    public static final ModConfigSpec.IntValue ADVANCED_FLUX_INFUSER_CAPACITY;
+    public static final ModConfigSpec.IntValue ADVANCED_FLUX_INFUSER_ENERGY_PER_TICK;
+    public static final ModConfigSpec.BooleanValue ADVANCED_FLUX_INFUSER_ENERGY_ENABLED;
+    public static final ModConfigSpec.IntValue ADVANCED_FLUX_INFUSER_CRAFT_TIME;
+    public static final ModConfigSpec.ConfigValue<String> ADVANCED_FLUX_INFUSER_EXPERIENCE_FLUID;
+    public static final ModConfigSpec.IntValue ADVANCED_FLUX_INFUSER_FLUID_CAPACITY;
 
     static {
         BUILDER.comment("Flux Bookshelf settings / 通量书架设置")
@@ -199,6 +208,38 @@ public class ApothicAdditionConfig {
                         "自动通量灌注器是否自动把产物输出到下方容器。")
                 .translation(CONFIG_PREFIX + "flux_infuser.auto_output")
                 .define("fluxInfuserAutoOutput", true);
+
+        FLUX_INFUSER_RECORD_LIMIT = BUILDER
+                .comment("Maximum number of input-to-recipe memories per infuser.",
+                        "自动通量灌注器可保存的输入物配方记录数量上限。")
+                .translation(CONFIG_PREFIX + "flux_infuser.record_limit")
+                .defineInRange("fluxInfuserRecordLimit", 5000, 1, 100000);
+
+        FLUX_INFUSER_EXPERIENCE_FLUID = BUILDER
+                .comment("Experience fluid id consumed by the Automatic Flux Infuser.")
+                .translation(CONFIG_PREFIX + "flux_infuser.experience_fluid")
+                .define("fluxInfuserExperienceFluid", "apothic_flux:experience");
+
+        FLUX_INFUSER_FLUID_CAPACITY = BUILDER
+                .comment("Automatic Flux Infuser fluid tank capacity in mB. Default: 10000 buckets.")
+                .translation(CONFIG_PREFIX + "flux_infuser.fluid_capacity")
+                .defineInRange("fluxInfuserFluidCapacity", 10_000_000, 1, Integer.MAX_VALUE);
+
+        BUILDER.pop();
+
+        BUILDER.comment("Advanced Automatic Flux Infuser settings / 高级自动通量灌注器设置")
+                .translation(CONFIG_PREFIX + "category.advanced_flux_infuser")
+                .push("Advanced Flux Infuser");
+
+        ADVANCED_FLUX_INFUSER_CAPACITY = BUILDER.translation(CONFIG_PREFIX + "advanced_flux_infuser.capacity").defineInRange("advancedFluxInfuserCapacity", 20_000_000, 0, Integer.MAX_VALUE);
+        ADVANCED_FLUX_INFUSER_ENERGY_PER_TICK = BUILDER.translation(CONFIG_PREFIX + "advanced_flux_infuser.energy_per_tick").defineInRange("advancedFluxInfuserEnergyPerTick", 5000, 0, Integer.MAX_VALUE);
+        ADVANCED_FLUX_INFUSER_ENERGY_ENABLED = BUILDER.translation(CONFIG_PREFIX + "advanced_flux_infuser.energy_enabled").define("advancedFluxInfuserEnergyEnabled", true);
+        ADVANCED_FLUX_INFUSER_CRAFT_TIME = BUILDER.translation(CONFIG_PREFIX + "advanced_flux_infuser.craft_time").defineInRange("advancedFluxInfuserCraftTime", 40, 1, 72000);
+        ADVANCED_FLUX_INFUSER_EXPERIENCE_FLUID = BUILDER.translation(CONFIG_PREFIX + "advanced_flux_infuser.experience_fluid").define("advancedFluxInfuserExperienceFluid", "apothic_flux:experience");
+        ADVANCED_FLUX_INFUSER_FLUID_CAPACITY = BUILDER
+                .comment("Capacity in mB. Default: 20000 buckets.")
+                .translation(CONFIG_PREFIX + "advanced_flux_infuser.fluid_capacity")
+                .defineInRange("advancedFluxInfuserFluidCapacity", 20_000_000, 1, Integer.MAX_VALUE);
 
         BUILDER.pop();
 

@@ -36,6 +36,7 @@ public class ApothicFluxClient {
         event.register(ModRegistry.FLUX_ANVIL_MENU.get(), FluxAnvilScreen::new);
         event.register(ModRegistry.FLUX_EXP_CONVERTER_MENU.get(), FluxExpConverterScreen::new);
         event.register(ModRegistry.FLUX_INFUSER_MENU.get(), FluxInfuserScreen::new);
+        event.register(ModRegistry.ADVANCED_FLUX_INFUSER_MENU.get(), FluxInfuserScreen::new);
         event.register(ModRegistry.FLUX_SPAWNER_MENU.get(), FluxSpawnerScreen::new);
         event.register(ModRegistry.STATS_BOOKSHELF_MENU.get(), FluxStatsBookshelfScreen::new);
     }

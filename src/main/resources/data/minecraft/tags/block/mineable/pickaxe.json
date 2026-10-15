@@ -9,6 +9,7 @@
     "apothic_flux:flux_enchanting_table",
     "apothic_flux:exp_converter",
     "apothic_flux:flux_spawner",
-    "apothic_flux:flux_infuser"
+    "apothic_flux:flux_infuser",
+    "apothic_flux:advanced_flux_infuser"
   ]
 }

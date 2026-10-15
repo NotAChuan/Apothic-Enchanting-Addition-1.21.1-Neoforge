@@ -85,6 +85,5 @@ public class FluxSpawnerScreen extends AbstractContainerScreen<FluxSpawnerMenu> 
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 0x404040, false);
     }
 }

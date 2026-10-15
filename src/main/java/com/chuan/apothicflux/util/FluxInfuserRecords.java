@@ -10,7 +10,9 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 自动通量灌注器的「配方记录表」。
@@ -23,7 +25,8 @@ import java.util.List;
 public final class FluxInfuserRecords {
 
     /** 记录表上限。超出后不再为新输入物建立记录。 */
-    public static final int MAX_RECORDS = 64;
+    /** Legacy limit retained only for old callers; the live limit is config-driven. */
+    public static final int MAX_RECORDS = 5000;
 
     private static final String KEY_LIST = "Records";
     private static final String KEY_ITEM = "Item";
@@ -90,6 +93,24 @@ public final class FluxInfuserRecords {
         }
     }
 
+    /** Immutable logical input key: item identity plus all data components, never count. */
+    public static final class InputKey {
+        private final ItemStack stack;
+        private final int hash;
+
+        public InputKey(ItemStack stack) {
+            this.stack = stack.copyWithCount(1);
+            this.hash = 31 * this.stack.getItem().hashCode() + this.stack.getComponents().hashCode();
+        }
+
+        public ItemStack stack() { return stack; }
+
+        @Override public boolean equals(Object o) {
+            return o instanceof InputKey other && ItemStack.isSameItemSameComponents(stack, other.stack);
+        }
+        @Override public int hashCode() { return hash; }
+    }
+
     /** 找到与给定输入物匹配的记录；没有则返回 null。 */
     @Nullable
     public static Record find(List<Record> records, ItemStack stack) {
@@ -102,6 +123,10 @@ public final class FluxInfuserRecords {
             }
         }
         return null;
+    }
+
+    public static Record find(Map<InputKey, Record> records, ItemStack stack) {
+        return stack.isEmpty() ? null : records.get(new InputKey(stack));
     }
 
     public static ListTag save(List<Record> records, HolderLookup.Provider registries) {
@@ -121,7 +146,7 @@ public final class FluxInfuserRecords {
         if (list == null) {
             return records;
         }
-        for (int i = 0; i < list.size() && records.size() < MAX_RECORDS; i++) {
+        for (int i = 0; i < list.size(); i++) {
             if (!(list.get(i) instanceof CompoundTag tag)) {
                 continue;
             }
@@ -139,6 +164,16 @@ public final class FluxInfuserRecords {
             records.add(new Record(key, id, tag.getBoolean(KEY_PRODUCED)));
         }
         return records;
+    }
+
+    public static Map<InputKey, Record> loadMap(@Nullable ListTag list, HolderLookup.Provider registries) {
+        Map<InputKey, Record> result = new LinkedHashMap<>();
+        for (Record record : load(list, registries)) result.put(new InputKey(record.key()), record);
+        return result;
+    }
+
+    public static ListTag save(Map<InputKey, Record> records, HolderLookup.Provider registries) {
+        return save(new ArrayList<>(records.values()), registries);
     }
 
     public static String listKey() {

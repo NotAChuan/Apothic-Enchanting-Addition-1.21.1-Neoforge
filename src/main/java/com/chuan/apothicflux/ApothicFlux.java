@@ -43,6 +43,7 @@ import net.neoforged.neoforgespi.locating.IModFile;
 
 import java.nio.file.Path;
 import java.util.Optional;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 
 import static com.chuan.apothicflux.registry.ModRegistry.*;
 
@@ -74,6 +75,7 @@ public class ApothicFlux {
                 output.accept(FLUX_ANVIL_ITEM.get());
                 output.accept(FLUX_EXP_CONVERTER_ITEM.get());
                 output.accept(FLUX_INFUSER_ITEM.get());
+                output.accept(ADVANCED_FLUX_INFUSER_ITEM.get());
                 output.accept(EXPERIENCE_BUCKET.get());
                 output.accept(SOLIDIFIED_FLUX_EXPERIENCE.get());
                 output.accept(COMPRESSED_SOLIDIFIED_FLUX_EXPERIENCE.get());
@@ -93,9 +95,17 @@ public class ApothicFlux {
         modEventBus.addListener(this::registerPackFinders);
         CREATIVE_MODE_TABS.register(modEventBus);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(this::onDatapackSync);
 
         modEventBus.addListener(this::onClientSetup);
 
+    }
+
+    private void onDatapackSync(OnDatapackSyncEvent event) {
+        com.chuan.apothicflux.util.FluxInfuserCandidates.invalidate();
+        var server = event.getPlayerList().getServer();
+        com.chuan.apothicflux.util.FluxInfuserSavedData.get(server.overworld())
+                .pruneMissingRecipes(server.getRecipeManager());
     }
 
     // 注册模组内置资源包 resourcepacks/apothic flux ae。
@@ -197,6 +207,10 @@ public class ApothicFlux {
                 ModRegistry.FLUX_INFUSER_BE.get(),
                 (be, side) -> be.automationItemHandler
         );
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, ModRegistry.ADVANCED_FLUX_INFUSER_BE.get(), (be, side) -> be.getEnergyStorage());
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, ModRegistry.ADVANCED_FLUX_INFUSER_BE.get(), (be, side) -> be.automationItemHandler);
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, ModRegistry.FLUX_INFUSER_BE.get(), (be, side) -> be.getFluidTank());
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, ModRegistry.ADVANCED_FLUX_INFUSER_BE.get(), (be, side) -> be.getFluidTank());
     }
 
     private void onPlayerTick(PlayerTickEvent.Post event) {

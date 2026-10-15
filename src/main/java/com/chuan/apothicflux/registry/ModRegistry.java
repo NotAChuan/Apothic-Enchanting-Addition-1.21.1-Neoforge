@@ -12,6 +12,7 @@ import com.chuan.apothicflux.menu.FluxEnchantingMenu;
 import com.chuan.apothicflux.menu.FluxAnvilMenu;
 import com.chuan.apothicflux.menu.FluxExpConverterMenu;
 import com.chuan.apothicflux.menu.FluxInfuserMenu;
+import com.chuan.apothicflux.menu.AdvancedFluxInfuserMenu;
 import com.chuan.apothicflux.menu.FluxSpawnerMenu;
 import com.chuan.apothicflux.menu.FluxStatsBookshelfMenu;
 import com.chuan.apothicflux.recipe.RitualCraftingRecipe;
@@ -81,6 +82,8 @@ public class ModRegistry {
 
     public static final DeferredHolder<Block, FluxInfuserBlock> FLUX_INFUSER = BLOCKS.register("flux_infuser",
             () -> new FluxInfuserBlock(BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
+    public static final DeferredHolder<Block, AdvancedFluxInfuserBlock> ADVANCED_FLUX_INFUSER = BLOCKS.register("advanced_flux_infuser",
+            () -> new AdvancedFluxInfuserBlock(BlockBehaviour.Properties.of().strength(3.5f).sound(SoundType.STONE).requiresCorrectToolForDrops().noOcclusion()));
 
     private static BaseFlowingFluid.Properties EXPERIENCE_FLUID_PROPERTIES;
 
@@ -116,6 +119,8 @@ public class ModRegistry {
 
     public static final DeferredHolder<Item, BlockItem> FLUX_INFUSER_ITEM = ITEMS.register("flux_infuser",
             () -> new BlockItem(FLUX_INFUSER.get(), new Item.Properties()));
+    public static final DeferredHolder<Item, BlockItem> ADVANCED_FLUX_INFUSER_ITEM = ITEMS.register("advanced_flux_infuser",
+            () -> new BlockItem(ADVANCED_FLUX_INFUSER.get(), new Item.Properties()));
 
     // 经验转化器顶部的球状物：只作为模型来源，不注册物品、不加入创造模式。
     public static final DeferredHolder<Block, Block> EXP_CONVERTER_TOP_BLOCK = BLOCKS.register("exp_converter_top",
@@ -171,6 +176,8 @@ public class ModRegistry {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluxInfuserBlockEntity>> FLUX_INFUSER_BE = BLOCK_ENTITIES.register("flux_infuser",
             () -> BlockEntityType.Builder.of(FluxInfuserBlockEntity::new, FLUX_INFUSER.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<AdvancedFluxInfuserBlockEntity>> ADVANCED_FLUX_INFUSER_BE = BLOCK_ENTITIES.register("advanced_flux_infuser",
+            () -> BlockEntityType.Builder.of(AdvancedFluxInfuserBlockEntity::new, ADVANCED_FLUX_INFUSER.get()).build(null));
 
     public static final DeferredHolder<Block, FluxEnchantingTableBlock> FLUX_ENCHANTING_TABLE = BLOCKS.register("flux_enchanting_table",
             () -> new FluxEnchantingTableBlock(BlockBehaviour.Properties.of().strength(5.0f).requiresCorrectToolForDrops()));
@@ -198,6 +205,8 @@ public class ModRegistry {
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxInfuserMenu>> FLUX_INFUSER_MENU = MENU_TYPES.register("flux_infuser_menu",
             () -> IMenuTypeExtension.create(FluxInfuserMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<AdvancedFluxInfuserMenu>> ADVANCED_FLUX_INFUSER_MENU = MENU_TYPES.register("advanced_flux_infuser_menu",
+            () -> IMenuTypeExtension.create(AdvancedFluxInfuserMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<FluxSpawnerMenu>> FLUX_SPAWNER_MENU = MENU_TYPES.register("flux_spawner_menu",
             () -> IMenuTypeExtension.create(FluxSpawnerMenu::new));

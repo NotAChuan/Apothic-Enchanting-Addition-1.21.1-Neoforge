@@ -6,11 +6,13 @@ import com.chuan.apothicflux.menu.FluxInfuserMenu;
 import com.chuan.apothicflux.registry.ModRegistry;
 import com.chuan.apothicflux.util.FluxInfuserCandidates;
 import com.chuan.apothicflux.util.FluxInfuserRecords;
+import com.chuan.apothicflux.util.FluxInfuserSavedData;
 import dev.shadowsoffire.apothic_enchanting.table.EnchantmentTableStats;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -30,10 +32,15 @@ import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.RangedWrapper;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import net.minecraft.core.registries.BuiltInRegistries;
+import com.chuan.apothicflux.util.ExperienceMath;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * 自动通量灌注器。
@@ -68,7 +75,12 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
     public static final int DATA_QUANTA = 4;
     public static final int DATA_ARCANA = 5;
     public static final int DATA_RECORD_COUNT = 6;
-    public static final int DATA_COUNT = 7;
+    public static final int DATA_RECORD_LIMIT = 7;
+    public static final int DATA_FLUID = 8;
+    public static final int DATA_FLUID_CAPACITY = 9;
+    public static final int DATA_ENERGY_CAPACITY = 10;
+    public static final int DATA_CRAFT_TIME = 11;
+    public static final int DATA_COUNT = 12;
 
     private static final int STAT_REFRESH_INTERVAL = 20;
     private static final int BELOW_HANDLER_CACHE_TICKS = 5;
@@ -76,6 +88,8 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
     private static final String KEY_ENERGY = "Energy";
     private static final String KEY_INVENTORY = "Inventory";
     private static final String KEY_PROGRESS = "Progress";
+    private static final String KEY_MACHINE_ID = "MachineId";
+    private static final String KEY_FLUID = "Fluid";
 
     /** 玩家选择候选的结果。 */
     public enum SelectResult {
@@ -87,8 +101,15 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         LIMIT_REACHED
     }
 
-    private final EnergyStorage energyStorage;
-    private final List<FluxInfuserRecords.Record> records = new ArrayList<>();
+    protected final EnergyStorage energyStorage;
+    protected final FluidTank fluidTank;
+    private final Map<FluxInfuserRecords.InputKey, FluxInfuserRecords.Record> records = new LinkedHashMap<>();
+    private UUID machineId = UUID.randomUUID();
+    private boolean recordsLoaded;
+    private ItemStack activeInput = ItemStack.EMPTY;
+    private @Nullable ResourceLocation activeRecipeId;
+    private @Nullable ResourceLocation syncedCurrentRecipeId;
+    private boolean syncedCurrentGlow;
 
     /** 当前单次灌注进度（tick）。 */
     private int progress = 0;
@@ -110,6 +131,7 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            if (slot == INPUT_SLOT && level != null && !level.isClientSide) sync();
         }
 
         @Override
@@ -172,6 +194,11 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
                 case DATA_QUANTA -> Float.floatToIntBits(quanta);
                 case DATA_ARCANA -> Float.floatToIntBits(arcana);
                 case DATA_RECORD_COUNT -> records.size();
+                case DATA_RECORD_LIMIT -> Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_RECORD_LIMIT.get());
+                case DATA_FLUID -> fluidTank.getFluidAmount();
+                case DATA_FLUID_CAPACITY -> fluidTank.getCapacity();
+                case DATA_ENERGY_CAPACITY -> energyStorage.getMaxEnergyStored();
+                case DATA_CRAFT_TIME -> getCraftTime();
                 default -> 0;
             };
         }
@@ -188,9 +215,13 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
     };
 
     public FluxInfuserBlockEntity(BlockPos pos, BlockState state) {
-        super(ModRegistry.FLUX_INFUSER_BE.get(), pos, state);
+        this(ModRegistry.FLUX_INFUSER_BE.get(), pos, state);
+    }
+
+    protected FluxInfuserBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
         // 储电上限在构造时读取配置：运行中修改配置需要重载世界（或重新放置机器）才会生效。
-        this.energyStorage = new EnergyStorage(Math.max(0, ApothicAdditionConfig.FLUX_INFUSER_CAPACITY.get()),
+        this.energyStorage = new EnergyStorage(getConfiguredEnergyCapacity(),
                 Integer.MAX_VALUE, Integer.MAX_VALUE) {
             @Override
             public int receiveEnergy(int maxReceive, boolean simulate) {
@@ -210,13 +241,32 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
                 return extracted;
             }
         };
+        this.fluidTank = new FluidTank(getConfiguredFluidCapacity(), stack -> isConfiguredExperienceFluid(stack)) {
+            @Override protected void onContentsChanged() { setChanged(); }
+        };
     }
+
+    protected int getConfiguredEnergyCapacity() { return Math.max(0, ApothicAdditionConfig.FLUX_INFUSER_CAPACITY.get()); }
+    protected int getConfiguredEnergyPerTick() { return Math.max(0, ApothicAdditionConfig.FLUX_INFUSER_ENERGY_PER_TICK.get()); }
+    protected boolean isEnergyEnabled() { return ApothicAdditionConfig.FLUX_INFUSER_ENERGY_ENABLED.get(); }
+    protected int getConfiguredFluidCapacity() { return Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_FLUID_CAPACITY.get()); }
+    protected String getConfiguredFluidId() { return ApothicAdditionConfig.FLUX_INFUSER_EXPERIENCE_FLUID.get(); }
+    public boolean ignoresRequirements() { return false; }
+    public boolean showsStats() { return true; }
+    public int getEnergyCapacity() { return energyStorage.getMaxEnergyStored(); }
 
     public EnergyStorage getEnergyStorage() {
         return energyStorage;
     }
 
-    public List<FluxInfuserRecords.Record> records() {
+    public FluidTank getFluidTank() { return fluidTank; }
+
+    protected boolean isConfiguredExperienceFluid(FluidStack stack) {
+        ResourceLocation id = ResourceLocation.tryParse(getConfiguredFluidId());
+        return id != null && BuiltInRegistries.FLUID.getKey(stack.getFluid()).equals(id);
+    }
+
+    public Map<FluxInfuserRecords.InputKey, FluxInfuserRecords.Record> records() {
         return records;
     }
 
@@ -245,7 +295,10 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         if (stack.isEmpty() || this.level == null) {
             return false;
         }
-        return FluxInfuserCandidates.hasAnyRecipe(this.level, stack);
+        if (this.level.isClientSide) return FluxInfuserCandidates.hasAnyRecipe(this.level, stack);
+        return FluxInfuserCandidates.hasAnyRecipe(this.level, stack)
+                && (FluxInfuserRecords.find(records, stack) != null
+                || records.size() < Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_RECORD_LIMIT.get()));
     }
 
     /**
@@ -261,9 +314,9 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         }
 
         // 用最新属性做校验，避免使用最多 1 秒前的快照
-        refreshStats(this.level);
+        if (!ignoresRequirements()) refreshStats(this.level);
 
-        if (FluxInfuserCandidates.resolveById(this.level, input, eterna, quanta, arcana, recipeId) == null) {
+        if (FluxInfuserCandidates.resolveById(this.level, input, eterna, quanta, arcana, recipeId, ignoresRequirements()) == null) {
             return SelectResult.INVALID;
         }
 
@@ -272,17 +325,19 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
             // 已有记录：改选只是覆盖，不占用新名额
             if (existing.select(recipeId)) {
                 progress = 0;
+                persistRecords();
                 sync();
             }
             return SelectResult.OK;
         }
 
-        if (records.size() >= FluxInfuserRecords.MAX_RECORDS) {
+        if (records.size() >= Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_RECORD_LIMIT.get())) {
             return SelectResult.LIMIT_REACHED;
         }
 
-        records.add(new FluxInfuserRecords.Record(input, recipeId, false));
+        records.put(new FluxInfuserRecords.InputKey(input), new FluxInfuserRecords.Record(input, recipeId, false));
         progress = 0;
+        persistRecords();
         sync();
         return SelectResult.OK;
     }
@@ -295,11 +350,12 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
     }
 
     private void serverTick(Level level, BlockPos pos, BlockState state) {
+        loadExternalRecords();
         clampEnergy();
 
         if (++statRefreshTimer >= STAT_REFRESH_INTERVAL) {
             statRefreshTimer = 0;
-            refreshStats(level);
+            if (!ignoresRequirements()) refreshStats(level);
             updateEnergyLevel(level, pos, state);
         }
 
@@ -311,8 +367,24 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         ItemStack input = inventory.getStackInSlot(INPUT_SLOT);
         FluxInfuserRecords.Record record = FluxInfuserRecords.find(records, input);
 
+        ResourceLocation nextRecipe = record == null ? null : record.recipeId();
+        if (!ItemStack.isSameItemSameComponents(activeInput, input)
+                || !java.util.Objects.equals(activeRecipeId, nextRecipe)) {
+            if (progress != 0) progress = 0;
+            activeInput = input.isEmpty() ? ItemStack.EMPTY : input.copyWithCount(1);
+            activeRecipeId = nextRecipe;
+        }
+
+        if (record != null && level.getRecipeManager().byKey(record.recipeId()).isEmpty()) {
+            records.remove(new FluxInfuserRecords.InputKey(input));
+            persistRecords();
+            record = null;
+        }
+
+        if (record != null && !ignoresRequirements()) refreshStats(level);
+
         FluxInfuserCandidates.Candidate active = record == null ? null
-                : FluxInfuserCandidates.resolveById(level, input, eterna, quanta, arcana, record.recipeId());
+                : FluxInfuserCandidates.resolveById(level, input, eterna, quanta, arcana, record.recipeId(), ignoresRequirements());
 
         if (input.isEmpty() || record == null || active == null) {
             // 中止：输入为空 / 尚未选择 / 已选配方不再满足属性上下限 → 直接清除进度
@@ -324,8 +396,11 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         }
 
         int craftTime = getCraftTime();
-        int cost = Math.max(0, ApothicAdditionConfig.FLUX_INFUSER_ENERGY_PER_TICK.get());
-        boolean energyEnabled = ApothicAdditionConfig.FLUX_INFUSER_ENERGY_ENABLED.get();
+        int cost = getConfiguredEnergyPerTick();
+        boolean energyEnabled = isEnergyEnabled();
+        int fluidCost = experienceFluidCost(active);
+
+        if (fluidTank.getFluidAmount() < fluidCost) return;
 
         // 电量不足 → 暂停并保留进度（电量属于外部供给问题，与属性不足的中止语义不同）
         if (energyEnabled && cost > 0 && energyStorage.getEnergyStored() < cost) {
@@ -343,10 +418,17 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
 
         progress++;
         if (progress >= craftTime) {
+            if (fluidCost > 0) fluidTank.drain(fluidCost, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
             produce(level, pos, input, active, record);
             progress = 0;
         }
         setChanged();
+    }
+
+    protected int experienceFluidCost(FluxInfuserCandidates.Candidate active) {
+        int level = Math.max(0, (int) Math.ceil(active.recipe().getRequirements().eterna()));
+        long mb = ExperienceMath.xpForLevel(level) * FluxExpConverterBlockEntity.MB_PER_XP;
+        return (int) Math.min(Integer.MAX_VALUE, mb);
     }
 
     private void produce(Level level, BlockPos pos, ItemStack input, FluxInfuserCandidates.Candidate active,
@@ -362,6 +444,7 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
 
         // 取消发光，且此后保持取消；只有玩家改选其它配方才会重新发光
         record.markProduced();
+        persistRecords();
         sync();
     }
 
@@ -495,6 +578,75 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         }
     }
 
+    private void loadExternalRecords() {
+        if (recordsLoaded || !(this.level instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
+        recordsLoaded = true;
+        var saved = FluxInfuserSavedData.get(serverLevel);
+        var storedState = saved.get(machineId);
+        if (storedState != null) {
+            records.clear();
+            records.putAll(FluxInfuserRecords.loadMap(
+                    storedState.getList(FluxInfuserRecords.listKey(), Tag.TAG_COMPOUND), serverLevel.registryAccess()));
+            sync();
+        } else if (!records.isEmpty()) {
+            persistRecords();
+        }
+    }
+
+    public UUID machineId() { return machineId; }
+
+    /** Claims the server-side state referenced by a placed block item, then gives the live machine a fresh id. */
+    public void claimStoredMachine(Tag rawId) {
+        if (!(this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) || !(rawId instanceof net.minecraft.nbt.IntArrayTag)) return;
+        UUID oldId;
+        try { oldId = NbtUtils.loadUUID(rawId); } catch (RuntimeException ignored) { return; }
+        var saved = FluxInfuserSavedData.get(serverLevel);
+        var state = saved.get(oldId);
+        if (state != null) {
+            records.clear();
+            records.putAll(FluxInfuserRecords.loadMap(state.getList(FluxInfuserRecords.listKey(), Tag.TAG_COMPOUND), serverLevel.registryAccess()));
+            if (state.contains(KEY_ENERGY)) energyStorage.deserializeNBT(serverLevel.registryAccess(), state.get(KEY_ENERGY));
+            if (state.contains(KEY_FLUID)) fluidTank.readFromNBT(serverLevel.registryAccess(), state.getCompound(KEY_FLUID));
+            saved.remove(oldId);
+        }
+        machineId = UUID.randomUUID();
+        recordsLoaded = true;
+        persistRecords();
+        sync();
+    }
+
+    public @Nullable ResourceLocation currentRecipeId() {
+        if (this.level != null && this.level.isClientSide) return syncedCurrentRecipeId;
+        FluxInfuserRecords.Record record = FluxInfuserRecords.find(records, inventory.getStackInSlot(INPUT_SLOT));
+        return record == null ? null : record.recipeId();
+    }
+
+    public boolean currentRecordGlows() {
+        if (this.level != null && this.level.isClientSide) return syncedCurrentGlow;
+        FluxInfuserRecords.Record record = FluxInfuserRecords.find(records, inventory.getStackInSlot(INPUT_SLOT));
+        return record != null && record.glow();
+    }
+
+    public void storeExternalRecords() {
+        if (this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            CompoundTag state = new CompoundTag();
+            state.put(FluxInfuserRecords.listKey(), FluxInfuserRecords.save(records, serverLevel.registryAccess()));
+            FluxInfuserSavedData.get(serverLevel).put(machineId, state);
+        }
+    }
+
+    public void storeForBlockItem() {
+        if (this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            CompoundTag state = new CompoundTag();
+            state.put(FluxInfuserRecords.listKey(), FluxInfuserRecords.save(records, serverLevel.registryAccess()));
+            state.put(KEY_ENERGY, energyStorage.serializeNBT(serverLevel.registryAccess()));
+            state.put(KEY_FLUID, fluidTank.writeToNBT(serverLevel.registryAccess(), new CompoundTag()));
+            FluxInfuserSavedData.get(serverLevel).put(machineId, state);
+        }
+    }
+
+    private void persistRecords() { storeExternalRecords(); }
+
     @Override
     public Component getDisplayName() {
         return Component.translatable("block.apothic_flux.flux_infuser");
@@ -512,7 +664,8 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
         tag.put(KEY_ENERGY, energyStorage.serializeNBT(registries));
         tag.put(KEY_INVENTORY, inventory.serializeNBT(registries));
         tag.putInt(KEY_PROGRESS, progress);
-        tag.put(FluxInfuserRecords.listKey(), FluxInfuserRecords.save(records, registries));
+        tag.putUUID(KEY_MACHINE_ID, machineId);
+        tag.put(KEY_FLUID, fluidTank.writeToNBT(registries, new CompoundTag()));
     }
 
     @Override
@@ -525,17 +678,27 @@ public class FluxInfuserBlockEntity extends BlockEntity implements MenuProvider 
             inventory.deserializeNBT(registries, tag.getCompound(KEY_INVENTORY));
         }
         progress = tag.getInt(KEY_PROGRESS);
+        if (tag.contains(KEY_FLUID)) fluidTank.readFromNBT(registries, tag.getCompound(KEY_FLUID));
+        if (tag.hasUUID(KEY_MACHINE_ID)) machineId = tag.getUUID(KEY_MACHINE_ID);
+        syncedCurrentRecipeId = tag.contains("CurrentRecipe", Tag.TAG_STRING)
+                ? ResourceLocation.tryParse(tag.getString("CurrentRecipe")) : null;
+        syncedCurrentGlow = tag.getBoolean("CurrentGlow");
         records.clear();
-        records.addAll(FluxInfuserRecords.load(
-                tag.getList(FluxInfuserRecords.listKey(), Tag.TAG_COMPOUND), registries));
+        recordsLoaded = false;
+        // Compatibility with pre-UUID block entities: migrate embedded records on first server tick.
+        if (tag.contains(FluxInfuserRecords.listKey(), Tag.TAG_LIST)) {
+            records.putAll(FluxInfuserRecords.loadMap(tag.getList(FluxInfuserRecords.listKey(), Tag.TAG_COMPOUND), registries));
+        }
         lastEnergy = energyStorage.getEnergyStored();
         clampEnergy();
     }
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        CompoundTag tag = super.getUpdateTag(registries);
-        saveAdditional(tag, registries);
+        CompoundTag tag = new CompoundTag();
+        ResourceLocation current = currentRecipeId();
+        if (current != null) tag.putString("CurrentRecipe", current.toString());
+        tag.putBoolean("CurrentGlow", currentRecordGlows());
         return tag;
     }
 

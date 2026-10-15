@@ -93,7 +93,11 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
     }
 
     public FluxInfuserMenu(int containerId, Inventory playerInventory, BlockEntity entity, ContainerData data) {
-        super(ModRegistry.FLUX_INFUSER_MENU.get(), containerId);
+        this(ModRegistry.FLUX_INFUSER_MENU.get(), containerId, playerInventory, entity, data);
+    }
+
+    protected FluxInfuserMenu(net.minecraft.world.inventory.MenuType<?> type, int containerId, Inventory playerInventory, BlockEntity entity, ContainerData data) {
+        super(type, containerId);
         this.blockEntity = (FluxInfuserBlockEntity) entity;
         this.data = data;
         this.addDataSlots(data);
@@ -147,12 +151,18 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
         return this.data.get(FluxInfuserBlockEntity.DATA_PROGRESS);
     }
 
+    public int getFluidAmount() { return this.data.get(FluxInfuserBlockEntity.DATA_FLUID); }
+    public int getFluidCapacity() { return this.data.get(FluxInfuserBlockEntity.DATA_FLUID_CAPACITY); }
+    public int getCraftTime() { return Math.max(1, this.data.get(FluxInfuserBlockEntity.DATA_CRAFT_TIME)); }
+    public int getEnergyCapacity() { return Math.max(1, this.data.get(FluxInfuserBlockEntity.DATA_ENERGY_CAPACITY)); }
+    public boolean showsStats() { return this.blockEntity.showsStats(); }
+
     public int getRecordCount() {
         return this.data.get(FluxInfuserBlockEntity.DATA_RECORD_COUNT);
     }
 
     public int getRecordLimit() {
-        return FluxInfuserRecords.MAX_RECORDS;
+        return Math.max(1, this.data.get(FluxInfuserBlockEntity.DATA_RECORD_LIMIT));
     }
 
     public FluxInfuserBlockEntity getBlockEntity() {
@@ -187,8 +197,8 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
 
         this.allCandidates.clear();
         if (!input.isEmpty()) {
-            this.allCandidates.addAll(
-                    FluxInfuserCandidates.resolve(this.blockEntity.getLevel(), input, eterna, quanta, arcana));
+            this.allCandidates.addAll(FluxInfuserCandidates.resolve(this.blockEntity.getLevel(), input,
+                    eterna, quanta, arcana, this.blockEntity.ignoresRequirements()));
         }
         this.page = 0;
     }
@@ -228,15 +238,16 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
     /** 当前输入物对应的记录；没有则为 null。 */
     @Nullable
     public FluxInfuserRecords.Record currentRecord() {
+        if (this.blockEntity.getLevel() != null && this.blockEntity.getLevel().isClientSide) return null;
         return FluxInfuserRecords.find(this.blockEntity.records(), inputStack());
     }
 
     /** 某个候选槽是否应该画发光边框（= 它是当前选中项，且本次选择后还没产出过）。 */
     public boolean isGlowing(int slotIndex) {
         FluxInfuserCandidates.Candidate candidate = candidateAt(slotIndex);
-        FluxInfuserRecords.Record record = currentRecord();
-        return candidate != null && record != null
-                && record.recipeId().equals(candidate.id()) && record.glow();
+        ResourceLocation selected = this.blockEntity.currentRecipeId();
+        return candidate != null && selected != null
+                && selected.equals(candidate.id()) && this.blockEntity.currentRecordGlows();
     }
 
     /**
@@ -244,7 +255,7 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
      * 注意：置灰**不影响点击**——点击仍会发到服务端，由服务端弹出上限提示。
      */
     public boolean isLockedByRecordLimit() {
-        return getRecordCount() >= FluxInfuserRecords.MAX_RECORDS && currentRecord() == null;
+        return getRecordCount() >= getRecordLimit() && this.blockEntity.currentRecipeId() == null;
     }
 
     // ===================== 选择下发（客户端 → 服务端）=====================
@@ -273,9 +284,11 @@ public class FluxInfuserMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        return stillValid(
-                ContainerLevelAccess.create(this.blockEntity.getLevel(), this.blockEntity.getBlockPos()),
-                player, ModRegistry.FLUX_INFUSER.get());
+        return player.distanceToSqr(this.blockEntity.getBlockPos().getX() + 0.5,
+                this.blockEntity.getBlockPos().getY() + 0.5,
+                this.blockEntity.getBlockPos().getZ() + 0.5) <= 64.0
+                && this.blockEntity.getLevel() != null
+                && this.blockEntity.getLevel().getBlockEntity(this.blockEntity.getBlockPos()) == this.blockEntity;
     }
 
     @Override

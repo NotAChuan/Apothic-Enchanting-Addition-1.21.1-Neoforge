@@ -44,7 +44,6 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
 
     // ===== 底部信息区 =====
     private static final int STATS_Y = 94;
-    private static final int RECORD_Y = 104;
     private static final int PROGRESS_X = 70;
     private static final int PROGRESS_Y = 104;
     private static final int PROGRESS_W = 90;
@@ -61,6 +60,11 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
     private static final int ENERGY_Y = 17;
     private static final int ENERGY_W = 8;
     private static final int ENERGY_H = 74;
+    private static final int FLUID_X = 97;
+    private static final int FLUID_Y = 17;
+    private static final int FLUID_W = 8;
+    private static final int FLUID_H = 74;
+    private static final int COLOR_FLUID = 0xFF55DD55;
 
     /** -1 = 未按下；0 = 上一页；1 = 下一页。 */
     private int pressedButton = -1;
@@ -143,6 +147,7 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
         }
 
         drawEnergyBar(guiGraphics);
+        drawFluidBar(guiGraphics);
         drawTexts(guiGraphics);
         drawPageControls(guiGraphics, mouseX, mouseY);
         drawProgressBar(guiGraphics);
@@ -179,7 +184,6 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
 
     /** 选中且尚未产出过的候选：发光边框。 */
     private void drawGlow(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.renderOutline(x - 1, y - 1, 20, 20, COLOR_GLOW);
         guiGraphics.renderOutline(x, y, 18, 18, COLOR_GLOW);
     }
 
@@ -188,7 +192,7 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
         int y = this.topPos + ENERGY_Y;
         guiGraphics.fill(x, y, x + ENERGY_W, y + ENERGY_H, COLOR_BAR_BG);
 
-        int capacity = Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_CAPACITY.get());
+        int capacity = Math.max(1, this.menu.getEnergyCapacity());
         int stored = Mth.clamp(this.menu.getEnergy(), 0, capacity);
         int filled = (int) ((long) (ENERGY_H - 2) * stored / capacity);
         if (filled > 0) {
@@ -197,11 +201,19 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
         guiGraphics.renderOutline(x, y, ENERGY_W, ENERGY_H, COLOR_PANEL_DARK);
     }
 
-    private void drawTexts(GuiGraphics guiGraphics) {
-        int x = this.leftPos + 8;
-        int y = this.topPos + 6;
-        guiGraphics.drawString(this.font, this.title, x, y, COLOR_TEXT, false);
+    private void drawFluidBar(GuiGraphics guiGraphics) {
+        int x = this.leftPos + FLUID_X;
+        int y = this.topPos + FLUID_Y;
+        guiGraphics.fill(x, y, x + FLUID_W, y + FLUID_H, COLOR_BAR_BG);
+        int capacity = Math.max(1, this.menu.getFluidCapacity());
+        int amount = Mth.clamp(this.menu.getFluidAmount(), 0, capacity);
+        int filled = (int) ((long) (FLUID_H - 2) * amount / capacity);
+        if (filled > 0) guiGraphics.fill(x + 1, y + FLUID_H - 1 - filled, x + FLUID_W - 1, y + FLUID_H - 1, COLOR_FLUID);
+        guiGraphics.renderOutline(x, y, FLUID_W, FLUID_H, COLOR_PANEL_DARK);
+    }
 
+    private void drawTexts(GuiGraphics guiGraphics) {
+        if (!this.menu.showsStats()) return;
         // 属性行
         String stats = Component.translatable("gui.apothic_flux.label.eterna").getString() + ": "
                 + formatStat(this.menu.getEterna()) + "  "
@@ -210,12 +222,6 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
                 + Component.translatable("gui.apothic_flux.label.arcana").getString() + ": "
                 + formatStat(this.menu.getArcana());
         guiGraphics.drawString(this.font, stats, this.leftPos + 8, this.topPos + STATS_Y, COLOR_TEXT, false);
-
-        // 记录行
-        String records = Component.translatable("gui.apothic_flux.flux_infuser.record",
-                this.menu.getRecordCount(), this.menu.getRecordLimit()).getString();
-        guiGraphics.drawString(this.font, records, this.leftPos + 8, this.topPos + RECORD_Y,
-                this.menu.isLockedByRecordLimit() ? 0xFFAA0000 : COLOR_TEXT, false);
     }
 
     private static String formatStat(float value) {
@@ -227,7 +233,7 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
         int y = this.topPos + PROGRESS_Y;
         guiGraphics.fill(x, y, x + PROGRESS_W, y + PROGRESS_H, COLOR_BAR_BG);
 
-        int craftTime = Math.max(1, ApothicAdditionConfig.FLUX_INFUSER_CRAFT_TIME.get());
+        int craftTime = Math.max(1, this.menu.getCraftTime());
         int progress = Mth.clamp(this.menu.getProgress(), 0, craftTime);
         int filled = (int) ((long) (PROGRESS_W - 2) * progress / craftTime);
         if (filled > 0) {
@@ -273,6 +279,11 @@ public class FluxInfuserScreen extends AbstractContainerScreen<FluxInfuserMenu> 
     protected void renderTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // 原版槽位（输入 / 输出 / 玩家背包）的 tooltip
         super.renderTooltip(guiGraphics, mouseX, mouseY);
+
+        if (isInside(mouseX, mouseY, this.leftPos + FLUID_X, this.topPos + FLUID_Y, FLUID_W, FLUID_H)) {
+            guiGraphics.renderTooltip(this.font, Component.literal(
+                    (this.menu.getFluidAmount() / 1000) + "B / " + (this.menu.getFluidCapacity() / 1000) + "B"), mouseX, mouseY);
+        }
 
         // 左侧候选区是手工绘制的，单独补 tooltip
         int slot = getHoveredCandidateSlot(mouseX, mouseY);

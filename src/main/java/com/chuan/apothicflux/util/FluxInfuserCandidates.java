@@ -52,6 +52,11 @@ public final class FluxInfuserCandidates {
      * @param eterna 机器采集到的位阶（tableEterna，不含玩家加成）
      */
     public static List<Candidate> resolve(Level level, ItemStack input, float eterna, float quanta, float arcana) {
+        return resolve(level, input, eterna, quanta, arcana, false);
+    }
+
+    public static List<Candidate> resolve(Level level, ItemStack input, float eterna, float quanta, float arcana,
+                                          boolean ignoreRequirements) {
         if (level == null || input.isEmpty()) {
             return List.of();
         }
@@ -64,12 +69,15 @@ public final class FluxInfuserCandidates {
             if (!recipe.getInput().test(input)) {
                 continue;
             }
-            ItemStack output = recipe.assemble(input, eterna, quanta, arcana);
+            float recipeEterna = ignoreRequirements ? recipe.getRequirements().eterna() : eterna;
+            float recipeQuanta = ignoreRequirements ? recipe.getRequirements().quanta() : quanta;
+            float recipeArcana = ignoreRequirements ? recipe.getRequirements().arcana() : arcana;
+            ItemStack output = recipe.assemble(input, recipeEterna, recipeQuanta, recipeArcana);
             if (output.isEmpty()) {
                 continue;
             }
             // 属性不满足的配方也一并返回（satisfied = false），由 GUI 置灰并禁止点击
-            boolean satisfied = satisfies(recipe, eterna, quanta, arcana);
+            boolean satisfied = ignoreRequirements || satisfies(recipe, eterna, quanta, arcana);
             candidates.add(new Candidate(holder.id(), recipe, output, recipe.getRequirements().eterna(), satisfied));
         }
 
@@ -132,6 +140,12 @@ public final class FluxInfuserCandidates {
     @Nullable
     public static Candidate resolveById(Level level, ItemStack input, float eterna, float quanta, float arcana,
                                         @Nullable ResourceLocation id) {
+        return resolveById(level, input, eterna, quanta, arcana, id, false);
+    }
+
+    @Nullable
+    public static Candidate resolveById(Level level, ItemStack input, float eterna, float quanta, float arcana,
+                                        @Nullable ResourceLocation id, boolean ignoreRequirements) {
         if (level == null || input.isEmpty() || id == null) {
             return null;
         }
@@ -145,10 +159,13 @@ public final class FluxInfuserCandidates {
             if (!recipe.getInput().test(input)) {
                 return null;
             }
-            if (!satisfies(recipe, eterna, quanta, arcana)) {
+            if (!ignoreRequirements && !satisfies(recipe, eterna, quanta, arcana)) {
                 return null;
             }
-            ItemStack output = recipe.assemble(input, eterna, quanta, arcana);
+            float recipeEterna = ignoreRequirements ? recipe.getRequirements().eterna() : eterna;
+            float recipeQuanta = ignoreRequirements ? recipe.getRequirements().quanta() : quanta;
+            float recipeArcana = ignoreRequirements ? recipe.getRequirements().arcana() : arcana;
+            ItemStack output = recipe.assemble(input, recipeEterna, recipeQuanta, recipeArcana);
             if (output.isEmpty()) {
                 return null;
             }

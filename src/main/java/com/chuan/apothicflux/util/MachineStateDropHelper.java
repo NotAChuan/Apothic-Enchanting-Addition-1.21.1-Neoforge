@@ -106,22 +106,13 @@ public final class MachineStateDropHelper {
      * 机器内的输入物/输出物由方块自己的 onRemove 直接掉出，进度不保留。
      */
     public static ItemStack createFluxInfuserDrop(HolderLookup.Provider registries, FluxInfuserBlockEntity blockEntity) {
-        ItemStack stack = new ItemStack(ModRegistry.FLUX_INFUSER.get());
-
+        ItemStack stack = blockEntity.getBlockState().getBlock().asItem().getDefaultInstance();
+        blockEntity.storeForBlockItem();
         CompoundTag tag = new CompoundTag();
-        int energy = blockEntity.getEnergyStorage().getEnergyStored();
-        if (energy > 0) {
-            tag.put("Energy", blockEntity.getEnergyStorage().serializeNBT(registries));
-        }
-        if (!blockEntity.records().isEmpty()) {
-            tag.put(FluxInfuserRecords.listKey(), FluxInfuserRecords.save(blockEntity.records(), registries));
-        }
-
-        if (tag.isEmpty()) {
-            return stack;
-        }
-
-        BlockItem.setBlockEntityData(stack, ModRegistry.FLUX_INFUSER_BE.get(), tag);
+        tag.putUUID("MachineId", blockEntity.machineId());
+        var type = blockEntity instanceof com.chuan.apothicflux.block.entity.AdvancedFluxInfuserBlockEntity
+                ? ModRegistry.ADVANCED_FLUX_INFUSER_BE.get() : ModRegistry.FLUX_INFUSER_BE.get();
+        BlockItem.setBlockEntityData(stack, type, tag);
         return stack;
     }
 }
